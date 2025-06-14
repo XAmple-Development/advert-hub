@@ -121,6 +121,9 @@ serve(async (req: Request) => {
         });
       }
 
+      const discordUser = await userRes.json();
+      console.log('Discord user ID:', discordUser.id);
+
       // Fetch guilds
       const guildsRes = await fetch('https://discord.com/api/v10/users/@me/guilds', {
         headers: { Authorization: `Bearer ${discordAccessToken}` }
@@ -129,33 +132,102 @@ serve(async (req: Request) => {
       const guilds = guildsRes.ok ? await guildsRes.json() : [];
       const manageableServers = guilds.filter((g: any) => g.owner || (parseInt(g.permissions) & 0x20));
 
-      // For bots, we'll try a different approach - check if user has created any applications
-      // Even without bot scopes, we can try to fetch applications they own
+      // For bots, we need to fetch applications owned by this user
+      // This uses a different approach - we'll look for applications where the user is the owner
       let applications = [];
+      
       try {
+        // Try to get applications via the applications endpoint
         const appsRes = await fetch('https://discord.com/api/v10/applications', {
           headers: { Authorization: `Bearer ${discordAccessToken}` }
         });
+        
         if (appsRes.ok) {
-          applications = await appsRes.json();
-        } else if (appsRes.status === 403) {
-          // Expected if user doesn't have bot applications.commands scope
-          console.log('Bot applications scope not available, which is expected');
+          const appsData = await appsRes.json();
+          applications = appsData;
+          console.log('Found applications via /applications endpoint:', applications.length);
+        } else {
+          console.log('Applications endpoint failed:', appsRes.status, appsRes.statusText);
+          
+          // Alternative approach: Try to get applications that the user owns
+          // by checking OAuth2 applications
+          const oauth2AppsRes = await fetch('https://discord.com/api/v10/oauth2/applications/@me', {
+            headers: { Authorization: `Bearer ${discordAccessToken}` }
+          });
+          
+          if (oauth2AppsRes.ok) {
+            const oauth2Data = await oauth2AppsRes.json();
+            applications = [oauth2Data]; // This returns a single application
+            console.log('Found application via OAuth2 endpoint');
+          } else {
+            console.log('OAuth2 applications endpoint also failed:', oauth2AppsRes.status);
+            
+            // Last resort: Try to find applications through team endpoints if available
+            const teamsRes = await fetch('https://discord.com/api/v10/teams', {
+              headers: { Authorization: `Bearer ${discordAccessToken}` }
+            });
+            
+            if (teamsRes.ok) {
+              const teams = await teamsRes.json();
+              console.log('Found teams:', teams.length);
+              
+              // Get applications for each team
+              for (const team of teams) {
+                try {
+                  const teamAppsRes = await fetch(`https://discord.com/api/v10/teams/${team.id}/applications`, {
+                    headers: { Authorization: `Bearer ${discordAccessToken}` }
+                  });
+                  
+                  if (teamAppsRes.ok) {
+                    const teamApps = await teamAppsRes.json();
+                    applications.push(...teamApps);
+                  }
+                } catch (error) {
+                  console.log('Error fetching team applications:', error);
+                }
+              }
+            }
+          }
         }
       } catch (error) {
-        console.log('Could not fetch applications:', error);
-        // This is expected without bot scopes, so we'll just return empty array
+        console.log('Error fetching applications:', error);
       }
+
+      // If we still don't have applications, try one more approach using the user's connections
+      if (applications.length === 0) {
+        try {
+          const connectionsRes = await fetch('https://discord.com/api/v10/users/@me/connections', {
+            headers: { Authorization: `Bearer ${discordAccessToken}` }
+          });
+          
+          if (connectionsRes.ok) {
+            const connections = await connectionsRes.json();
+            console.log('User connections:', connections.length);
+            // Note: This won't directly give us applications, but might provide insight
+          }
+        } catch (error) {
+          console.log('Error fetching connections:', error);
+        }
+      }
+
+      const formattedBots = applications.map((app: any) => ({
+        id: app.id,
+        name: app.name,
+        icon: app.icon,
+        description: app.description || 'Discord bot application',
+        public: app.bot_public !== false // Default to true if not specified
+      }));
+
+      console.log('Final bot applications found:', formattedBots.length);
 
       return new Response(JSON.stringify({
         servers: manageableServers,
-        bots: applications.map((a: any) => ({
-          id: a.id,
-          name: a.name,
-          icon: a.icon,
-          description: a.description || 'A Discord bot application'
-        })),
-        note: applications.length === 0 ? 'Bot information is limited without additional Discord permissions. To see your bots, you may need to re-authenticate with expanded permissions.' : undefined
+        bots: formattedBots,
+        debug: {
+          user_id: discordUser.id,
+          applications_found: applications.length,
+          endpoints_tried: ['applications', 'oauth2/applications/@me', 'teams']
+        }
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200

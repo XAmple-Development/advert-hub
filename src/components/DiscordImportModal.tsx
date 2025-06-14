@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -59,7 +60,7 @@ const DiscordImportModal = ({
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [showBotLimitedNote, setShowBotLimitedNote] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -70,7 +71,7 @@ const DiscordImportModal = ({
     setLoading(true);
     setError(null);
     setErrorCode(null);
-    setShowBotLimitedNote(false);
+    setDebugInfo(null);
     
     try {
       console.log('Fetching Discord data...');
@@ -129,16 +130,12 @@ const DiscordImportModal = ({
       // Handle the response format
       setServers(data.servers || []);
       setBots(data.bots || []);
-      
-      // Show note if bot data is limited
-      if (data.note) {
-        setShowBotLimitedNote(true);
-      }
+      setDebugInfo(data.debug);
 
       console.log('Successfully fetched Discord data:', {
         servers: (data.servers || []).length,
         bots: (data.bots || []).length,
-        hasNote: !!data.note
+        debug: data.debug
       });
 
     } catch (error: any) {
@@ -235,34 +232,6 @@ const DiscordImportModal = ({
         options: {
           redirectTo: window.location.origin,
           scopes: 'identify email guilds'
-        },
-      });
-
-      if (error) {
-        console.error('Discord sign-in error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Sign-in failed',
-          description: error.message,
-        });
-      }
-    } catch (error: any) {
-      console.error('Error signing in with Discord:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Sign-in failed',
-        description: 'Failed to sign in with Discord',
-      });
-    }
-  };
-
-  const handleSignInWithDiscordForBots = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'discord',
-        options: {
-          redirectTo: window.location.origin,
-          scopes: 'identify email guilds applications.commands'
         },
       });
 
@@ -425,18 +394,12 @@ const DiscordImportModal = ({
           </div>
         ) : (
           <>
-            {showBotLimitedNote && (
-              <Alert className="bg-yellow-900/20 border-yellow-500 mb-4">
+            {debugInfo && (
+              <Alert className="bg-blue-900/20 border-blue-500 mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-yellow-200">
-                  Bot information is limited with current permissions. To see all your bots, you may need additional Discord permissions.
-                  <Button
-                    onClick={handleSignInWithDiscordForBots}
-                    variant="link"
-                    className="text-yellow-300 underline p-0 h-auto ml-2"
-                  >
-                    Re-authenticate for full bot access
-                  </Button>
+                <AlertDescription className="text-blue-200">
+                  Debug: Found {debugInfo.applications_found} bot applications using multiple detection methods.
+                  {debugInfo.applications_found === 0 && " No Discord applications found in your account."}
                 </AlertDescription>
               </Alert>
             )}
@@ -558,10 +521,7 @@ const DiscordImportModal = ({
                     ))}
                     {bots.length === 0 && (
                       <p className="text-gray-400 text-center py-4">
-                        {showBotLimitedNote 
-                          ? "Limited bot access with current permissions"
-                          : "No bots found in your Discord applications"
-                        }
+                        No Discord bot applications found in your account
                       </p>
                     )}
                   </div>
