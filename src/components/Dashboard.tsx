@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,7 +37,6 @@ const Dashboard = () => {
     if (!user?.id) {
       console.log('Dashboard: No user ID available for fetching listings');
       setLoading(false);
-      setError('User not authenticated');
       return;
     }
 
@@ -82,9 +80,9 @@ const Dashboard = () => {
       fetchListings();
     } else if (user === null) {
       // User is explicitly null (not authenticated)
-      console.log('Dashboard: User is null, stopping loading');
+      console.log('Dashboard: User is null, redirecting to auth');
       setLoading(false);
-      setError('User not authenticated');
+      navigate('/auth');
     }
     // If user is undefined, we're still loading auth state
   }, [user?.id]);
@@ -126,7 +124,6 @@ const Dashboard = () => {
     fetchListings();
   };
 
-  // Show error state if there's an authentication error
   if (error === 'User not authenticated') {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
@@ -199,7 +196,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {error && error !== 'User not authenticated' && (
+        {error && (
           <Card className="bg-red-900/20 border-red-500 mb-6">
             <CardContent className="pt-6">
               <div className="text-red-400 text-center">
