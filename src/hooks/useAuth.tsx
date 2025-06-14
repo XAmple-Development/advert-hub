@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -14,6 +15,7 @@ export const useAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session:', !!session?.user, 'provider:', session?.user?.app_metadata?.provider);
       setUser(session?.user ?? null);
+      setSession(session);
       setLoading(false);
     });
 
@@ -21,6 +23,7 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event, !!session?.user);
       setUser(session?.user ?? null);
+      setSession(session);
       setLoading(false);
       
       // Handle Discord token storage on sign-in
@@ -78,5 +81,5 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  return { user, loading };
+  return { user, session, loading };
 };

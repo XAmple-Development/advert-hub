@@ -80,7 +80,7 @@ const DiscordImportModal: React.FC<DiscordImportModalProps> = ({
   };
 
   const importServer = async (serverId: string, serverName: string) => {
-    if (!session?.access_token) {
+    if (!session?.user?.id) {
       toast({
         title: "Authentication Required",
         description: "Please sign in with Discord to continue.",
@@ -92,12 +92,14 @@ const DiscordImportModal: React.FC<DiscordImportModalProps> = ({
     setImporting(true);
     try {
       const { data, error } = await supabase
-        .from('servers')
+        .from('listings')
         .insert([
           {
             discord_id: serverId,
             name: serverName,
-            owner_id: session.user.id,
+            description: `Imported from Discord: ${serverName}`,
+            user_id: session.user.id,
+            type: 'server',
             status: 'active',
           },
         ])

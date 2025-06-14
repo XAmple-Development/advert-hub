@@ -37,9 +37,9 @@ const Dashboard = () => {
 
     try {
       const { data, error } = await supabase
-        .from('servers')
+        .from('listings')
         .select('*')
-        .eq('owner_id', session.user.id)
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -214,7 +214,7 @@ const Dashboard = () => {
       )}
 
       <CreateListingModal
-        isOpen={showCreateModal}
+        open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onServerCreated={handleServerUpdate}
       />
