@@ -47,15 +47,38 @@ serve(async (req) => {
       throw new Error('User not authenticated')
     }
 
-    // Get Discord access token from user metadata or session
-    const discordToken = user.user_metadata?.provider_token
+    console.log('User metadata:', JSON.stringify(user.user_metadata, null, 2))
+    console.log('App metadata:', JSON.stringify(user.app_metadata, null, 2))
+
+    // Try to get Discord access token from multiple possible locations
+    let discordToken = user.user_metadata?.provider_token || 
+                      user.user_metadata?.access_token ||
+                      user.app_metadata?.provider_token
+
+    console.log('Discord token found:', !!discordToken)
+
     if (!discordToken) {
-      throw new Error('Discord access token not found. Please re-authenticate with Discord.')
+      // Get the session to check for provider tokens
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+      if (session?.provider_token) {
+        discordToken = session.provider_token
+        console.log('Found token in session provider_token')
+      } else if (session?.access_token) {
+        // Sometimes the provider token is stored as access_token
+        discordToken = session.access_token
+        console.log('Using session access_token as provider token')
+      }
+    }
+
+    if (!discordToken) {
+      throw new Error('Discord access token not found. Please sign out and sign back in with Discord to refresh your authentication.')
     }
 
     const { action } = await req.json()
 
     if (action === 'fetch') {
+      console.log('Fetching Discord guilds with token')
+      
       // Fetch user's Discord guilds
       const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
         headers: {
@@ -64,11 +87,16 @@ serve(async (req) => {
         },
       })
 
+      console.log('Discord guilds response status:', guildsResponse.status)
+
       if (!guildsResponse.ok) {
-        throw new Error('Failed to fetch Discord servers')
+        const errorText = await guildsResponse.text()
+        console.error('Discord API error:', errorText)
+        throw new Error(`Failed to fetch Discord servers: ${guildsResponse.status} ${errorText}`)
       }
 
       const guilds: DiscordGuild[] = await guildsResponse.json()
+      console.log('Found guilds:', guilds.length)
 
       // Filter guilds where user has manage permissions (permission bit 32)
       const manageableGuilds = guilds.filter(guild => {
@@ -77,6 +105,8 @@ serve(async (req) => {
         const administrator = 0x8n // ADMINISTRATOR permission
         return (permissions & (manageGuild | administrator)) !== 0n || guild.owner
       })
+
+      console.log('Manageable guilds:', manageableGuilds.length)
 
       // Fetch user's Discord applications (bots)
       const appsResponse = await fetch('https://discord.com/api/v10/applications', {
@@ -89,6 +119,9 @@ serve(async (req) => {
       let applications: DiscordApplication[] = []
       if (appsResponse.ok) {
         applications = await appsResponse.json()
+        console.log('Found applications:', applications.length)
+      } else {
+        console.log('Could not fetch applications:', appsResponse.status)
       }
 
       return new Response(
