@@ -237,6 +237,20 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
               />
             </div>
 
+            <div>
+              <Label htmlFor="member_count">Member Count</Label>
+              <Input
+                id="member_count"
+                type="number"
+                value={formData.member_count}
+                onChange={(e) => setFormData({ ...formData, member_count: e.target.value })}
+                className="bg-[#2C2F33] border-[#40444B]"
+                placeholder="0"
+                min="0"
+              />
+            </div>
+          </div>
+
           <div>
             <Label htmlFor="website_url">Website URL</Label>
             <Input
