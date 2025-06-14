@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,7 +85,7 @@ const AuthForm = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          scopes: 'identify email guilds',
+          scopes: 'identify email guilds applications.builds.read',
           redirectTo: `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
