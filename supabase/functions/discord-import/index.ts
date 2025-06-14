@@ -31,6 +31,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== Discord Import Function Called ===')
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -44,40 +46,87 @@ serve(async (req) => {
     // Get the user's session
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     if (userError || !user) {
+      console.error('Auth error:', userError)
       throw new Error('User not authenticated')
     }
 
+    console.log('User authenticated:', user.id)
     console.log('User metadata:', JSON.stringify(user.user_metadata, null, 2))
     console.log('App metadata:', JSON.stringify(user.app_metadata, null, 2))
 
-    // Try to get Discord access token from multiple possible locations
-    let discordToken = user.user_metadata?.provider_token || 
-                      user.user_metadata?.access_token ||
-                      user.app_metadata?.provider_token
+    // Enhanced token detection - try multiple approaches
+    let discordToken = null;
+    
+    // Method 1: Check user metadata
+    discordToken = user.user_metadata?.provider_token || 
+                  user.user_metadata?.access_token ||
+                  user.app_metadata?.provider_token ||
+                  user.app_metadata?.provider_access_token;
 
-    console.log('Discord token found:', !!discordToken)
+    console.log('Token from metadata:', !!discordToken)
 
+    // Method 2: Get fresh session
     if (!discordToken) {
-      // Get the session to check for provider tokens
       const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
-      if (session?.provider_token) {
-        discordToken = session.provider_token
-        console.log('Found token in session provider_token')
-      } else if (session?.access_token) {
-        // Sometimes the provider token is stored as access_token
-        discordToken = session.access_token
-        console.log('Using session access_token as provider token')
+      console.log('Session error:', sessionError)
+      console.log('Session data:', session ? 'exists' : 'null')
+      
+      if (session) {
+        discordToken = session.provider_token || 
+                      session.access_token ||
+                      (session as any).provider_access_token;
+        console.log('Token from session:', !!discordToken)
+      }
+    }
+
+    // Method 3: Try to refresh the session to get fresh tokens
+    if (!discordToken) {
+      console.log('Attempting to refresh session...')
+      const { data: refreshData, error: refreshError } = await supabaseClient.auth.refreshSession()
+      console.log('Refresh error:', refreshError)
+      
+      if (refreshData?.session) {
+        discordToken = refreshData.session.provider_token ||
+                      refreshData.session.access_token ||
+                      (refreshData.session as any).provider_access_token;
+        console.log('Token from refresh:', !!discordToken)
       }
     }
 
     if (!discordToken) {
-      throw new Error('Discord access token not found. Please sign out and sign back in with Discord to refresh your authentication.')
+      console.error('No Discord token found after all attempts')
+      throw new Error('Discord access token not found. Please sign out and sign back in with Discord to refresh your authentication. Make sure you\'re using Discord OAuth login.')
     }
 
     const { action } = await req.json()
+    console.log('Action requested:', action)
 
     if (action === 'fetch') {
-      console.log('Fetching Discord guilds with token')
+      console.log('Fetching Discord guilds with token length:', discordToken.length)
+      
+      // Test the token first with a simple user info call
+      try {
+        const userResponse = await fetch('https://discord.com/api/v10/users/@me', {
+          headers: {
+            'Authorization': `Bearer ${discordToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        console.log('Discord user API response status:', userResponse.status)
+        
+        if (!userResponse.ok) {
+          const errorText = await userResponse.text()
+          console.error('Discord user API error:', errorText)
+          throw new Error(`Discord token is invalid. Status: ${userResponse.status}. Please sign out and sign back in with Discord.`)
+        }
+        
+        const userData = await userResponse.json()
+        console.log('Discord user verified:', userData.username)
+      } catch (error) {
+        console.error('Discord user verification failed:', error)
+        throw new Error('Failed to verify Discord authentication. Please sign out and sign back in with Discord.')
+      }
       
       // Fetch user's Discord guilds
       const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
@@ -91,9 +140,8 @@ serve(async (req) => {
 
       if (!guildsResponse.ok) {
         const errorText = await guildsResponse.text()
-        console.error('Discord API error:', errorText)
+        console.error('Discord guilds API error:', errorText)
         
-        // If we get a 401, the token is invalid
         if (guildsResponse.status === 401) {
           throw new Error('Discord authentication expired. Please sign out and sign back in with Discord.')
         }
@@ -104,7 +152,7 @@ serve(async (req) => {
       const guilds: DiscordGuild[] = await guildsResponse.json()
       console.log('Found guilds:', guilds.length)
 
-      // Filter guilds where user has manage permissions (permission bit 32)
+      // Filter guilds where user has manage permissions
       const manageableGuilds = guilds.filter(guild => {
         const permissions = BigInt(guild.permissions)
         const manageGuild = 0x20n // MANAGE_GUILD permission
@@ -114,11 +162,9 @@ serve(async (req) => {
 
       console.log('Manageable guilds:', manageableGuilds.length)
 
-      // For Discord applications, we need to try a different approach
-      // The /applications endpoint requires different permissions
+      // Try to fetch applications (this often fails for regular users)
       let applications: DiscordApplication[] = []
       
-      // Try to fetch applications - this might fail if user doesn't have any
       try {
         const appsResponse = await fetch('https://discord.com/api/v10/applications', {
           headers: {
@@ -131,12 +177,10 @@ serve(async (req) => {
           applications = await appsResponse.json()
           console.log('Found applications:', applications.length)
         } else {
-          console.log('Could not fetch applications:', appsResponse.status)
-          // This is not a critical error - many users don't have bot applications
+          console.log('Could not fetch applications (this is normal for most users):', appsResponse.status)
         }
       } catch (error) {
         console.log('Error fetching applications (non-critical):', error)
-        // Continue without applications
       }
 
       return new Response(
@@ -166,93 +210,113 @@ serve(async (req) => {
 
     if (action === 'import') {
       const { servers, bots } = await req.json()
+      console.log('Importing servers:', servers?.length || 0, 'bots:', bots?.length || 0)
 
       const importedListings = []
 
       // Import selected servers
-      for (const serverId of servers) {
-        // Get detailed server info
-        const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${serverId}?with_counts=true`, {
-          headers: {
-            'Authorization': `Bearer ${discordToken}`,
-            'Content-Type': 'application/json',
-          },
-        })
+      if (servers && servers.length > 0) {
+        for (const serverId of servers) {
+          console.log('Importing server:', serverId)
+          
+          let guildData: any = {}
+          try {
+            const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${serverId}?with_counts=true`, {
+              headers: {
+                'Authorization': `Bearer ${discordToken}`,
+                'Content-Type': 'application/json',
+              },
+            })
 
-        let guildData: any = {}
-        if (guildResponse.ok) {
-          guildData = await guildResponse.json()
-        } else {
-          console.log(`Could not fetch detailed info for guild ${serverId}:`, guildResponse.status)
-          // Continue with basic info from the guilds list
-        }
+            if (guildResponse.ok) {
+              guildData = await guildResponse.json()
+              console.log('Guild data fetched for:', guildData.name)
+            } else {
+              console.log(`Could not fetch detailed info for guild ${serverId}:`, guildResponse.status)
+            }
+          } catch (error) {
+            console.error('Error fetching guild details:', error)
+          }
 
-        // Create listing in database
-        const { data: listing, error: listingError } = await supabaseClient
-          .from('listings')
-          .insert({
-            user_id: user.id,
-            type: 'server',
-            name: guildData.name || `Server ${serverId}`,
-            description: guildData.description || 'Imported from Discord',
-            discord_id: serverId,
-            member_count: guildData.approximate_member_count || 0,
-            online_count: guildData.approximate_presence_count || 0,
-            boost_level: guildData.premium_tier || 0,
-            verification_level: guildData.verification_level?.toString(),
-            nsfw: guildData.nsfw_level > 0,
-            avatar_url: guildData.icon ? `https://cdn.discordapp.com/icons/${serverId}/${guildData.icon}.png` : null,
-            banner_url: guildData.banner ? `https://cdn.discordapp.com/banners/${serverId}/${guildData.banner}.png` : null,
-            status: 'active'
-          })
-          .select()
-          .single()
+          // Create listing in database
+          const { data: listing, error: listingError } = await supabaseClient
+            .from('listings')
+            .insert({
+              user_id: user.id,
+              type: 'server',
+              name: guildData.name || `Server ${serverId}`,
+              description: guildData.description || 'Imported from Discord',
+              discord_id: serverId,
+              member_count: guildData.approximate_member_count || 0,
+              online_count: guildData.approximate_presence_count || 0,
+              boost_level: guildData.premium_tier || 0,
+              verification_level: guildData.verification_level?.toString(),
+              nsfw: guildData.nsfw_level > 0,
+              avatar_url: guildData.icon ? `https://cdn.discordapp.com/icons/${serverId}/${guildData.icon}.png` : null,
+              banner_url: guildData.banner ? `https://cdn.discordapp.com/banners/${serverId}/${guildData.banner}.png` : null,
+              status: 'active'
+            })
+            .select()
+            .single()
 
-        if (!listingError && listing) {
-          importedListings.push(listing)
-        } else {
-          console.error('Error creating server listing:', listingError)
+          if (!listingError && listing) {
+            importedListings.push(listing)
+            console.log('Server listing created:', listing.id)
+          } else {
+            console.error('Error creating server listing:', listingError)
+          }
         }
       }
 
       // Import selected bots
-      for (const botId of bots) {
-        // Get detailed bot info
-        const botResponse = await fetch(`https://discord.com/api/v10/applications/${botId}`, {
-          headers: {
-            'Authorization': `Bearer ${discordToken}`,
-            'Content-Type': 'application/json',
-          },
-        })
+      if (bots && bots.length > 0) {
+        for (const botId of bots) {
+          console.log('Importing bot:', botId)
+          
+          let botData: any = {}
+          try {
+            const botResponse = await fetch(`https://discord.com/api/v10/applications/${botId}`, {
+              headers: {
+                'Authorization': `Bearer ${discordToken}`,
+                'Content-Type': 'application/json',
+              },
+            })
 
-        let botData: any = {}
-        if (botResponse.ok) {
-          botData = await botResponse.json()
-        } else {
-          console.log(`Could not fetch detailed info for bot ${botId}:`, botResponse.status)
-        }
+            if (botResponse.ok) {
+              botData = await botResponse.json()
+              console.log('Bot data fetched for:', botData.name)
+            } else {
+              console.log(`Could not fetch detailed info for bot ${botId}:`, botResponse.status)
+            }
+          } catch (error) {
+            console.error('Error fetching bot details:', error)
+          }
 
-        // Create listing in database
-        const { data: listing, error: listingError } = await supabaseClient
-          .from('listings')
-          .insert({
-            user_id: user.id,
-            type: 'bot',
-            name: botData.name || `Bot ${botId}`,
-            description: botData.description || 'Imported Discord bot',
-            discord_id: botId,
-            avatar_url: botData.icon ? `https://cdn.discordapp.com/app-icons/${botId}/${botData.icon}.png` : null,
-            status: 'active'
-          })
-          .select()
-          .single()
+          // Create listing in database
+          const { data: listing, error: listingError } = await supabaseClient
+            .from('listings')
+            .insert({
+              user_id: user.id,
+              type: 'bot',
+              name: botData.name || `Bot ${botId}`,
+              description: botData.description || 'Imported Discord bot',
+              discord_id: botId,
+              avatar_url: botData.icon ? `https://cdn.discordapp.com/app-icons/${botId}/${botData.icon}.png` : null,
+              status: 'active'
+            })
+            .select()
+            .single()
 
-        if (!listingError && listing) {
-          importedListings.push(listing)
-        } else {
-          console.error('Error creating bot listing:', listingError)
+          if (!listingError && listing) {
+            importedListings.push(listing)
+            console.log('Bot listing created:', listing.id)
+          } else {
+            console.error('Error creating bot listing:', listingError)
+          }
         }
       }
+
+      console.log('Import completed. Total imported:', importedListings.length)
 
       return new Response(
         JSON.stringify({ success: true, imported: importedListings.length }),
@@ -270,7 +334,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       }
     )
