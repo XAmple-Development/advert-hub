@@ -6,6 +6,7 @@ import Features from '@/components/Features';
 import HowItWorks from '@/components/HowItWorks';
 import Pricing from '@/components/Pricing';
 import Footer from '@/components/Footer';
+import Dashboard from '@/components/Dashboard';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -18,7 +19,12 @@ const Index = () => {
     );
   }
 
-  // Always show the main landing page - users can navigate to dashboard via navbar
+  // Show dashboard if authenticated, otherwise show landing page
+  if (user) {
+    return <Dashboard />;
+  }
+
+  // Show the main landing page for non-authenticated users
   return (
     <div className="min-h-screen bg-[#2C2F33]">
       <Navbar />
