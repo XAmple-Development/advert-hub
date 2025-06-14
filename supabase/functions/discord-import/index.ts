@@ -225,8 +225,10 @@ serve(async (req: Request) => {
 
         console.log('[discord-import] Manageable servers:', manageableServers.length);
 
-        // Try to fetch applications (bots) - this might fail for users without the right scope
+        // Fetch applications (bots) - with better error handling
         let applications = [];
+        console.log('[discord-import] Attempting to fetch Discord applications...');
+        
         try {
           const appsResponse = await fetch('https://discord.com/api/v10/applications', {
             headers: {
@@ -235,14 +237,33 @@ serve(async (req: Request) => {
             }
           });
 
+          console.log('[discord-import] Applications API response status:', appsResponse.status);
+
           if (appsResponse.ok) {
             applications = await appsResponse.json();
-            console.log('[discord-import] Fetched applications:', applications.length);
+            console.log('[discord-import] Successfully fetched applications:', applications.length);
+            console.log('[discord-import] Application names:', applications.map((app: any) => app.name));
           } else {
-            console.log('[discord-import] Could not fetch applications (this is normal for most users)');
+            const errorText = await appsResponse.text();
+            console.error('[discord-import] Applications fetch failed with status:', appsResponse.status);
+            console.error('[discord-import] Applications error response:', errorText);
+            
+            // Try to parse error details
+            try {
+              const errorJson = JSON.parse(errorText);
+              console.error('[discord-import] Parsed error:', errorJson);
+            } catch (e) {
+              console.error('[discord-import] Could not parse error response as JSON');
+            }
+            
+            if (appsResponse.status === 403) {
+              console.log('[discord-import] Applications access forbidden - missing applications.builds.read scope');
+            } else if (appsResponse.status === 401) {
+              console.log('[discord-import] Applications access unauthorized - token may not have required permissions');
+            }
           }
         } catch (error) {
-          console.log('[discord-import] Applications fetch failed (this is normal):', error);
+          console.error('[discord-import] Applications fetch threw error:', error);
         }
 
         // Format response data
@@ -264,6 +285,9 @@ serve(async (req: Request) => {
         }));
 
         console.log('[discord-import] Returning data:', { servers: servers.length, bots: bots.length });
+        if (bots.length > 0) {
+          console.log('[discord-import] Bot details:', bots.map(bot => ({ name: bot.name, id: bot.id })));
+        }
 
         return new Response(JSON.stringify({
           servers: servers,
