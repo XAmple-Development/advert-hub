@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -31,7 +30,9 @@ serve(async (req) => {
   }
 
   try {
-    console.log('=== Discord Import Function Called ===')
+    console.log('=== Discord Import Function Started ===')
+    console.log('Request method:', req.method)
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()))
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -45,66 +46,101 @@ serve(async (req) => {
 
     // Get the user's session
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
-    if (userError || !user) {
-      console.error('Auth error:', userError)
-      throw new Error('User not authenticated')
+    if (userError) {
+      console.error('User authentication error:', userError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Authentication failed',
+          details: userError.message,
+          code: 'AUTH_ERROR'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+    
+    if (!user) {
+      console.error('No user found in session')
+      return new Response(
+        JSON.stringify({ 
+          error: 'User not authenticated',
+          details: 'No user session found',
+          code: 'NO_USER'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
     }
 
     console.log('User authenticated:', user.id)
-    console.log('User metadata:', JSON.stringify(user.user_metadata, null, 2))
-    console.log('App metadata:', JSON.stringify(user.app_metadata, null, 2))
+    console.log('User provider:', user.app_metadata?.provider)
+    console.log('User metadata keys:', Object.keys(user.user_metadata || {}))
+    console.log('App metadata keys:', Object.keys(user.app_metadata || {}))
 
-    // Enhanced token detection - try multiple approaches
+    // Enhanced token detection
     let discordToken = null;
     
-    // Method 1: Check user metadata
-    discordToken = user.user_metadata?.provider_token || 
-                  user.user_metadata?.access_token ||
-                  user.app_metadata?.provider_token ||
-                  user.app_metadata?.provider_access_token;
+    // Check all possible token locations
+    const tokenSources = [
+      { name: 'user_metadata.provider_token', value: user.user_metadata?.provider_token },
+      { name: 'user_metadata.access_token', value: user.user_metadata?.access_token },
+      { name: 'app_metadata.provider_token', value: user.app_metadata?.provider_token },
+      { name: 'app_metadata.provider_access_token', value: user.app_metadata?.provider_access_token },
+    ];
 
-    console.log('Token from metadata:', !!discordToken)
-
-    // Method 2: Get fresh session
-    if (!discordToken) {
-      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
-      console.log('Session error:', sessionError)
-      console.log('Session data:', session ? 'exists' : 'null')
-      
-      if (session) {
-        discordToken = session.provider_token || 
-                      session.access_token ||
-                      (session as any).provider_access_token;
-        console.log('Token from session:', !!discordToken)
+    for (const source of tokenSources) {
+      if (source.value) {
+        console.log(`Found token in ${source.name}:`, source.value.substring(0, 10) + '...')
+        discordToken = source.value;
+        break;
       }
     }
 
-    // Method 3: Try to refresh the session to get fresh tokens
+    // Try to get fresh session
     if (!discordToken) {
-      console.log('Attempting to refresh session...')
-      const { data: refreshData, error: refreshError } = await supabaseClient.auth.refreshSession()
-      console.log('Refresh error:', refreshError)
+      console.log('No token in user metadata, checking session...')
+      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
       
-      if (refreshData?.session) {
-        discordToken = refreshData.session.provider_token ||
-                      refreshData.session.access_token ||
-                      (refreshData.session as any).provider_access_token;
-        console.log('Token from refresh:', !!discordToken)
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+      }
+      
+      if (session) {
+        console.log('Session provider:', session.provider_token ? 'has provider_token' : 'no provider_token')
+        discordToken = session.provider_token || 
+                      session.access_token ||
+                      (session as any).provider_access_token;
       }
     }
 
     if (!discordToken) {
       console.error('No Discord token found after all attempts')
-      throw new Error('Discord access token not found. Please sign out and sign back in with Discord to refresh your authentication. Make sure you\'re using Discord OAuth login.')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Discord access token not found',
+          details: 'Please sign out and sign back in with Discord to refresh your authentication. Make sure you\'re using Discord OAuth login.',
+          code: 'NO_DISCORD_TOKEN',
+          tokenSources: tokenSources.map(s => ({ name: s.name, found: !!s.value }))
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
     }
 
-    const { action } = await req.json()
+    const requestBody = await req.json()
+    const { action } = requestBody
     console.log('Action requested:', action)
 
     if (action === 'fetch') {
-      console.log('Fetching Discord guilds with token length:', discordToken.length)
+      console.log('Fetching Discord data with token length:', discordToken.length)
       
-      // Test the token first with a simple user info call
+      // Test the token first
       try {
         const userResponse = await fetch('https://discord.com/api/v10/users/@me', {
           headers: {
@@ -118,94 +154,137 @@ serve(async (req) => {
         if (!userResponse.ok) {
           const errorText = await userResponse.text()
           console.error('Discord user API error:', errorText)
-          throw new Error(`Discord token is invalid. Status: ${userResponse.status}. Please sign out and sign back in with Discord.`)
+          return new Response(
+            JSON.stringify({ 
+              error: 'Discord token is invalid',
+              details: `Discord API returned status ${userResponse.status}. Please sign out and sign back in with Discord.`,
+              code: 'INVALID_DISCORD_TOKEN',
+              status: userResponse.status
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
         }
         
         const userData = await userResponse.json()
         console.log('Discord user verified:', userData.username)
       } catch (error) {
         console.error('Discord user verification failed:', error)
-        throw new Error('Failed to verify Discord authentication. Please sign out and sign back in with Discord.')
+        return new Response(
+          JSON.stringify({ 
+            error: 'Failed to verify Discord authentication',
+            details: error.message,
+            code: 'DISCORD_VERIFICATION_FAILED'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          }
+        )
       }
       
       // Fetch user's Discord guilds
-      const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
-        headers: {
-          'Authorization': `Bearer ${discordToken}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      console.log('Discord guilds response status:', guildsResponse.status)
-
-      if (!guildsResponse.ok) {
-        const errorText = await guildsResponse.text()
-        console.error('Discord guilds API error:', errorText)
-        
-        if (guildsResponse.status === 401) {
-          throw new Error('Discord authentication expired. Please sign out and sign back in with Discord.')
-        }
-        
-        throw new Error(`Failed to fetch Discord servers: ${guildsResponse.status} ${errorText}`)
-      }
-
-      const guilds: DiscordGuild[] = await guildsResponse.json()
-      console.log('Found guilds:', guilds.length)
-
-      // Filter guilds where user has manage permissions
-      const manageableGuilds = guilds.filter(guild => {
-        const permissions = BigInt(guild.permissions)
-        const manageGuild = 0x20n // MANAGE_GUILD permission
-        const administrator = 0x8n // ADMINISTRATOR permission
-        return (permissions & (manageGuild | administrator)) !== 0n || guild.owner
-      })
-
-      console.log('Manageable guilds:', manageableGuilds.length)
-
-      // Try to fetch applications (this often fails for regular users)
-      let applications: DiscordApplication[] = []
-      
       try {
-        const appsResponse = await fetch('https://discord.com/api/v10/applications', {
+        const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
           headers: {
             'Authorization': `Bearer ${discordToken}`,
             'Content-Type': 'application/json',
           },
         })
 
-        if (appsResponse.ok) {
-          applications = await appsResponse.json()
-          console.log('Found applications:', applications.length)
-        } else {
-          console.log('Could not fetch applications (this is normal for most users):', appsResponse.status)
-        }
-      } catch (error) {
-        console.log('Error fetching applications (non-critical):', error)
-      }
+        console.log('Discord guilds response status:', guildsResponse.status)
 
-      return new Response(
-        JSON.stringify({
-          servers: manageableGuilds.map(guild => ({
-            id: guild.id,
-            name: guild.name,
-            icon: guild.icon,
-            permissions: guild.permissions,
-            member_count: guild.approximate_member_count,
-            owner: guild.owner
-          })),
-          bots: applications.map(app => ({
-            id: app.id,
-            name: app.name,
-            icon: app.icon,
-            description: app.description,
-            public: app.bot_public
-          }))
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
+        if (!guildsResponse.ok) {
+          const errorText = await guildsResponse.text()
+          console.error('Discord guilds API error:', errorText)
+          
+          return new Response(
+            JSON.stringify({ 
+              error: 'Failed to fetch Discord servers',
+              details: `Discord API returned status ${guildsResponse.status}: ${errorText}`,
+              code: 'DISCORD_GUILDS_FAILED',
+              status: guildsResponse.status
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
         }
-      )
+
+        const guilds: DiscordGuild[] = await guildsResponse.json()
+        console.log('Found guilds:', guilds.length)
+
+        // Filter guilds where user has manage permissions
+        const manageableGuilds = guilds.filter(guild => {
+          const permissions = BigInt(guild.permissions)
+          const manageGuild = 0x20n // MANAGE_GUILD permission
+          const administrator = 0x8n // ADMINISTRATOR permission
+          return (permissions & (manageGuild | administrator)) !== 0n || guild.owner
+        })
+
+        console.log('Manageable guilds:', manageableGuilds.length)
+
+        // Try to fetch applications (often fails for regular users)
+        let applications: DiscordApplication[] = []
+        
+        try {
+          const appsResponse = await fetch('https://discord.com/api/v10/applications', {
+            headers: {
+              'Authorization': `Bearer ${discordToken}`,
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (appsResponse.ok) {
+            applications = await appsResponse.json()
+            console.log('Found applications:', applications.length)
+          } else {
+            console.log('Could not fetch applications (normal for most users):', appsResponse.status)
+          }
+        } catch (error) {
+          console.log('Error fetching applications (non-critical):', error)
+        }
+
+        return new Response(
+          JSON.stringify({
+            servers: manageableGuilds.map(guild => ({
+              id: guild.id,
+              name: guild.name,
+              icon: guild.icon,
+              permissions: guild.permissions,
+              member_count: guild.approximate_member_count,
+              owner: guild.owner
+            })),
+            bots: applications.map(app => ({
+              id: app.id,
+              name: app.name,
+              icon: app.icon,
+              description: app.description,
+              public: app.bot_public
+            }))
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+      } catch (error) {
+        console.error('Unexpected error fetching guilds:', error)
+        return new Response(
+          JSON.stringify({ 
+            error: 'Unexpected error occurred',
+            details: error.message,
+            code: 'UNEXPECTED_ERROR'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          }
+        )
+      }
     }
 
     if (action === 'import') {
@@ -327,15 +406,29 @@ serve(async (req) => {
       )
     }
 
-    throw new Error('Invalid action')
+    return new Response(
+      JSON.stringify({ 
+        error: 'Invalid action',
+        details: `Action '${action}' is not supported`,
+        code: 'INVALID_ACTION'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    )
 
   } catch (error) {
-    console.error('Discord import error:', error)
+    console.error('Discord import function error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message,
+        code: 'INTERNAL_ERROR'
+      }),
       {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
       }
     )
   }

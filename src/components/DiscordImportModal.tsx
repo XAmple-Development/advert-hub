@@ -19,7 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Bot, Server } from 'lucide-react';
+import { Loader2, Users, Bot, Server, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface DiscordServer {
   id: string;
@@ -55,20 +55,34 @@ const DiscordImportModal = ({
   const [selectedServers, setSelectedServers] = useState<string[]>([]);
   const [selectedBots, setSelectedBots] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [detailedError, setDetailedError] = useState<any>(null);
   const { toast } = useToast();
 
   const fetchDiscordData = async () => {
     setLoading(true);
+    setError(null);
+    setDetailedError(null);
+    
     try {
+      console.log('Fetching Discord data...');
+      
       const {
         data: { session },
         error: sessionError,
       } = await supabase.auth.getSession();
 
-      if (sessionError || !session?.access_token) {
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+
+      if (!session?.access_token) {
         throw new Error('No active session found. Please log in.');
       }
 
+      console.log('Making request to discord-import function...');
+      
       const { data, error } = await supabase.functions.invoke('discord-import', {
         body: { action: 'fetch' },
         headers: {
@@ -76,22 +90,36 @@ const DiscordImportModal = ({
         },
       });
 
+      console.log('Function response:', { data, error });
+
       if (error) {
+        console.error('Supabase function error:', error);
+        setDetailedError(error);
         throw new Error(error.message || 'Supabase function error');
       }
 
-      if (
-        !data ||
-        !Array.isArray(data.servers) ||
-        !Array.isArray(data.bots)
-      ) {
-        throw new Error('Malformed data received from Edge Function');
+      // Check if the response contains an error from the function
+      if (data && data.error) {
+        console.error('Function returned error:', data);
+        setDetailedError(data);
+        throw new Error(data.details || data.error);
       }
+
+      if (!data || !Array.isArray(data.servers) || !Array.isArray(data.bots)) {
+        console.error('Malformed response:', data);
+        throw new Error('Malformed data received from Discord API');
+      }
+
+      console.log('Successfully fetched Discord data:', {
+        servers: data.servers.length,
+        bots: data.bots.length
+      });
 
       setServers(data.servers);
       setBots(data.bots);
     } catch (error: any) {
       console.error('[DiscordImportModal] Error fetching Discord data:', error);
+      setError(error.message);
       toast({
         variant: 'destructive',
         title: 'Error fetching Discord data',
@@ -168,6 +196,10 @@ const DiscordImportModal = ({
     );
   };
 
+  const handleRetry = () => {
+    fetchDiscordData();
+  };
+
   return (
     <Dialog open={open} onOpenChange={(next) => !importing && onOpenChange(next)}>
       <DialogContent className="max-w-4xl max-h-[80vh] bg-[#36393F] border-[#40444B]">
@@ -178,170 +210,206 @@ const DiscordImportModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        {loading ? (
+        {error ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <AlertCircle className="h-12 w-12 text-red-500" />
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-white">Failed to fetch Discord data</h3>
+              <p className="text-gray-400 max-w-md">{error}</p>
+              {detailedError && (
+                <details className="mt-4 text-left">
+                  <summary className="cursor-pointer text-gray-300 hover:text-white">
+                    Show technical details
+                  </summary>
+                  <pre className="mt-2 p-3 bg-[#2C2F33] rounded text-xs text-gray-300 overflow-auto">
+                    {JSON.stringify(detailedError, null, 2)}
+                  </pre>
+                </details>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleRetry}
+                className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-[#5865F2]" />
             <span className="ml-2 text-white">Fetching your Discord data...</span>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Servers */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Server className="h-5 w-5" />
-                Your Servers ({servers.length})
-              </h3>
-              <ScrollArea className="h-[400px]">
-                <div className="space-y-3">
-                  {servers.map((server) => (
-                    <Card key={server.id} className="bg-[#2C2F33] border-[#40444B]">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center space-x-3">
-                          <Checkbox
-                            checked={selectedServers.includes(server.id)}
-                            onCheckedChange={() => toggleServer(server.id)}
-                          />
-                          {server.icon ? (
-                            <img
-                              src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}
-                              alt={server.name}
-                              className="w-10 h-10 rounded-full"
-                              onError={(e) =>
-                                (e.currentTarget.src = '/fallback-icon.png')
-                              }
+          <>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Servers */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Server className="h-5 w-5" />
+                  Your Servers ({servers.length})
+                </h3>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-3">
+                    {servers.map((server) => (
+                      <Card key={server.id} className="bg-[#2C2F33] border-[#40444B]">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              checked={selectedServers.includes(server.id)}
+                              onCheckedChange={() => toggleServer(server.id)}
                             />
-                          ) : (
-                            <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
-                              <Server className="h-5 w-5 text-white" />
+                            {server.icon ? (
+                              <img
+                                src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}
+                                alt={server.name}
+                                className="w-10 h-10 rounded-full"
+                                onError={(e) =>
+                                  (e.currentTarget.src = '/fallback-icon.png')
+                                }
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
+                                <Server className="h-5 w-5 text-white" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <CardTitle className="text-sm text-white">
+                                {server.name}
+                              </CardTitle>
+                              <div className="flex items-center gap-2 mt-1">
+                                {server.owner && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    Owner
+                                  </Badge>
+                                )}
+                                {server.member_count && (
+                                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                                    <Users className="h-3 w-3" />
+                                    {server.member_count.toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          )}
-                          <div className="flex-1">
-                            <CardTitle className="text-sm text-white">
-                              {server.name}
-                            </CardTitle>
-                            <div className="flex items-center gap-2 mt-1">
-                              {server.owner && (
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                    {servers.length === 0 && (
+                      <p className="text-gray-400 text-center py-4">
+                        No servers found where you have manage permissions
+                      </p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Bots */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Bot className="h-5 w-5" />
+                  Your Bots ({bots.length})
+                </h3>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-3">
+                    {bots.map((bot) => (
+                      <Card key={bot.id} className="bg-[#2C2F33] border-[#40444B]">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox
+                              checked={selectedBots.includes(bot.id)}
+                              onCheckedChange={() => toggleBot(bot.id)}
+                            />
+                            {bot.icon ? (
+                              <img
+                                src={`https://cdn.discordapp.com/app-icons/${bot.id}/${bot.icon}.png`}
+                                alt={bot.name}
+                                className="w-10 h-10 rounded-full"
+                                onError={(e) =>
+                                  (e.currentTarget.src = '/fallback-icon.png')
+                                }
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
+                                <Bot className="h-5 w-5 text-white" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <CardTitle className="text-sm text-white">
+                                {bot.name}
+                              </CardTitle>
+                              <CardDescription className="text-xs text-gray-400">
+                                {bot.description || 'No description'}
+                              </CardDescription>
+                              <div className="flex items-center gap-2 mt-1">
                                 <Badge
-                                  variant="secondary"
+                                  variant={bot.public ? 'default' : 'secondary'}
                                   className="text-xs"
                                 >
-                                  Owner
+                                  {bot.public ? 'Public' : 'Private'}
                                 </Badge>
-                              )}
-                              {server.member_count && (
-                                <div className="flex items-center gap-1 text-xs text-gray-400">
-                                  <Users className="h-3 w-3" />
-                                  {server.member_count.toLocaleString()}
-                                </div>
-                              )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                  {servers.length === 0 && (
-                    <p className="text-gray-400 text-center py-4">
-                      No servers found where you have manage permissions
-                    </p>
-                  )}
-                </div>
-              </ScrollArea>
+                        </CardHeader>
+                      </Card>
+                    ))}
+                    {bots.length === 0 && (
+                      <p className="text-gray-400 text-center py-4">
+                        No bots found in your Discord applications
+                      </p>
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
             </div>
 
-            {/* Bots */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Bot className="h-5 w-5" />
-                Your Bots ({bots.length})
-              </h3>
-              <ScrollArea className="h-[400px]">
-                <div className="space-y-3">
-                  {bots.map((bot) => (
-                    <Card key={bot.id} className="bg-[#2C2F33] border-[#40444B]">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center space-x-3">
-                          <Checkbox
-                            checked={selectedBots.includes(bot.id)}
-                            onCheckedChange={() => toggleBot(bot.id)}
-                          />
-                          {bot.icon ? (
-                            <img
-                              src={`https://cdn.discordapp.com/app-icons/${bot.id}/${bot.icon}.png`}
-                              alt={bot.name}
-                              className="w-10 h-10 rounded-full"
-                              onError={(e) =>
-                                (e.currentTarget.src = '/fallback-icon.png')
-                              }
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
-                              <Bot className="h-5 w-5 text-white" />
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <CardTitle className="text-sm text-white">
-                              {bot.name}
-                            </CardTitle>
-                            <CardDescription className="text-xs text-gray-400">
-                              {bot.description || 'No description'}
-                            </CardDescription>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge
-                                variant={bot.public ? 'default' : 'secondary'}
-                                className="text-xs"
-                              >
-                                {bot.public ? 'Public' : 'Private'}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                  {bots.length === 0 && (
-                    <p className="text-gray-400 text-center py-4">
-                      No bots found in your Discord applications
-                    </p>
+            <div className="flex justify-between items-center pt-4 border-t border-[#40444B]">
+              <div className="text-sm text-gray-400">
+                Selected: {selectedServers.length} servers, {selectedBots.length} bots
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={importing}
+                  className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleImport}
+                  disabled={
+                    importing ||
+                    (selectedServers.length === 0 && selectedBots.length === 0)
+                  }
+                  className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                >
+                  {importing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Importing...
+                    </>
+                  ) : (
+                    'Import Selected'
                   )}
-                </div>
-              </ScrollArea>
+                </Button>
+              </div>
             </div>
-          </div>
+          </>
         )}
-
-        <div className="flex justify-between items-center pt-4 border-t border-[#40444B]">
-          <div className="text-sm text-gray-400">
-            Selected: {selectedServers.length} servers, {selectedBots.length} bots
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={importing}
-              className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleImport}
-              disabled={
-                importing ||
-                (selectedServers.length === 0 && selectedBots.length === 0)
-              }
-              className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-            >
-              {importing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Importing...
-                </>
-              ) : (
-                'Import Selected'
-              )}
-            </Button>
-          </div>
-        </div>
       </DialogContent>
     </Dialog>
   );
