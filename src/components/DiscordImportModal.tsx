@@ -226,7 +226,7 @@ const DiscordImportModal = ({
         provider: 'discord',
         options: {
           redirectTo: window.location.origin,
-          scopes: 'identify email guilds applications.commands',
+          scopes: 'identify email guilds applications.commands applications.builds.read'
         },
       });
 
