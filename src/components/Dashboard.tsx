@@ -10,29 +10,44 @@ import CreateListingModal from './CreateListingModal';
 import DiscordImportModal from './DiscordImportModal';
 import { Plus, Import, ExternalLink, Users, Calendar, BarChart3 } from 'lucide-react';
 
-interface Server {
+interface Listing {
   id: string;
   discord_id: string;
   name: string;
   description: string | null;
   invite_url: string | null;
   member_count: number | null;
-  category: string | null;
-  tags: string[] | null;
   status: string;
   created_at: string;
   updated_at: string;
+  tags: string[] | null;
+  long_description: string | null;
+  type: string;
+  user_id: string;
+  avatar_url: string | null;
+  banner_url: string | null;
+  website_url: string | null;
+  support_server_url: string | null;
+  boost_level: number | null;
+  bump_count: number | null;
+  view_count: number | null;
+  join_count: number | null;
+  online_count: number | null;
+  verification_level: string | null;
+  nsfw: boolean | null;
+  featured: boolean | null;
+  last_bumped_at: string | null;
 }
 
 const Dashboard = () => {
-  const [servers, setServers] = useState<Server[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const { toast } = useToast();
   const { session } = useAuth();
 
-  const fetchServers = async () => {
+  const fetchListings = async () => {
     if (!session?.user?.id) return;
 
     try {
@@ -43,12 +58,12 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setServers(data || []);
+      setListings(data || []);
     } catch (error: any) {
-      console.error('Error fetching servers:', error);
+      console.error('Error fetching listings:', error);
       toast({
-        title: "Error Loading Servers",
-        description: "Failed to load your servers. Please try again.",
+        title: "Error Loading Listings",
+        description: "Failed to load your listings. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -57,11 +72,11 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchServers();
+    fetchListings();
   }, [session?.user?.id]);
 
-  const handleServerUpdate = () => {
-    fetchServers();
+  const handleListingUpdate = () => {
+    fetchListings();
   };
 
   const getStatusColor = (status: string) => {
@@ -98,7 +113,7 @@ const Dashboard = () => {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -119,12 +134,12 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {servers.length === 0 ? (
+      {listings.length === 0 ? (
         <div className="text-center py-12">
           <div className="mx-auto w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
             <Users className="w-16 h-16 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">No servers yet</h3>
+          <h3 className="text-xl font-semibold mb-2">No listings yet</h3>
           <p className="text-muted-foreground mb-4">
             Get started by creating your first server listing or importing from Discord.
           </p>
@@ -141,62 +156,60 @@ const Dashboard = () => {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {servers.map((server) => (
-            <Card key={server.id} className="hover:shadow-lg transition-shadow">
+          {listings.map((listing) => (
+            <Card key={listing.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{server.name}</CardTitle>
+                    <CardTitle className="text-lg">{listing.name}</CardTitle>
                     <CardDescription className="mt-1">
-                      {server.description || 'No description provided'}
+                      {listing.description || 'No description provided'}
                     </CardDescription>
                   </div>
-                  <Badge className={getStatusColor(server.status)}>
-                    {server.status}
+                  <Badge className={getStatusColor(listing.status)}>
+                    {listing.status}
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {server.category && (
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      {server.category}
-                    </div>
-                  )}
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    {listing.type}
+                  </div>
                   
-                  {server.member_count && (
+                  {listing.member_count && (
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Users className="w-4 h-4 mr-2" />
-                      {server.member_count.toLocaleString()} members
+                      {listing.member_count.toLocaleString()} members
                     </div>
                   )}
                   
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Created {formatDate(server.created_at)}
+                    Created {formatDate(listing.created_at)}
                   </div>
 
-                  {server.tags && server.tags.length > 0 && (
+                  {listing.tags && listing.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {server.tags.slice(0, 3).map((tag, index) => (
+                      {listing.tags.slice(0, 3).map((tag, index) => (
                         <Badge key={index} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>
                       ))}
-                      {server.tags.length > 3 && (
+                      {listing.tags.length > 3 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{server.tags.length - 3} more
+                          +{listing.tags.length - 3} more
                         </Badge>
                       )}
                     </div>
                   )}
 
-                  {server.invite_url && (
+                  {listing.invite_url && (
                     <div className="pt-2">
                       <Button variant="outline" size="sm" className="w-full" asChild>
                         <a 
-                          href={server.invite_url} 
+                          href={listing.invite_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
                         >
@@ -215,14 +228,14 @@ const Dashboard = () => {
 
       <CreateListingModal
         open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onServerCreated={handleServerUpdate}
+        onOpenChange={setShowCreateModal}
+        onSuccess={handleListingUpdate}
       />
 
       <DiscordImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
-        onImportComplete={handleServerUpdate}
+        onImportComplete={handleListingUpdate}
       />
     </div>
   );
