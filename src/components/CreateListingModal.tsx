@@ -32,7 +32,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
     invite_url: '',
     website_url: '',
     support_server_url: '',
-    member_count: '',
     category_id: ''
   });
   const { toast } = useToast();
@@ -82,7 +81,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
           invite_url: formData.invite_url || null,
           website_url: formData.website_url || null,
           support_server_url: formData.support_server_url || null,
-          member_count: parseInt(formData.member_count) || 0,
           status: 'pending'
         })
         .select()
@@ -117,7 +115,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         invite_url: '',
         website_url: '',
         support_server_url: '',
-        member_count: '',
         category_id: ''
       });
 
@@ -236,20 +233,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
                 placeholder="https://discord.gg/..."
               />
             </div>
-
-            <div>
-              <Label htmlFor="member_count">Member Count</Label>
-              <Input
-                id="member_count"
-                type="number"
-                value={formData.member_count}
-                onChange={(e) => setFormData({ ...formData, member_count: e.target.value })}
-                className="bg-[#2C2F33] border-[#40444B]"
-                placeholder="0"
-                min="0"
-              />
-            </div>
-          </div>
 
           <div>
             <Label htmlFor="website_url">Website URL</Label>
