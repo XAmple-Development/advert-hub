@@ -124,7 +124,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold text-white">Discord Boost Dashboard</h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-300">Welcome, {user?.displayname}</span>
+            <span className="text-gray-300">Welcome, {user?.email}</span>
             <Button
               onClick={handleSignOut}
               variant="outline"
@@ -133,15 +133,6 @@ const Dashboard = () => {
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
-            </Button>
-            <Button
-              onClick= "/"
-              variant="outline"
-              size="sm"
-              className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Home
             </Button>
           </div>
         </div>
