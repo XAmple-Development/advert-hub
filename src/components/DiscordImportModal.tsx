@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -59,6 +58,7 @@ const DiscordImportModal = ({
   const [selectedBots, setSelectedBots] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -68,6 +68,7 @@ const DiscordImportModal = ({
   const fetchDiscordData = async () => {
     setLoading(true);
     setError(null);
+    setErrorCode(null);
     
     try {
       console.log('Fetching Discord data...');
@@ -99,7 +100,24 @@ const DiscordImportModal = ({
 
       if (error) {
         console.error('Supabase function error:', error);
-        throw new Error(error.message || 'Failed to fetch Discord data');
+        
+        // Parse error details if available
+        let errorMessage = error.message || 'Failed to fetch Discord data';
+        let errorCodeValue = 'UNKNOWN_ERROR';
+        
+        try {
+          if (typeof error.message === 'string') {
+            const parsedError = JSON.parse(error.message);
+            errorMessage = parsedError.details || parsedError.error || errorMessage;
+            errorCodeValue = parsedError.code || errorCodeValue;
+          }
+        } catch (parseError) {
+          // If parsing fails, use the original error message
+        }
+        
+        setError(errorMessage);
+        setErrorCode(errorCodeValue);
+        throw new Error(errorMessage);
       }
 
       if (!data) {
@@ -117,7 +135,11 @@ const DiscordImportModal = ({
 
     } catch (error: any) {
       console.error('[DiscordImportModal] Error fetching Discord data:', error);
-      setError(error.message);
+      
+      if (!error.message.includes('details') && !error.message.includes('code')) {
+        setError(error.message);
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Error fetching Discord data',
@@ -240,6 +262,41 @@ const DiscordImportModal = ({
     }
   };
 
+  const getErrorHelp = () => {
+    switch (errorCode) {
+      case 'DISCORD_TOKEN_EXPIRED':
+      case 'NO_DISCORD_TOKEN':
+        return (
+          <Alert className="bg-yellow-900/20 border-yellow-500 mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-yellow-200">
+              Your Discord session has expired. Please sign out and sign back in with Discord to refresh your authentication.
+            </AlertDescription>
+          </Alert>
+        );
+      case 'DISCORD_PERMISSIONS_ERROR':
+        return (
+          <Alert className="bg-blue-900/20 border-blue-500 mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-blue-200">
+              Missing Discord permissions. Please re-authenticate with Discord to grant the necessary permissions.
+            </AlertDescription>
+          </Alert>
+        );
+      case 'NOT_DISCORD_USER':
+        return (
+          <Alert className="bg-red-900/20 border-red-500 mt-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-red-200">
+              You need to sign in with Discord to use this feature.
+            </AlertDescription>
+          </Alert>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(next) => !importing && onOpenChange(next)}>
       <DialogContent className="max-w-4xl max-h-[80vh] bg-[#36393F] border-[#40444B]">
@@ -284,32 +341,45 @@ const DiscordImportModal = ({
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-white">Failed to fetch Discord data</h3>
               <p className="text-gray-400 max-w-md">{error}</p>
-              {error.includes('Discord access token not found') && (
-                <div className="mt-4">
-                  <Alert className="bg-yellow-900/20 border-yellow-500">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className="text-yellow-200">
-                      Your Discord session may have expired. Try signing out and signing back in with Discord to refresh your token.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              )}
+              {getErrorHelp()}
             </div>
             <div className="flex gap-2">
-              <Button
-                onClick={handleRetry}
-                className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
-              >
-                Close
-              </Button>
+              {(errorCode === 'DISCORD_TOKEN_EXPIRED' || errorCode === 'NO_DISCORD_TOKEN') ? (
+                <>
+                  <Button
+                    onClick={handleSignOut}
+                    variant="outline"
+                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                  <Button
+                    onClick={handleSignInWithDiscord}
+                    className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Re-authenticate with Discord
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleRetry}
+                    className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                  >
+                    Close
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         ) : loading ? (
