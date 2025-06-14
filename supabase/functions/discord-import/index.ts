@@ -228,7 +228,7 @@ serve(async (req: Request) => {
         // Try to fetch applications (bots) - this might fail for users without the right scope
         let applications = [];
         try {
-          const appsResponse = await fetch('https://discord.com/api/v10/applications', {
+          const appsResponse = await fetch('https://discord.com/api/v10/applications.commands', {
             headers: {
               'Authorization': `Bearer ${discordAccessToken}`,
               'Content-Type': 'application/json'
