@@ -29,24 +29,23 @@ export const useAuth = () => {
         
         if (session.user.app_metadata?.provider === 'discord') {
           console.log('Discord user detected, attempting to store token...');
+          console.log('Session data:', {
+            provider_token: !!session.provider_token,
+            provider_refresh_token: !!session.provider_refresh_token,
+            user_metadata: session.user.user_metadata,
+            identities_count: session.user.identities?.length || 0
+          });
           
-          // Try to get provider token from user metadata
+          // Try to get provider token from session
           let providerToken = session.provider_token;
           
-          // Fallback to other possible locations
+          // Fallback to user metadata
           if (!providerToken) {
             providerToken = session.user.user_metadata?.provider_token;
+            console.log('Fallback to user metadata token:', !!providerToken);
           }
           
-          // Another fallback - check identities
-          if (!providerToken && session.user.identities && session.user.identities.length > 0) {
-            const discordIdentity = session.user.identities.find(identity => identity.provider === 'discord');
-            if (discordIdentity) {
-              providerToken = discordIdentity.access_token;
-            }
-          }
-          
-          console.log('Provider token found:', !!providerToken);
+          console.log('Final provider token found:', !!providerToken);
           
           if (providerToken) {
             try {
@@ -68,7 +67,9 @@ export const useAuth = () => {
               console.error('Error storing Discord token:', error);
             }
           } else {
-            console.warn('No Discord provider token found in session');
+            console.warn('No Discord provider token found in session or user metadata');
+            console.log('Available session keys:', Object.keys(session || {}));
+            console.log('Available user metadata keys:', Object.keys(session.user.user_metadata || {}));
           }
         }
       }
