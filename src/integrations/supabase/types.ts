@@ -218,8 +218,10 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          discord_access_token: string | null
           discord_avatar: string | null
           discord_id: string | null
+          discord_token_updated_at: string | null
           discord_username: string | null
           id: string
           subscription_expires_at: string | null
@@ -229,8 +231,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discord_access_token?: string | null
           discord_avatar?: string | null
           discord_id?: string | null
+          discord_token_updated_at?: string | null
           discord_username?: string | null
           id: string
           subscription_expires_at?: string | null
@@ -240,8 +244,10 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discord_access_token?: string | null
           discord_avatar?: string | null
           discord_id?: string | null
+          discord_token_updated_at?: string | null
           discord_username?: string | null
           id?: string
           subscription_expires_at?: string | null
