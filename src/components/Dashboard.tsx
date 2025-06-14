@@ -24,14 +24,41 @@ interface Listing {
   avatar_url?: string;
 }
 
+interface Profile {
+  username?: string;
+  discord_username?: string;
+}
+
 const Dashboard = () => {
   const [listings, setListings] = useState<Listing[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const fetchProfile = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, discord_username')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+      
+      setProfile(data);
+    } catch (error: any) {
+      console.error('fetchProfile error:', error);
+    }
+  };
 
   const fetchListings = async () => {
     console.log('Dashboard: fetchListings called for user:', user?.id);
@@ -65,7 +92,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('Dashboard: User found, fetching listings...');
+      console.log('Dashboard: User found, fetching data...');
+      fetchProfile();
       fetchListings();
     }
   }, [user]);
@@ -118,13 +146,15 @@ const Dashboard = () => {
 
   console.log('Dashboard: Rendering with listings:', listings);
 
+  const displayName = profile?.username || profile?.discord_username || user?.email || 'User';
+
   return (
     <div className="min-h-screen bg-[#2C2F33]">
       <nav className="bg-[#36393F] border-b border-[#40444B] px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold text-white">Discord Boost Dashboard</h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-300">Welcome, {user?.username}</span>
+            <span className="text-gray-300">Welcome, {displayName}</span>
             <Button
               onClick={handleSignOut}
               variant="outline"
