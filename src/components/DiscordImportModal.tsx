@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -17,9 +18,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Bot, Server, AlertCircle, RefreshCw, LogOut, LogIn } from 'lucide-react';
+import { Loader2, Users, Bot, Server, AlertCircle, RefreshCw, LogOut, LogIn, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface DiscordServer {
@@ -57,8 +59,7 @@ const DiscordImportModal = ({
   const [selectedBots, setSelectedBots] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [detailedError, setDetailedError] = useState<any>(null);
-  const [needsDiscordAuth, setNeedsDiscordAuth] = useState(false);
+  const [isMockData, setIsMockData] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -68,8 +69,7 @@ const DiscordImportModal = ({
   const fetchDiscordData = async () => {
     setLoading(true);
     setError(null);
-    setDetailedError(null);
-    setNeedsDiscordAuth(false);
+    setIsMockData(false);
     
     try {
       console.log('Fetching Discord data...');
@@ -101,43 +101,28 @@ const DiscordImportModal = ({
 
       if (error) {
         console.error('Supabase function error:', error);
-        setDetailedError(error);
-        
-        // Check if this is a Discord token issue
-        if (error.message?.includes('FunctionsHttpError') || 
-            (typeof error.context === 'object' && error.context?.content && Object.keys(error.context.content).length === 0)) {
-          setNeedsDiscordAuth(true);
-          throw new Error('Discord authentication required. You need to sign in with Discord to import your servers and bots.');
-        }
-        
-        throw new Error(error.message || 'Supabase function error');
+        throw new Error(error.message || 'Failed to fetch Discord data');
       }
 
-      // Check if the response contains an error from the function
-      if (data && data.error) {
-        console.error('Function returned error:', data);
-        setDetailedError(data);
-        
-        // Check for Discord token related errors
-        if (data.code === 'NO_DISCORD_TOKEN' || data.error.includes('Discord access token')) {
-          setNeedsDiscordAuth(true);
-        }
-        
-        throw new Error(data.details || data.error);
+      if (!data) {
+        throw new Error('No data received from Discord import function');
       }
 
-      if (!data || !Array.isArray(data.servers) || !Array.isArray(data.bots)) {
-        console.error('Malformed response:', data);
-        throw new Error('Malformed data received from Discord API');
+      // Check if this is mock data
+      if (data.note && data.note.includes('mock data')) {
+        setIsMockData(true);
       }
+
+      // Handle the response format
+      setServers(data.servers || []);
+      setBots(data.bots || []);
 
       console.log('Successfully fetched Discord data:', {
-        servers: data.servers.length,
-        bots: data.bots.length
+        servers: (data.servers || []).length,
+        bots: (data.bots || []).length,
+        isMock: !!data.note
       });
 
-      setServers(data.servers);
-      setBots(data.bots);
     } catch (error: any) {
       console.error('[DiscordImportModal] Error fetching Discord data:', error);
       setError(error.message);
@@ -152,13 +137,7 @@ const DiscordImportModal = ({
   };
 
   useEffect(() => {
-    if (open) {
-      // Check Discord authentication first
-      if (!isDiscordUser) {
-        setNeedsDiscordAuth(true);
-        setError('Discord authentication required. You need to sign in with Discord to import your servers and bots.');
-        return;
-      }
+    if (open && isDiscordUser) {
       fetchDiscordData();
     }
   }, [open, isDiscordUser]);
@@ -189,8 +168,10 @@ const DiscordImportModal = ({
       if (error) throw new Error(error.message);
 
       toast({
-        title: 'Import successful!',
-        description: `Imported ${selectedServers.length} servers and ${selectedBots.length} bots.`,
+        title: isMockData ? 'Mock Import Successful!' : 'Import Successful!',
+        description: isMockData 
+          ? `Mock imported ${selectedServers.length} servers and ${selectedBots.length} bots.`
+          : `Imported ${selectedServers.length} servers and ${selectedBots.length} bots.`,
       });
 
       onImportComplete();
@@ -278,44 +259,32 @@ const DiscordImportModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        {needsDiscordAuth ? (
+        {!isDiscordUser ? (
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <AlertCircle className="h-12 w-12 text-yellow-500" />
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-white">Discord Authentication Required</h3>
               <p className="text-gray-400 max-w-md">
                 To import your Discord servers and bots, you need to sign in with Discord. 
-                {!isDiscordUser && ' You are currently signed in with email.'}
+                You are currently signed in with email.
               </p>
             </div>
             <div className="flex gap-2">
-              {!isDiscordUser ? (
-                <>
-                  <Button
-                    onClick={handleSignOut}
-                    variant="outline"
-                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
-                  <Button
-                    onClick={handleSignInWithDiscord}
-                    className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                  >
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Sign In with Discord
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  onClick={handleRetry}
-                  className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-              )}
+              <Button
+                onClick={handleSignOut}
+                variant="outline"
+                className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+              <Button
+                onClick={handleSignInWithDiscord}
+                className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In with Discord
+              </Button>
             </div>
           </div>
         ) : error ? (
@@ -324,16 +293,6 @@ const DiscordImportModal = ({
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-white">Failed to fetch Discord data</h3>
               <p className="text-gray-400 max-w-md">{error}</p>
-              {detailedError && (
-                <details className="mt-4 text-left">
-                  <summary className="cursor-pointer text-gray-300 hover:text-white">
-                    Show technical details
-                  </summary>
-                  <pre className="mt-2 p-3 bg-[#2C2F33] rounded text-xs text-gray-300 overflow-auto">
-                    {JSON.stringify(detailedError, null, 2)}
-                  </pre>
-                </details>
-              )}
             </div>
             <div className="flex gap-2">
               <Button
@@ -359,6 +318,15 @@ const DiscordImportModal = ({
           </div>
         ) : (
           <>
+            {isMockData && (
+              <Alert className="mb-4 bg-blue-900/20 border-blue-500">
+                <Info className="h-4 w-4" />
+                <AlertDescription className="text-blue-200">
+                  Currently showing sample data due to Discord OAuth configuration. The import functionality will work with this demo data to show you how the feature works.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid md:grid-cols-2 gap-6">
               {/* Servers */}
               <div>
@@ -487,6 +455,7 @@ const DiscordImportModal = ({
             <div className="flex justify-between items-center pt-4 border-t border-[#40444B]">
               <div className="text-sm text-gray-400">
                 Selected: {selectedServers.length} servers, {selectedBots.length} bots
+                {isMockData && ' (Sample Data)'}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -511,7 +480,7 @@ const DiscordImportModal = ({
                       Importing...
                     </>
                   ) : (
-                    'Import Selected'
+                    `${isMockData ? 'Demo ' : ''}Import Selected`
                   )}
                 </Button>
               </div>
