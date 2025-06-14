@@ -1,6 +1,6 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Zap, Users, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -15,9 +15,11 @@ const Hero = () => {
             Connect your Discord servers and bots to our advertising network. Get discovered by thousands of users and grow your community with our premium promotion system.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-4 text-lg">
-              Start Advertising <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <Link to="/auth">
+              <Button size="lg" className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-4 text-lg">
+                Start Advertising <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
             <Button size="lg" variant="outline" className="border-gray-400 text-gray-300 hover:bg-gray-800 px-8 py-4 text-lg">
               View Demo
             </Button>

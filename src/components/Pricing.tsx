@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Pricing = () => {
   const plans = [
@@ -89,16 +90,18 @@ const Pricing = () => {
                   ))}
                 </ul>
                 
-                <Button 
-                  className={`w-full py-3 text-lg ${
-                    plan.buttonVariant === 'default' 
-                      ? 'bg-[#5865F2] hover:bg-[#4752C4] text-white' 
-                      : 'border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white'
-                  }`}
-                  variant={plan.buttonVariant}
-                >
-                  {plan.buttonText}
-                </Button>
+                <Link to="/auth" className="block">
+                  <Button 
+                    className={`w-full py-3 text-lg ${
+                      plan.buttonVariant === 'default' 
+                        ? 'bg-[#5865F2] hover:bg-[#4752C4] text-white' 
+                        : 'border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white'
+                    }`}
+                    variant={plan.buttonVariant}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
