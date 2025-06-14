@@ -1,4 +1,3 @@
-
 // Edge Function: discord-import
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -38,13 +37,13 @@ serve(async (req: Request) => {
   }
   console.log('[discord-import] Bearer token received:', !!bearerToken);
 
-  // 4. Create Supabase client (no automatic user context—we'll use bearerToken directly)
+  // 4. Create Supabase client
   const supabaseClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   );
 
-  // 5. Get user and validate with token
+  // 5. Get user via Supabase JWT (bearerToken)
   const { data: { user }, error: userError } = await supabaseClient.auth.getUser(bearerToken);
   console.log('[discord-import] user:', JSON.stringify(user));
   if (userError || !user) {
@@ -68,9 +67,28 @@ serve(async (req: Request) => {
     });
   }
 
-  // 7. At this point, bearerToken *is* the Discord token
-  const discordToken = bearerToken;
-  console.log('[discord-import] discordToken:', discordToken ? '[REDACTED]' : null);
+  // 7. Find Discord provider_token in identity_data
+  let discordToken: string | undefined = undefined;
+  if (Array.isArray(user.identities)) {
+    for (const identity of user.identities) {
+      if (identity.provider === 'discord') {
+        discordToken = identity.identity_data?.provider_token || identity.identity_data?.access_token;
+        break;
+      }
+    }
+  }
+  console.log('[discord-import] discordToken[provider_token]:', discordToken ? '[REDACTED]' : null);
+
+  if (!discordToken) {
+    // Provider token hasn't been stored, maybe due to missing OAuth scope or expired token.
+    return new Response(JSON.stringify({
+      error: 'No Discord provider token found. Please sign out and sign in again via Discord.',
+      code: 'NO_DISCORD_TOKEN'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400
+    });
+  }
 
   // 8. Parse JSON body
   let requestBody: any = {};
@@ -88,7 +106,7 @@ serve(async (req: Request) => {
   console.log('[discord-import] action:', action);
 
   if (action === 'fetch') {
-    // 9. Fetch Discord profile (as test/proof-of-token)
+    // 9. Fetch Discord profile (test token validity)
     try {
       const userResponse = await fetch('https://discord.com/api/v10/users/@me', {
         headers: {
@@ -111,7 +129,7 @@ serve(async (req: Request) => {
       }
 
       const discordUser = JSON.parse(text);
-      // Proof it works: just return this user
+      // Return Discord user info for proof
       return new Response(JSON.stringify({
         discord_user: discordUser
       }), {
@@ -154,4 +172,3 @@ serve(async (req: Request) => {
     status: 400
   });
 });
-
