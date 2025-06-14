@@ -32,7 +32,6 @@ serve(async (req) => {
   try {
     console.log('=== Discord Import Function Started ===')
     console.log('Request method:', req.method)
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()))
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -78,53 +77,15 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id)
     console.log('User provider:', user.app_metadata?.provider)
-    console.log('User metadata keys:', Object.keys(user.user_metadata || {}))
-    console.log('App metadata keys:', Object.keys(user.app_metadata || {}))
 
-    // Enhanced token detection
-    let discordToken = null;
-    
-    // Check all possible token locations
-    const tokenSources = [
-      { name: 'user_metadata.provider_token', value: user.user_metadata?.provider_token },
-      { name: 'user_metadata.access_token', value: user.user_metadata?.access_token },
-      { name: 'app_metadata.provider_token', value: user.app_metadata?.provider_token },
-      { name: 'app_metadata.provider_access_token', value: user.app_metadata?.provider_access_token },
-    ];
-
-    for (const source of tokenSources) {
-      if (source.value) {
-        console.log(`Found token in ${source.name}:`, source.value.substring(0, 10) + '...')
-        discordToken = source.value;
-        break;
-      }
-    }
-
-    // Try to get fresh session
-    if (!discordToken) {
-      console.log('No token in user metadata, checking session...')
-      const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError)
-      }
-      
-      if (session) {
-        console.log('Session provider:', session.provider_token ? 'has provider_token' : 'no provider_token')
-        discordToken = session.provider_token || 
-                      session.access_token ||
-                      (session as any).provider_access_token;
-      }
-    }
-
-    if (!discordToken) {
-      console.error('No Discord token found after all attempts')
+    // Check if user signed in with Discord
+    if (user.app_metadata?.provider !== 'discord') {
+      console.error('User not signed in with Discord, provider:', user.app_metadata?.provider)
       return new Response(
         JSON.stringify({ 
-          error: 'Discord access token not found',
-          details: 'Please sign out and sign back in with Discord to refresh your authentication. Make sure you\'re using Discord OAuth login.',
-          code: 'NO_DISCORD_TOKEN',
-          tokenSources: tokenSources.map(s => ({ name: s.name, found: !!s.value }))
+          error: 'Discord authentication required',
+          details: 'You must sign in with Discord to import servers and bots. Please sign out and sign back in using Discord.',
+          code: 'NOT_DISCORD_USER'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -133,12 +94,66 @@ serve(async (req) => {
       )
     }
 
+    // Get fresh session to access provider token
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Session error',
+          details: sessionError.message,
+          code: 'SESSION_ERROR'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+
+    if (!session) {
+      console.error('No session found')
+      return new Response(
+        JSON.stringify({ 
+          error: 'No session found',
+          details: 'Please sign out and sign back in with Discord.',
+          code: 'NO_SESSION'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+
+    // Try to get Discord token from session
+    let discordToken = session.provider_token;
+    
+    if (!discordToken) {
+      console.error('No Discord provider token found in session')
+      console.log('Session keys:', Object.keys(session))
+      return new Response(
+        JSON.stringify({ 
+          error: 'Discord token not found',
+          details: 'Discord access token not available. Please sign out completely and sign back in with Discord to refresh your tokens.',
+          code: 'NO_DISCORD_TOKEN'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+
+    console.log('Discord token found, length:', discordToken.length)
+
     const requestBody = await req.json()
     const { action } = requestBody
     console.log('Action requested:', action)
 
     if (action === 'fetch') {
-      console.log('Fetching Discord data with token length:', discordToken.length)
+      console.log('Fetching Discord data...')
       
       // Test the token first
       try {
@@ -156,8 +171,8 @@ serve(async (req) => {
           console.error('Discord user API error:', errorText)
           return new Response(
             JSON.stringify({ 
-              error: 'Discord token is invalid',
-              details: `Discord API returned status ${userResponse.status}. Please sign out and sign back in with Discord.`,
+              error: 'Discord token is invalid or expired',
+              details: `Discord API returned status ${userResponse.status}. Please sign out and sign back in with Discord to refresh your tokens.`,
               code: 'INVALID_DISCORD_TOKEN',
               status: userResponse.status
             }),
