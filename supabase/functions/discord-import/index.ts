@@ -6,7 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 function handleOptions(req: Request) {
   if (req.method === 'OPTIONS') {
@@ -23,20 +23,29 @@ serve(async (req: Request) => {
   // 2. Logging request headers
   console.log('[discord-import] Request headers:', Object.fromEntries(req.headers.entries()));
 
-  // 3. Create Supabase client
+  // 3. Extract Bearer token from Authorization header (robustly)
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization') || '';
+  let bearerToken = '';
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    bearerToken = authHeader.substring(7);
+  }
+
+  if (!bearerToken) {
+    console.error('[discord-import][ERROR] Missing Authorization header (Bearer required)');
+    return new Response(JSON.stringify({error: 'Missing Bearer token in Authorization header', code: 'NO_AUTH_HEADER'}),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+    );
+  }
+  console.log('[discord-import] Bearer token received:', !!bearerToken);
+
+  // 4. Create Supabase client (no automatic user context—we'll use bearerToken directly)
   const supabaseClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    {
-      global: {
-        headers: { Authorization: req.headers.get('Authorization')! },
-      },
-    }
+    Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   );
 
-  // 4. Get user
-  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-
+  // 5. Get user and session EXPLICITLY with token
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser(bearerToken);
   console.log('[discord-import] user:', JSON.stringify(user));
   if (userError || !user) {
     console.error('[discord-import][ERROR] user auth failed:', userError);
@@ -46,7 +55,7 @@ serve(async (req: Request) => {
     });
   }
 
-  // 5. Check Discord provider
+  // 6. Discord provider check
   const isDiscord = user.app_metadata?.provider === 'discord'
     || user.app_metadata?.providers?.includes('discord');
   console.log('[discord-import] isDiscord:', isDiscord, 'app_metadata:', user.app_metadata);
@@ -59,8 +68,8 @@ serve(async (req: Request) => {
     });
   }
 
-  // 6. Get session for tokens
-  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+  // 7. Get session tokens
+  const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession(bearerToken);
   console.log('[discord-import] session:', JSON.stringify(session));
   if (sessionError || !session) {
     console.error('[discord-import][ERROR] No active session:', sessionError);
@@ -73,6 +82,7 @@ serve(async (req: Request) => {
     });
   }
 
+  // 8. Extract Discord token
   let discordToken: string | undefined = session.provider_token
     || session.access_token
     || user.user_metadata?.provider_token;
@@ -89,7 +99,7 @@ serve(async (req: Request) => {
     });
   }
 
-  // 7. Parse request body
+  // 9. Parse JSON body
   let requestBody: any = {};
   try {
     requestBody = await req.json();
@@ -105,7 +115,7 @@ serve(async (req: Request) => {
   console.log('[discord-import] action:', action);
 
   if (action === 'fetch') {
-    // 8. Fetch Discord profile (test)
+    // 10. Fetch Discord profile (as test/proof-of-token)
     try {
       const userResponse = await fetch('https://discord.com/api/v10/users/@me', {
         headers: {
@@ -128,6 +138,7 @@ serve(async (req: Request) => {
       }
 
       const discordUser = JSON.parse(text);
+      // Proof it works: just return this user
       return new Response(JSON.stringify({
         discord_user: discordUser
       }), {
@@ -149,11 +160,11 @@ serve(async (req: Request) => {
   }
 
   if (action === 'import') {
-    // Place import logic here; log received payload
+    // 11. Import logic stub
     console.log('[discord-import] import payload:', JSON.stringify(requestBody));
     return new Response(JSON.stringify({
       success: false,
-      message: 'Import logic not implemented in starter template.'
+      message: 'Import logic not implemented.'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 501
