@@ -180,7 +180,7 @@ const Dashboard = () => {
               className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
             >
               <Download className="h-4 w-4 mr-2" />
-              Import from Discord
+              Import Servers from Discord
             </Button>
             <Button
               onClick={() => setShowCreateModal(true)}
