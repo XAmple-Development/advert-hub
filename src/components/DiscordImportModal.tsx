@@ -54,7 +54,6 @@ const DiscordImportModal = ({
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState<DiscordServer[]>([]);
   const [selectedServers, setSelectedServers] = useState<string[]>([]);
-  const [selectedBots, setSelectedBots] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
