@@ -134,6 +134,15 @@ const Dashboard = () => {
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </Button>
+            <Button
+              onClick= "/"
+              variant="outline"
+              size="sm"
+              className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Home
+            </Button>
           </div>
         </div>
       </nav>
