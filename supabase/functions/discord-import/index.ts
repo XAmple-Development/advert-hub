@@ -1,3 +1,4 @@
+
 // Edge Function: discord-import
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -81,11 +82,23 @@ serve(async (req: Request) => {
       });
     }
 
-    // 7. Get Discord access token from user metadata
-    const discordAccessToken = user.user_metadata?.provider_token || user.identities?.[0]?.access_token;
-    console.log('[discord-import] Discord token available:', !!discordAccessToken);
-    console.log('[discord-import] User metadata:', user.user_metadata);
-    console.log('[discord-import] User identities:', user.identities);
+    // 7. Get Discord access token from stored profile data
+    console.log('[discord-import] Fetching stored Discord token from profile...');
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('discord_access_token, discord_token_updated_at')
+      .eq('id', user.id)
+      .single();
+
+    console.log('[discord-import] Profile data:', profile);
+    
+    let discordAccessToken = profile?.discord_access_token;
+    
+    // Fallback to user metadata if not in profile
+    if (!discordAccessToken) {
+      discordAccessToken = user.user_metadata?.provider_token || user.identities?.[0]?.access_token;
+      console.log('[discord-import] Fallback to metadata token:', !!discordAccessToken);
+    }
 
     if (!discordAccessToken) {
       console.error('[discord-import][ERROR] No Discord access token found');
@@ -98,6 +111,8 @@ serve(async (req: Request) => {
         status: 400
       });
     }
+
+    console.log('[discord-import] Discord token available:', !!discordAccessToken);
 
     // 8. Parse JSON body first to check action
     let requestBody: any = {};
