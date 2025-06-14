@@ -1,8 +1,19 @@
-
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,7 +44,11 @@ interface DiscordImportModalProps {
   onImportComplete: () => void;
 }
 
-const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImportModalProps) => {
+const DiscordImportModal = ({
+  open,
+  onOpenChange,
+  onImportComplete,
+}: DiscordImportModalProps) => {
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState<DiscordServer[]>([]);
   const [bots, setBots] = useState<DiscordBot[]>([]);
@@ -45,20 +60,42 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
   const fetchDiscordData = async () => {
     setLoading(true);
     try {
-      // Call our edge function to fetch Discord data
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        throw new Error('No active session found. Please log in.');
+      }
+
       const { data, error } = await supabase.functions.invoke('discord-import', {
-        body: { action: 'fetch' }
+        body: { action: 'fetch' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message || 'Supabase function error');
+      }
 
-      setServers(data.servers || []);
-      setBots(data.bots || []);
+      if (
+        !data ||
+        !Array.isArray(data.servers) ||
+        !Array.isArray(data.bots)
+      ) {
+        throw new Error('Malformed data received from Edge Function');
+      }
+
+      setServers(data.servers);
+      setBots(data.bots);
     } catch (error: any) {
+      console.error('[DiscordImportModal] Error fetching Discord data:', error);
       toast({
-        variant: "destructive",
-        title: "Error fetching Discord data",
-        description: error.message,
+        variant: 'destructive',
+        title: 'Error fetching Discord data',
+        description: error.message || 'An unknown error occurred.',
       });
     } finally {
       setLoading(false);
@@ -74,27 +111,40 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
   const handleImport = async () => {
     setImporting(true);
     try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        throw new Error('No active session found. Please log in.');
+      }
+
       const { data, error } = await supabase.functions.invoke('discord-import', {
         body: {
           action: 'import',
           servers: selectedServers,
-          bots: selectedBots
-        }
+          bots: selectedBots,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
 
       toast({
-        title: "Import successful!",
+        title: 'Import successful!',
         description: `Imported ${selectedServers.length} servers and ${selectedBots.length} bots.`,
       });
 
       onImportComplete();
       onOpenChange(false);
     } catch (error: any) {
+      console.error('[DiscordImportModal] Error importing Discord data:', error);
       toast({
-        variant: "destructive",
-        title: "Import failed",
+        variant: 'destructive',
+        title: 'Import failed',
         description: error.message,
       });
     } finally {
@@ -103,23 +153,23 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
   };
 
   const toggleServer = (serverId: string) => {
-    setSelectedServers(prev => 
-      prev.includes(serverId) 
-        ? prev.filter(id => id !== serverId)
+    setSelectedServers((prev) =>
+      prev.includes(serverId)
+        ? prev.filter((id) => id !== serverId)
         : [...prev, serverId]
     );
   };
 
   const toggleBot = (botId: string) => {
-    setSelectedBots(prev => 
-      prev.includes(botId) 
-        ? prev.filter(id => id !== botId)
+    setSelectedBots((prev) =>
+      prev.includes(botId)
+        ? prev.filter((id) => id !== botId)
         : [...prev, botId]
     );
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => !importing && onOpenChange(next)}>
       <DialogContent className="max-w-4xl max-h-[80vh] bg-[#36393F] border-[#40444B]">
         <DialogHeader>
           <DialogTitle className="text-white">Import from Discord</DialogTitle>
@@ -135,7 +185,7 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Servers Section */}
+            {/* Servers */}
             <div>
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Server className="h-5 w-5" />
@@ -156,6 +206,9 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
                               src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}
                               alt={server.name}
                               className="w-10 h-10 rounded-full"
+                              onError={(e) =>
+                                (e.currentTarget.src = '/fallback-icon.png')
+                              }
                             />
                           ) : (
                             <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
@@ -163,9 +216,18 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
                             </div>
                           )}
                           <div className="flex-1">
-                            <CardTitle className="text-sm text-white">{server.name}</CardTitle>
+                            <CardTitle className="text-sm text-white">
+                              {server.name}
+                            </CardTitle>
                             <div className="flex items-center gap-2 mt-1">
-                              {server.owner && <Badge variant="secondary" className="text-xs">Owner</Badge>}
+                              {server.owner && (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  Owner
+                                </Badge>
+                              )}
                               {server.member_count && (
                                 <div className="flex items-center gap-1 text-xs text-gray-400">
                                   <Users className="h-3 w-3" />
@@ -179,13 +241,15 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
                     </Card>
                   ))}
                   {servers.length === 0 && (
-                    <p className="text-gray-400 text-center py-4">No servers found where you have manage permissions</p>
+                    <p className="text-gray-400 text-center py-4">
+                      No servers found where you have manage permissions
+                    </p>
                   )}
                 </div>
               </ScrollArea>
             </div>
 
-            {/* Bots Section */}
+            {/* Bots */}
             <div>
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Bot className="h-5 w-5" />
@@ -206,6 +270,9 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
                               src={`https://cdn.discordapp.com/app-icons/${bot.id}/${bot.icon}.png`}
                               alt={bot.name}
                               className="w-10 h-10 rounded-full"
+                              onError={(e) =>
+                                (e.currentTarget.src = '/fallback-icon.png')
+                              }
                             />
                           ) : (
                             <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
@@ -213,12 +280,17 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
                             </div>
                           )}
                           <div className="flex-1">
-                            <CardTitle className="text-sm text-white">{bot.name}</CardTitle>
+                            <CardTitle className="text-sm text-white">
+                              {bot.name}
+                            </CardTitle>
                             <CardDescription className="text-xs text-gray-400">
                               {bot.description || 'No description'}
                             </CardDescription>
                             <div className="flex items-center gap-2 mt-1">
-                              <Badge variant={bot.public ? "default" : "secondary"} className="text-xs">
+                              <Badge
+                                variant={bot.public ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
                                 {bot.public ? 'Public' : 'Private'}
                               </Badge>
                             </div>
@@ -228,7 +300,9 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
                     </Card>
                   ))}
                   {bots.length === 0 && (
-                    <p className="text-gray-400 text-center py-4">No bots found in your Discord applications</p>
+                    <p className="text-gray-400 text-center py-4">
+                      No bots found in your Discord applications
+                    </p>
                   )}
                 </div>
               </ScrollArea>
@@ -251,7 +325,10 @@ const DiscordImportModal = ({ open, onOpenChange, onImportComplete }: DiscordImp
             </Button>
             <Button
               onClick={handleImport}
-              disabled={importing || (selectedServers.length === 0 && selectedBots.length === 0)}
+              disabled={
+                importing ||
+                (selectedServers.length === 0 && selectedBots.length === 0)
+              }
               className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
             >
               {importing ? (
