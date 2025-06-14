@@ -225,26 +225,6 @@ serve(async (req: Request) => {
 
         console.log('[discord-import] Manageable servers:', manageableServers.length);
 
-        // Try to fetch applications (bots) - this might fail for users without the right scope
-        let applications = [];
-        try {
-          const appsResponse = await fetch('https://discord.com/api/v10/applications', {
-            headers: {
-              'Authorization': `Bearer ${discordAccessToken}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (appsResponse.ok) {
-            applications = await appsResponse.json();
-            console.log('[discord-import] Fetched applications:', applications.length);
-          } else {
-            console.log('[discord-import] Could not fetch applications (this is normal for most users)');
-          }
-        } catch (error) {
-          console.log('[discord-import] Applications fetch failed (this is normal):', error);
-        }
-
         // Format response data
         const servers = manageableServers.map((guild: any) => ({
           id: guild.id,
@@ -255,19 +235,10 @@ serve(async (req: Request) => {
           owner: guild.owner
         }));
 
-        const bots = applications.map((app: any) => ({
-          id: app.id,
-          name: app.name,
-          icon: app.icon,
-          description: app.description || 'A Discord bot application',
-          public: app.bot_public || false
-        }));
-
-        console.log('[discord-import] Returning data:', { servers: servers.length, bots: bots.length });
+        console.log('[discord-import] Returning data:', { servers: servers.length });
 
         return new Response(JSON.stringify({
-          servers: servers,
-          bots: bots
+          servers: servers
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
@@ -290,13 +261,13 @@ serve(async (req: Request) => {
     // Handle import action
     if (action === 'import') {
       console.log('[discord-import] Starting import process...');
-      const { servers: selectedServerIds, bots: selectedBotIds } = requestBody;
+      const { servers: selectedServerIds } = requestBody;
       
-      if (!selectedServerIds?.length && !selectedBotIds?.length) {
+      if (!selectedServerIds?.length) {
         return new Response(JSON.stringify({
           error: 'No items selected for import',
           code: 'NO_SELECTION',
-          details: 'Please select at least one server or bot to import.'
+          details: 'Please select at least one server to import.'
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400
@@ -305,7 +276,6 @@ serve(async (req: Request) => {
 
       try {
         let importedServers = 0;
-        let importedBots = 0;
 
         // Import selected servers
         if (selectedServerIds?.length > 0) {
@@ -348,58 +318,13 @@ serve(async (req: Request) => {
           }
         }
 
-        // Import selected bots
-        if (selectedBotIds?.length > 0) {
-          try {
-            const appsResponse = await fetch('https://discord.com/api/v10/applications', {
-              headers: {
-                'Authorization': `Bearer ${discordAccessToken}`,
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (appsResponse.ok) {
-              const applications = await appsResponse.json();
-              const botsToImport = applications.filter((bot: any) => selectedBotIds.includes(bot.id));
-              
-              for (const bot of botsToImport) {
-                const { error: botError } = await supabaseClient
-                  .from('listings')
-                  .insert({
-                    user_id: user.id,
-                    type: 'bot',
-                    name: bot.name,
-                    description: bot.description || 'A Discord bot application',
-                    member_count: 0,
-                    view_count: 0,
-                    bump_count: 0,
-                    status: 'active',
-                    avatar_url: bot.icon ? `https://cdn.discordapp.com/app-icons/${bot.id}/${bot.icon}.png` : null,
-                    discord_id: bot.id,
-                    invite_url: null
-                  });
-
-                if (botError) {
-                  console.error('[discord-import][ERROR] Failed to import bot:', bot.name, botError);
-                } else {
-                  importedBots++;
-                  console.log('[discord-import] Successfully imported bot:', bot.name);
-                }
-              }
-            }
-          } catch (error) {
-            console.error('[discord-import][ERROR] Bot import failed:', error);
-          }
-        }
-
-        console.log('[discord-import] Import completed:', { importedServers, importedBots });
+        console.log('[discord-import] Import completed:', { importedServers });
 
         return new Response(JSON.stringify({
           success: true,
-          message: `Successfully imported ${importedServers} servers and ${importedBots} bots.`,
+          message: `Successfully imported ${importedServers} servers.`,
           imported: {
-            servers: importedServers,
-            bots: importedBots
+            servers: importedServers
           }
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
