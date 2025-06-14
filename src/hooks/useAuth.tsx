@@ -10,56 +10,11 @@ export const useAuth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Handle OAuth callback tokens in URL
-    const handleOAuthCallback = async () => {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const providerToken = hashParams.get('provider_token');
-      
-      console.log('OAuth callback - access_token:', !!accessToken, 'provider_token:', !!providerToken);
-      
-      if (accessToken && providerToken) {
-        console.log('Found OAuth tokens in URL, storing provider token...');
-        
-        // Store the Discord provider token for later use
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            console.log('Storing Discord token for user:', user.id);
-            // Store the provider token in the user's profile
-            const { error } = await supabase
-              .from('profiles')
-              .upsert({
-                id: user.id,
-                discord_access_token: providerToken,
-                discord_token_updated_at: new Date().toISOString()
-              });
-            
-            if (error) {
-              console.error('Error storing Discord token:', error);
-            } else {
-              console.log('Discord token stored successfully');
-            }
-          }
-        } catch (error) {
-          console.error('Error storing Discord token:', error);
-        }
-        
-        // Clean up the URL by removing the hash fragment
-        window.history.replaceState(null, '', window.location.pathname);
-      }
-    };
-
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session:', !!session?.user, 'provider:', session?.user?.app_metadata?.provider);
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // Handle OAuth callback if we have tokens in URL
-      if (window.location.hash.includes('access_token')) {
-        handleOAuthCallback();
-      }
     });
 
     // Listen for auth changes
@@ -68,35 +23,52 @@ export const useAuth = () => {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // Handle OAuth callback after successful sign-in
-      if (session?.user && window.location.hash.includes('provider_token')) {
-        console.log('Handling OAuth callback after auth state change');
-        await handleOAuthCallback();
-      }
-      
-      // Also try to extract provider token from user metadata on sign-in
+      // Handle Discord token storage on sign-in
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log('User signed in, checking for provider token in metadata...');
-        const providerToken = session.user.user_metadata?.provider_token;
+        console.log('User signed in, checking for Discord provider...');
         
-        if (providerToken && session.user.app_metadata?.provider === 'discord') {
-          console.log('Found provider token in user metadata, storing...');
-          try {
-            const { error } = await supabase
-              .from('profiles')
-              .upsert({
-                id: session.user.id,
-                discord_access_token: providerToken,
-                discord_token_updated_at: new Date().toISOString()
-              });
-            
-            if (error) {
-              console.error('Error storing Discord token from metadata:', error);
-            } else {
-              console.log('Discord token stored from metadata successfully');
+        if (session.user.app_metadata?.provider === 'discord') {
+          console.log('Discord user detected, attempting to store token...');
+          
+          // Try to get provider token from user metadata
+          let providerToken = session.provider_token;
+          
+          // Fallback to other possible locations
+          if (!providerToken) {
+            providerToken = session.user.user_metadata?.provider_token;
+          }
+          
+          // Another fallback - check identities
+          if (!providerToken && session.user.identities && session.user.identities.length > 0) {
+            const discordIdentity = session.user.identities.find(identity => identity.provider === 'discord');
+            if (discordIdentity) {
+              providerToken = discordIdentity.access_token;
             }
-          } catch (error) {
-            console.error('Error storing Discord token from metadata:', error);
+          }
+          
+          console.log('Provider token found:', !!providerToken);
+          
+          if (providerToken) {
+            try {
+              console.log('Storing Discord token for user:', session.user.id);
+              const { error } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: session.user.id,
+                  discord_access_token: providerToken,
+                  discord_token_updated_at: new Date().toISOString()
+                });
+              
+              if (error) {
+                console.error('Error storing Discord token:', error);
+              } else {
+                console.log('Discord token stored successfully');
+              }
+            } catch (error) {
+              console.error('Error storing Discord token:', error);
+            }
+          } else {
+            console.warn('No Discord provider token found in session');
           }
         }
       }
