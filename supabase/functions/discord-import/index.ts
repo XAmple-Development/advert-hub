@@ -1,3 +1,4 @@
+
 // Edge Function: discord-import
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -105,6 +106,7 @@ serve(async (req: Request) => {
     const { action } = requestBody;
 
     if (action === 'fetch') {
+      // First verify the token is still valid
       const userRes = await fetch('https://discord.com/api/v10/users/@me', {
         headers: { Authorization: `Bearer ${discordAccessToken}` }
       });
@@ -119,6 +121,7 @@ serve(async (req: Request) => {
         });
       }
 
+      // Fetch guilds
       const guildsRes = await fetch('https://discord.com/api/v10/users/@me/guilds', {
         headers: { Authorization: `Bearer ${discordAccessToken}` }
       });
@@ -126,11 +129,23 @@ serve(async (req: Request) => {
       const guilds = guildsRes.ok ? await guildsRes.json() : [];
       const manageableServers = guilds.filter((g: any) => g.owner || (parseInt(g.permissions) & 0x20));
 
+      // For bots, we'll try a different approach - check if user has created any applications
+      // Even without bot scopes, we can try to fetch applications they own
       let applications = [];
-      const appsRes = await fetch('https://discord.com/api/v10/applications', {
-        headers: { Authorization: `Bearer ${discordAccessToken}` }
-      });
-      if (appsRes.ok) applications = await appsRes.json();
+      try {
+        const appsRes = await fetch('https://discord.com/api/v10/applications', {
+          headers: { Authorization: `Bearer ${discordAccessToken}` }
+        });
+        if (appsRes.ok) {
+          applications = await appsRes.json();
+        } else if (appsRes.status === 403) {
+          // Expected if user doesn't have bot applications.commands scope
+          console.log('Bot applications scope not available, which is expected');
+        }
+      } catch (error) {
+        console.log('Could not fetch applications:', error);
+        // This is expected without bot scopes, so we'll just return empty array
+      }
 
       return new Response(JSON.stringify({
         servers: manageableServers,
@@ -139,7 +154,8 @@ serve(async (req: Request) => {
           name: a.name,
           icon: a.icon,
           description: a.description || 'A Discord bot application'
-        }))
+        })),
+        note: applications.length === 0 ? 'Bot information is limited without additional Discord permissions. To see your bots, you may need to re-authenticate with expanded permissions.' : undefined
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200

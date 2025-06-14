@@ -59,6 +59,7 @@ const DiscordImportModal = ({
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [showBotLimitedNote, setShowBotLimitedNote] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -69,6 +70,7 @@ const DiscordImportModal = ({
     setLoading(true);
     setError(null);
     setErrorCode(null);
+    setShowBotLimitedNote(false);
     
     try {
       console.log('Fetching Discord data...');
@@ -127,10 +129,16 @@ const DiscordImportModal = ({
       // Handle the response format
       setServers(data.servers || []);
       setBots(data.bots || []);
+      
+      // Show note if bot data is limited
+      if (data.note) {
+        setShowBotLimitedNote(true);
+      }
 
       console.log('Successfully fetched Discord data:', {
         servers: (data.servers || []).length,
-        bots: (data.bots || []).length
+        bots: (data.bots || []).length,
+        hasNote: !!data.note
       });
 
     } catch (error: any) {
@@ -227,6 +235,34 @@ const DiscordImportModal = ({
         options: {
           redirectTo: window.location.origin,
           scopes: 'identify email guilds'
+        },
+      });
+
+      if (error) {
+        console.error('Discord sign-in error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Sign-in failed',
+          description: error.message,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error signing in with Discord:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Sign-in failed',
+        description: 'Failed to sign in with Discord',
+      });
+    }
+  };
+
+  const handleSignInWithDiscordForBots = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: window.location.origin,
+          scopes: 'identify email guilds applications.commands'
         },
       });
 
@@ -389,6 +425,22 @@ const DiscordImportModal = ({
           </div>
         ) : (
           <>
+            {showBotLimitedNote && (
+              <Alert className="bg-yellow-900/20 border-yellow-500 mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-yellow-200">
+                  Bot information is limited with current permissions. To see all your bots, you may need additional Discord permissions.
+                  <Button
+                    onClick={handleSignInWithDiscordForBots}
+                    variant="link"
+                    className="text-yellow-300 underline p-0 h-auto ml-2"
+                  >
+                    Re-authenticate for full bot access
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid md:grid-cols-2 gap-6">
               {/* Servers */}
               <div>
@@ -506,7 +558,10 @@ const DiscordImportModal = ({
                     ))}
                     {bots.length === 0 && (
                       <p className="text-gray-400 text-center py-4">
-                        No bots found in your Discord applications
+                        {showBotLimitedNote 
+                          ? "Limited bot access with current permissions"
+                          : "No bots found in your Discord applications"
+                        }
                       </p>
                     )}
                   </div>
