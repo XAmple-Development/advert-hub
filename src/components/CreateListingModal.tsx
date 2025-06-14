@@ -140,7 +140,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         <DialogHeader>
           <DialogTitle>Create New Listing</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Add your Discord server or bot to our network
+            Add your Discord bot to our network
           </DialogDescription>
         </DialogHeader>
 
@@ -153,7 +153,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#2C2F33] border-[#40444B]">
-                  <SelectItem value="server">Discord Server</SelectItem>
                   <SelectItem value="bot">Discord Bot</SelectItem>
                 </SelectContent>
               </Select>
@@ -237,20 +236,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
                 placeholder="https://discord.gg/..."
               />
             </div>
-
-            <div>
-              <Label htmlFor="member_count">Member Count</Label>
-              <Input
-                id="member_count"
-                type="number"
-                value={formData.member_count}
-                onChange={(e) => setFormData({ ...formData, member_count: e.target.value })}
-                className="bg-[#2C2F33] border-[#40444B]"
-                placeholder="0"
-                min="0"
-              />
-            </div>
-          </div>
 
           <div>
             <Label htmlFor="website_url">Website URL</Label>
