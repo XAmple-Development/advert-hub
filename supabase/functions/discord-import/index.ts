@@ -32,6 +32,7 @@ serve(async (req) => {
   try {
     console.log('=== Discord Import Function Started ===')
     console.log('Request method:', req.method)
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()))
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -77,10 +78,17 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id)
     console.log('User provider:', user.app_metadata?.provider)
+    console.log('User providers:', user.app_metadata?.providers)
+    console.log('Full user metadata:', JSON.stringify(user.app_metadata, null, 2))
 
     // Check if user signed in with Discord
-    if (user.app_metadata?.provider !== 'discord') {
-      console.error('User not signed in with Discord, provider:', user.app_metadata?.provider)
+    const isDiscordUser = user.app_metadata?.provider === 'discord' || 
+                         user.app_metadata?.providers?.includes('discord');
+    
+    if (!isDiscordUser) {
+      console.error('User not signed in with Discord')
+      console.log('Provider:', user.app_metadata?.provider)
+      console.log('Providers:', user.app_metadata?.providers)
       return new Response(
         JSON.stringify({ 
           error: 'Discord authentication required',
@@ -127,17 +135,49 @@ serve(async (req) => {
       )
     }
 
-    // Try to get Discord token from session
+    console.log('Session found')
+    console.log('Session provider token length:', session.provider_token?.length || 'undefined')
+    console.log('Session provider refresh token length:', session.provider_refresh_token?.length || 'undefined')
+    console.log('Session keys:', Object.keys(session))
+
+    // Try to get Discord token from session - try multiple approaches
     let discordToken = session.provider_token;
     
     if (!discordToken) {
       console.error('No Discord provider token found in session')
-      console.log('Session keys:', Object.keys(session))
+      console.log('Trying alternative token access methods...')
+      
+      // Try to get from user metadata
+      const userToken = user.user_metadata?.provider_token;
+      if (userToken) {
+        console.log('Found token in user metadata')
+        discordToken = userToken;
+      }
+    }
+    
+    if (!discordToken) {
+      console.error('Still no Discord token found')
+      console.log('Session structure:', JSON.stringify({
+        access_token: session.access_token ? 'present' : 'missing',
+        refresh_token: session.refresh_token ? 'present' : 'missing',
+        provider_token: session.provider_token ? 'present' : 'missing',
+        provider_refresh_token: session.provider_refresh_token ? 'present' : 'missing',
+        user_metadata_keys: Object.keys(user.user_metadata || {}),
+        app_metadata_keys: Object.keys(user.app_metadata || {})
+      }, null, 2))
+      
       return new Response(
         JSON.stringify({ 
           error: 'Discord token not found',
-          details: 'Discord access token not available. Please sign out completely and sign back in with Discord to refresh your tokens.',
-          code: 'NO_DISCORD_TOKEN'
+          details: 'Discord access token not available. Please sign out completely and sign back in with Discord to refresh your tokens. Make sure to grant all requested permissions.',
+          code: 'NO_DISCORD_TOKEN',
+          debug: {
+            hasSession: !!session,
+            hasProviderToken: !!session.provider_token,
+            hasProviderRefreshToken: !!session.provider_refresh_token,
+            provider: user.app_metadata?.provider,
+            providers: user.app_metadata?.providers
+          }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -174,7 +214,8 @@ serve(async (req) => {
               error: 'Discord token is invalid or expired',
               details: `Discord API returned status ${userResponse.status}. Please sign out and sign back in with Discord to refresh your tokens.`,
               code: 'INVALID_DISCORD_TOKEN',
-              status: userResponse.status
+              status: userResponse.status,
+              response: errorText
             }),
             {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
