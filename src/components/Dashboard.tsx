@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +30,7 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -74,18 +75,27 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    console.log('Dashboard: useEffect triggered, user:', !!user, 'user.id:', user?.id);
+    console.log('Dashboard: useEffect triggered, authLoading:', authLoading, 'user:', !!user, 'user.id:', user?.id);
+    
+    // Wait for auth to finish loading
+    if (authLoading) {
+      console.log('Dashboard: Still loading auth state...');
+      return;
+    }
+
+    // If auth finished loading and no user, redirect to auth
+    if (!user) {
+      console.log('Dashboard: No user found after auth loading, redirecting to auth');
+      navigate('/auth');
+      return;
+    }
+
+    // If we have a user, fetch their listings
     if (user?.id) {
       console.log('Dashboard: User found, fetching listings...');
       fetchListings();
-    } else if (user === null) {
-      // User is explicitly null (not authenticated)
-      console.log('Dashboard: User is null, redirecting to auth');
-      setLoading(false);
-      navigate('/auth');
     }
-    // If user is undefined, we're still loading auth state
-  }, [user?.id]);
+  }, [user, authLoading, navigate]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -124,21 +134,25 @@ const Dashboard = () => {
     fetchListings();
   };
 
-  if (loading) {
+  // Show loading while auth is loading or while fetching data
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
         <div className="text-center">
-          <div className="text-white text-xl">Loading your dashboard...</div>
-          <div className="text-gray-400 text-sm mt-2">User ID: {user?.id || 'Not available'}</div>
+          <div className="text-white text-xl">
+            {authLoading ? 'Loading authentication...' : 'Loading your dashboard...'}
+          </div>
+          <div className="text-gray-400 text-sm mt-2">
+            Auth Loading: {authLoading ? 'Yes' : 'No'} | User ID: {user?.id || 'Not available'}
+          </div>
           {error && <div className="text-red-400 text-sm mt-2">Error: {error}</div>}
         </div>
       </div>
     );
   }
 
-  // If user is null after loading, redirect to auth
-  if (user === null) {
-    navigate('/auth');
+  // If auth finished loading and no user, this will be handled by useEffect redirect
+  if (!user) {
     return null;
   }
 
