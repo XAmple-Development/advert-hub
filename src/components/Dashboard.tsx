@@ -124,20 +124,6 @@ const Dashboard = () => {
     fetchListings();
   };
 
-  if (error === 'User not authenticated') {
-    return (
-      <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-white text-xl mb-4">Authentication Error</div>
-          <p className="text-gray-400 mb-4">Please sign in to access your dashboard.</p>
-          <Button onClick={() => navigate('/auth')} className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
-            Sign In
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
@@ -148,6 +134,12 @@ const Dashboard = () => {
         </div>
       </div>
     );
+  }
+
+  // If user is null after loading, redirect to auth
+  if (user === null) {
+    navigate('/auth');
+    return null;
   }
 
   console.log('Dashboard: Rendering with listings:', listings);

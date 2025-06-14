@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <nav className="bg-[#36393F] border-b border-[#40444B]">
@@ -19,15 +21,28 @@ const Navbar = () => {
               <Link to="/listings" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
                 Browse Servers
               </Link>
+              {user && (
+                <Link to="/dashboard" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  Dashboard
+                </Link>
+              )}
             </div>
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/auth">
-              <Button className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
-                Sign In
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/dashboard">
+                <Button className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/auth">
+                <Button className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
           
           <div className="md:hidden flex items-center">
@@ -51,13 +66,23 @@ const Navbar = () => {
             >
               Browse Servers
             </Link>
-            <Link 
-              to="/auth" 
-              className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sign In
-            </Link>
+            {user ? (
+              <Link 
+                to="/dashboard" 
+                className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link 
+                to="/auth" 
+                className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       )}
