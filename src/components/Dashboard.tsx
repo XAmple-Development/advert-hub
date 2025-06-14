@@ -27,6 +27,7 @@ interface Listing {
 const Dashboard = () => {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const { user } = useAuth();
@@ -34,18 +35,28 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const fetchListings = async () => {
-    console.log('Dashboard: fetchListings called for user:', user?.id);
+    if (!user?.id) {
+      console.log('Dashboard: No user ID available for fetching listings');
+      setLoading(false);
+      setError('User not authenticated');
+      return;
+    }
+
+    console.log('Dashboard: fetchListings called for user:', user.id);
+    setError(null);
+    
     try {
       const { data, error } = await supabase
         .from('listings')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      console.log('Dashboard: Query result:', { data, error, userID: user?.id });
+      console.log('Dashboard: Query result:', { data, error, userID: user.id });
       
       if (error) {
         console.error('Dashboard: Error fetching listings:', error);
+        setError(`Failed to fetch listings: ${error.message}`);
         throw error;
       }
       
@@ -53,6 +64,7 @@ const Dashboard = () => {
       setListings(data || []);
     } catch (error: any) {
       console.error('Dashboard: fetchListings error:', error);
+      setError(error.message || 'An unexpected error occurred');
       toast({
         variant: "destructive",
         title: "Error",
@@ -64,11 +76,18 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    console.log('Dashboard: useEffect triggered, user:', !!user, 'user.id:', user?.id);
+    if (user?.id) {
       console.log('Dashboard: User found, fetching listings...');
       fetchListings();
+    } else if (user === null) {
+      // User is explicitly null (not authenticated)
+      console.log('Dashboard: User is null, stopping loading');
+      setLoading(false);
+      setError('User not authenticated');
     }
-  }, [user]);
+    // If user is undefined, we're still loading auth state
+  }, [user?.id]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -103,15 +122,33 @@ const Dashboard = () => {
 
   const handleImportComplete = () => {
     console.log('Dashboard: Import completed, refreshing listings...');
-    // Force a fresh fetch of listings
     setLoading(true);
     fetchListings();
   };
 
+  // Show error state if there's an authentication error
+  if (error === 'User not authenticated') {
+    return (
+      <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-white text-xl mb-4">Authentication Error</div>
+          <p className="text-gray-400 mb-4">Please sign in to access your dashboard.</p>
+          <Button onClick={() => navigate('/auth')} className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+            Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
-        <div className="text-white text-xl">Loading your dashboard...</div>
+        <div className="text-center">
+          <div className="text-white text-xl">Loading your dashboard...</div>
+          <div className="text-gray-400 text-sm mt-2">User ID: {user?.id || 'Not available'}</div>
+          {error && <div className="text-red-400 text-sm mt-2">Error: {error}</div>}
+        </div>
       </div>
     );
   }
@@ -161,6 +198,24 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
+
+        {error && error !== 'User not authenticated' && (
+          <Card className="bg-red-900/20 border-red-500 mb-6">
+            <CardContent className="pt-6">
+              <div className="text-red-400 text-center">
+                <p className="font-semibold">Error loading dashboard</p>
+                <p className="text-sm mt-1">{error}</p>
+                <Button
+                  onClick={fetchListings}
+                  className="mt-4 bg-red-600 hover:bg-red-700 text-white"
+                  size="sm"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {listings.length === 0 ? (
           <Card className="bg-[#36393F] border-[#40444B] text-center py-12">
