@@ -21,7 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Bot, Server, AlertCircle, RefreshCw, LogOut, LogIn, Info } from 'lucide-react';
+import { Loader2, Users, Bot, Server, AlertCircle, RefreshCw, LogOut, LogIn } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 interface DiscordServer {
@@ -59,7 +59,6 @@ const DiscordImportModal = ({
   const [selectedBots, setSelectedBots] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isMockData, setIsMockData] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -69,7 +68,6 @@ const DiscordImportModal = ({
   const fetchDiscordData = async () => {
     setLoading(true);
     setError(null);
-    setIsMockData(false);
     
     try {
       console.log('Fetching Discord data...');
@@ -108,19 +106,13 @@ const DiscordImportModal = ({
         throw new Error('No data received from Discord import function');
       }
 
-      // Check if this is mock data
-      if (data.note && data.note.includes('mock data')) {
-        setIsMockData(true);
-      }
-
       // Handle the response format
       setServers(data.servers || []);
       setBots(data.bots || []);
 
       console.log('Successfully fetched Discord data:', {
         servers: (data.servers || []).length,
-        bots: (data.bots || []).length,
-        isMock: !!data.note
+        bots: (data.bots || []).length
       });
 
     } catch (error: any) {
@@ -168,10 +160,8 @@ const DiscordImportModal = ({
       if (error) throw new Error(error.message);
 
       toast({
-        title: isMockData ? 'Mock Import Successful!' : 'Import Successful!',
-        description: isMockData 
-          ? `Mock imported ${selectedServers.length} servers and ${selectedBots.length} bots.`
-          : `Imported ${selectedServers.length} servers and ${selectedBots.length} bots.`,
+        title: 'Import Successful!',
+        description: `Imported ${selectedServers.length} servers and ${selectedBots.length} bots.`,
       });
 
       onImportComplete();
@@ -214,6 +204,7 @@ const DiscordImportModal = ({
         provider: 'discord',
         options: {
           redirectTo: window.location.origin,
+          scopes: 'identify email guilds applications.builds.read',
         },
       });
 
@@ -293,6 +284,16 @@ const DiscordImportModal = ({
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-white">Failed to fetch Discord data</h3>
               <p className="text-gray-400 max-w-md">{error}</p>
+              {error.includes('Discord access token not found') && (
+                <div className="mt-4">
+                  <Alert className="bg-yellow-900/20 border-yellow-500">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-yellow-200">
+                      Your Discord session may have expired. Try signing out and signing back in with Discord to refresh your token.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               <Button
@@ -318,15 +319,6 @@ const DiscordImportModal = ({
           </div>
         ) : (
           <>
-            {isMockData && (
-              <Alert className="mb-4 bg-blue-900/20 border-blue-500">
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-blue-200">
-                  Currently showing sample data due to Discord OAuth configuration. The import functionality will work with this demo data to show you how the feature works.
-                </AlertDescription>
-              </Alert>
-            )}
-
             <div className="grid md:grid-cols-2 gap-6">
               {/* Servers */}
               <div>
@@ -455,7 +447,6 @@ const DiscordImportModal = ({
             <div className="flex justify-between items-center pt-4 border-t border-[#40444B]">
               <div className="text-sm text-gray-400">
                 Selected: {selectedServers.length} servers, {selectedBots.length} bots
-                {isMockData && ' (Sample Data)'}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -480,7 +471,7 @@ const DiscordImportModal = ({
                       Importing...
                     </>
                   ) : (
-                    `${isMockData ? 'Demo ' : ''}Import Selected`
+                    'Import Selected'
                   )}
                 </Button>
               </div>

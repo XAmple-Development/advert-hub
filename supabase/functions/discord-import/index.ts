@@ -68,7 +68,22 @@ serve(async (req: Request) => {
     });
   }
 
-  // 7. Parse JSON body first to check action
+  // 7. Get Discord access token from user metadata
+  const discordAccessToken = user.user_metadata?.provider_token || user.identities?.[0]?.access_token;
+  console.log('[discord-import] Discord token available:', !!discordAccessToken);
+
+  if (!discordAccessToken) {
+    console.error('[discord-import][ERROR] No Discord access token found');
+    return new Response(JSON.stringify({
+      error: 'Discord access token not found. Please re-authenticate with Discord.',
+      code: 'NO_DISCORD_TOKEN'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400
+    });
+  }
+
+  // 8. Parse JSON body first to check action
   let requestBody: any = {};
   try {
     requestBody = await req.json();
@@ -84,105 +99,201 @@ serve(async (req: Request) => {
   console.log('[discord-import] action:', action);
 
   if (action === 'fetch') {
-    // For now, return mock data since the Discord OAuth token issue is preventing real API calls
-    // This will allow the UI to work while we resolve the token storage issue
-    console.log('[discord-import] Returning mock data due to Discord token limitations');
-    
-    const mockServers = [
-      {
-        id: '123456789012345678',
-        name: 'My Gaming Server',
-        icon: null,
-        permissions: '8',
-        member_count: 150,
-        owner: true
-      },
-      {
-        id: '234567890123456789',
-        name: 'Community Hub',
-        icon: null,
-        permissions: '8',
-        member_count: 75,
-        owner: false
-      }
-    ];
+    try {
+      console.log('[discord-import] Fetching real Discord data...');
 
-    const mockBots = [
-      {
-        id: '345678901234567890',
-        name: 'My Bot',
-        icon: null,
-        description: 'A helpful Discord bot',
-        public: false
-      }
-    ];
+      // Fetch user's Discord guilds (servers)
+      const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: {
+          'Authorization': `Bearer ${discordAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    return new Response(JSON.stringify({
-      servers: mockServers,
-      bots: mockBots,
-      note: 'This is mock data. Discord OAuth token storage needs to be configured properly for real data.'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200
-    });
+      if (!guildsResponse.ok) {
+        console.error('[discord-import][ERROR] Failed to fetch guilds:', guildsResponse.status, await guildsResponse.text());
+        throw new Error(`Failed to fetch Discord servers: ${guildsResponse.status}`);
+      }
+
+      const guilds = await guildsResponse.json();
+      console.log('[discord-import] Fetched guilds:', guilds.length);
+
+      // Filter servers where user has MANAGE_GUILD permission (0x20) or is owner
+      const manageableServers = guilds.filter((guild: any) => {
+        const hasManagePermission = (parseInt(guild.permissions) & 0x20) === 0x20;
+        return guild.owner || hasManagePermission;
+      });
+
+      // Fetch user's Discord applications (bots)
+      const appsResponse = await fetch('https://discord.com/api/v10/applications', {
+        headers: {
+          'Authorization': `Bearer ${discordAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      let applications = [];
+      if (appsResponse.ok) {
+        applications = await appsResponse.json();
+        console.log('[discord-import] Fetched applications:', applications.length);
+      } else {
+        console.log('[discord-import] Could not fetch applications (this is normal if user has no bots):', appsResponse.status);
+      }
+
+      // For servers, we need to get member counts
+      const serversWithCounts = await Promise.all(
+        manageableServers.map(async (guild: any) => {
+          try {
+            // Try to get approximate member count from guild object first
+            let memberCount = guild.approximate_member_count || 0;
+            
+            // If not available, try to fetch from guild endpoint (requires bot permissions)
+            if (!memberCount) {
+              const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${guild.id}?with_counts=true`, {
+                headers: {
+                  'Authorization': `Bearer ${discordAccessToken}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              
+              if (guildResponse.ok) {
+                const guildData = await guildResponse.json();
+                memberCount = guildData.approximate_member_count || 0;
+              }
+            }
+
+            return {
+              id: guild.id,
+              name: guild.name,
+              icon: guild.icon,
+              permissions: guild.permissions,
+              member_count: memberCount,
+              owner: guild.owner
+            };
+          } catch (error) {
+            console.error(`[discord-import] Error fetching data for guild ${guild.id}:`, error);
+            return {
+              id: guild.id,
+              name: guild.name,
+              icon: guild.icon,
+              permissions: guild.permissions,
+              member_count: 0,
+              owner: guild.owner
+            };
+          }
+        })
+      );
+
+      // Format bots data
+      const bots = applications.map((app: any) => ({
+        id: app.id,
+        name: app.name,
+        icon: app.icon,
+        description: app.description || 'A Discord bot application',
+        public: app.bot_public || false
+      }));
+
+      console.log('[discord-import] Returning real Discord data:', {
+        servers: serversWithCounts.length,
+        bots: bots.length
+      });
+
+      return new Response(JSON.stringify({
+        servers: serversWithCounts,
+        bots: bots
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      });
+
+    } catch (error: any) {
+      console.error('[discord-import][ERROR] Failed to fetch Discord data:', error);
+      return new Response(JSON.stringify({
+        error: 'Failed to fetch Discord data',
+        message: error.message,
+        code: 'DISCORD_API_ERROR'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      });
+    }
   }
 
   if (action === 'import') {
     console.log('[discord-import] Starting import process...');
     const { servers: selectedServerIds, bots: selectedBotIds } = requestBody;
     
-    // Mock data to match what we return in fetch
-    const mockServers = [
-      {
-        id: '123456789012345678',
-        name: 'My Gaming Server',
-        icon: null,
-        permissions: '8',
-        member_count: 150,
-        owner: true
-      },
-      {
-        id: '234567890123456789',
-        name: 'Community Hub',
-        icon: null,
-        permissions: '8',
-        member_count: 75,
-        owner: false
-      }
-    ];
-
-    const mockBots = [
-      {
-        id: '345678901234567890',
-        name: 'My Bot',
-        icon: null,
-        description: 'A helpful Discord bot',
-        public: false
-      }
-    ];
-
     try {
+      // Fetch the real data again to import
+      const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: {
+          'Authorization': `Bearer ${discordAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!guildsResponse.ok) {
+        throw new Error(`Failed to fetch Discord servers: ${guildsResponse.status}`);
+      }
+
+      const guilds = await guildsResponse.json();
+      const manageableServers = guilds.filter((guild: any) => {
+        const hasManagePermission = (parseInt(guild.permissions) & 0x20) === 0x20;
+        return guild.owner || hasManagePermission;
+      });
+
+      const appsResponse = await fetch('https://discord.com/api/v10/applications', {
+        headers: {
+          'Authorization': `Bearer ${discordAccessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      let applications = [];
+      if (appsResponse.ok) {
+        applications = await appsResponse.json();
+      }
+
       let importedServers = 0;
       let importedBots = 0;
 
       // Import selected servers
       if (selectedServerIds && selectedServerIds.length > 0) {
-        const serversToImport = mockServers.filter(server => selectedServerIds.includes(server.id));
+        const serversToImport = manageableServers.filter((server: any) => selectedServerIds.includes(server.id));
         
         for (const server of serversToImport) {
+          // Get member count
+          let memberCount = server.approximate_member_count || 0;
+          try {
+            const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${server.id}?with_counts=true`, {
+              headers: {
+                'Authorization': `Bearer ${discordAccessToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (guildResponse.ok) {
+              const guildData = await guildResponse.json();
+              memberCount = guildData.approximate_member_count || memberCount;
+            }
+          } catch (error) {
+            console.error(`Error fetching member count for ${server.id}:`, error);
+          }
+
           const { error: serverError } = await supabaseClient
             .from('listings')
             .insert({
               user_id: user.id,
               type: 'server',
               name: server.name,
-              description: `Discord server with ${server.member_count} members. ${server.owner ? 'You are the owner of this server.' : 'You have manage permissions.'}`,
-              member_count: server.member_count,
+              description: `Discord server with ${memberCount} members. ${server.owner ? 'You are the owner of this server.' : 'You have manage permissions.'}`,
+              member_count: memberCount,
               view_count: 0,
               bump_count: 0,
               status: 'active',
               avatar_url: server.icon ? `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png` : null,
-              discord_id: server.id
+              discord_id: server.id,
+              invite_url: null // Will need to be set manually by user
             });
 
           if (serverError) {
@@ -196,7 +307,7 @@ serve(async (req: Request) => {
 
       // Import selected bots
       if (selectedBotIds && selectedBotIds.length > 0) {
-        const botsToImport = mockBots.filter(bot => selectedBotIds.includes(bot.id));
+        const botsToImport = applications.filter((bot: any) => selectedBotIds.includes(bot.id));
         
         for (const bot of botsToImport) {
           const { error: botError } = await supabaseClient
@@ -211,7 +322,8 @@ serve(async (req: Request) => {
               bump_count: 0,
               status: 'active',
               avatar_url: bot.icon ? `https://cdn.discordapp.com/app-icons/${bot.id}/${bot.icon}.png` : null,
-              discord_id: bot.id
+              discord_id: bot.id,
+              invite_url: null // Will need to be set manually by user
             });
 
           if (botError) {
