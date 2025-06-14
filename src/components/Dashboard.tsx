@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -102,7 +101,7 @@ const Dashboard = () => {
   };
 
   const handleImportComplete = () => {
-    console.log('Dashboard: Import completed, refreshing listings...');
+    console.log('Dashboard: Server import completed, refreshing listings...');
     // Force a fresh fetch of listings
     setLoading(true);
     fetchListings();
@@ -142,7 +141,7 @@ const Dashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold text-white mb-2">Your Listings</h2>
-            <p className="text-gray-400">Manage your Discord servers and bots</p>
+            <p className="text-gray-400">Manage your Discord servers</p>
           </div>
           <div className="flex gap-3">
             <Button
@@ -150,7 +149,7 @@ const Dashboard = () => {
               className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
             >
               <Download className="h-4 w-4 mr-2" />
-              Import from Discord
+              Import Servers from Discord
             </Button>
             <Button
               onClick={() => setShowCreateModal(true)}
@@ -168,7 +167,7 @@ const Dashboard = () => {
               <div className="text-gray-400 mb-4">
                 <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <h3 className="text-xl font-semibold text-white mb-2">No listings yet</h3>
-                <p>Get started by creating your first listing or importing from Discord</p>
+                <p>Get started by creating your first listing or importing servers from Discord</p>
                 <p className="text-xs mt-2 text-gray-500">Debug: User ID: {user?.id}</p>
               </div>
               <div className="flex gap-3 justify-center">
@@ -177,7 +176,7 @@ const Dashboard = () => {
                   className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Import from Discord
+                  Import Servers from Discord
                 </Button>
                 <Button
                   onClick={() => setShowCreateModal(true)}
