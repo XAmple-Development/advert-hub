@@ -1,4 +1,5 @@
 
+// Edge Function: discord-import
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -7,7 +8,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Utility for CORS preflight
 function handleOptions(req: Request) {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -16,11 +16,14 @@ function handleOptions(req: Request) {
 }
 
 serve(async (req: Request) => {
-  // Handle preflight for CORS
+  // 1. CORS preflight
   const corsResponse = handleOptions(req);
   if (corsResponse) return corsResponse;
 
-  // Create Supabase client for Edge Functions
+  // 2. Logging request headers
+  console.log('[discord-import] Request headers:', Object.fromEntries(req.headers.entries()));
+
+  // 3. Create Supabase client
   const supabaseClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -31,36 +34,36 @@ serve(async (req: Request) => {
     }
   );
 
-  // Check user session
+  // 4. Get user
   const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
+  console.log('[discord-import] user:', JSON.stringify(user));
   if (userError || !user) {
-    return new Response(JSON.stringify({
-      error: 'Authentication failed',
-      code: 'AUTH_ERROR'
-    }), {
+    console.error('[discord-import][ERROR] user auth failed:', userError);
+    return new Response(JSON.stringify({error: 'Authentication failed', code: 'AUTH_ERROR'}), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 401
     });
   }
 
-  // Verify Discord login
-  const isDiscord = user.app_metadata?.provider === 'discord' ||
-    user.app_metadata?.providers?.includes('discord');
+  // 5. Check Discord provider
+  const isDiscord = user.app_metadata?.provider === 'discord'
+    || user.app_metadata?.providers?.includes('discord');
+  console.log('[discord-import] isDiscord:', isDiscord, 'app_metadata:', user.app_metadata);
 
   if (!isDiscord) {
-    return new Response(JSON.stringify({
-      error: 'Discord authentication required',
-      code: 'NOT_DISCORD_USER'
-    }), {
+    console.error('[discord-import][ERROR] Not a Discord user');
+    return new Response(JSON.stringify({error: 'Discord authentication required', code: 'NOT_DISCORD_USER'}), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400
     });
   }
 
-  // Get raw session to access tokens
+  // 6. Get session for tokens
   const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+  console.log('[discord-import] session:', JSON.stringify(session));
   if (sessionError || !session) {
+    console.error('[discord-import][ERROR] No active session:', sessionError);
     return new Response(JSON.stringify({
       error: 'No active session',
       code: 'NO_SESSION'
@@ -70,12 +73,13 @@ serve(async (req: Request) => {
     });
   }
 
-  // Attempt to obtain Discord OAuth token
   let discordToken: string | undefined = session.provider_token
     || session.access_token
     || user.user_metadata?.provider_token;
+  console.log('[discord-import] discordToken:', discordToken ? '[REDACTED]' : null);
 
   if (!discordToken) {
+    console.error('[discord-import][ERROR] No Discord token found');
     return new Response(JSON.stringify({
       error: 'No Discord token found. Please sign out completely and sign in only with Discord.',
       code: 'NO_DISCORD_TOKEN'
@@ -85,24 +89,23 @@ serve(async (req: Request) => {
     });
   }
 
-  // Parse action
+  // 7. Parse request body
   let requestBody: any = {};
   try {
     requestBody = await req.json();
-  } catch (_) {
-    return new Response(JSON.stringify({
-      error: 'Invalid request body',
-      code: 'BAD_REQUEST'
-    }), {
+  } catch (e) {
+    console.error('[discord-import][ERROR] Invalid request body:', e);
+    return new Response(JSON.stringify({error: 'Invalid request body', code: 'BAD_REQUEST'}), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400
     });
   }
 
   const { action } = requestBody;
+  console.log('[discord-import] action:', action);
 
   if (action === 'fetch') {
-    // Example: test Discord OAuth, fetch user object
+    // 8. Fetch Discord profile (test)
     try {
       const userResponse = await fetch('https://discord.com/api/v10/users/@me', {
         headers: {
@@ -110,19 +113,21 @@ serve(async (req: Request) => {
           'Content-Type': 'application/json',
         }
       });
+      const text = await userResponse.text();
+      console.log('[discord-import] Discord API /users/@me status:', userResponse.status, 'body:', text);
 
       if (!userResponse.ok) {
         return new Response(JSON.stringify({
           error: 'Failed to fetch Discord profile',
-          code: 'DISCORD_PROFILE_FAIL'
+          code: 'DISCORD_PROFILE_FAIL',
+          details: text,
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400
         });
       }
 
-      const discordUser = await userResponse.json();
-      // Minimal working return (expand as needed)
+      const discordUser = JSON.parse(text);
       return new Response(JSON.stringify({
         discord_user: discordUser
       }), {
@@ -131,6 +136,7 @@ serve(async (req: Request) => {
       });
 
     } catch (e) {
+      console.error('[discord-import][ERROR] Could not connect to Discord API:', e);
       return new Response(JSON.stringify({
         error: 'Could not connect to Discord API',
         details: e.message,
@@ -142,9 +148,9 @@ serve(async (req: Request) => {
     }
   }
 
-  // Skeleton for import action (not implemented)
   if (action === 'import') {
-    // Place import logic here
+    // Place import logic here; log received payload
+    console.log('[discord-import] import payload:', JSON.stringify(requestBody));
     return new Response(JSON.stringify({
       success: false,
       message: 'Import logic not implemented in starter template.'
@@ -154,6 +160,8 @@ serve(async (req: Request) => {
     });
   }
 
+  // Fallback for invalid actions
+  console.error('[discord-import][ERROR] Invalid action:', action);
   return new Response(JSON.stringify({
     error: 'Invalid action.',
     code: 'INVALID_ACTION'
