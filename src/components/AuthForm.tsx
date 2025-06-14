@@ -85,7 +85,7 @@ const AuthForm = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          scopes: 'identify email guilds applications.builds.read',
+          scopes: 'identify email guilds applications.commands applications.read',
           redirectTo: `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
