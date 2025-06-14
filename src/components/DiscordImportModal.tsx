@@ -53,7 +53,6 @@ const DiscordImportModal = ({
 }: DiscordImportModalProps) => {
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState<DiscordServer[]>([]);
-  const [bots, setBots] = useState<DiscordBot[]>([]);
   const [selectedServers, setSelectedServers] = useState<string[]>([]);
   const [selectedBots, setSelectedBots] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
@@ -313,7 +312,7 @@ const DiscordImportModal = ({
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-white">Discord Authentication Required</h3>
               <p className="text-gray-400 max-w-md">
-                To import your Discord servers and bots, you need to sign in with Discord. 
+                To import your Discord Servers, you need to sign in with Discord. 
                 You are currently signed in with email.
               </p>
             </div>
@@ -453,66 +452,6 @@ const DiscordImportModal = ({
                   </div>
                 </ScrollArea>
               </div>
-
-              {/* Bots */}
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Bot className="h-5 w-5" />
-                  Your Bots ({bots.length})
-                </h3>
-                <ScrollArea className="h-[400px]">
-                  <div className="space-y-3">
-                    {bots.map((bot) => (
-                      <Card key={bot.id} className="bg-[#2C2F33] border-[#40444B]">
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center space-x-3">
-                            <Checkbox
-                              checked={selectedBots.includes(bot.id)}
-                              onCheckedChange={() => toggleBot(bot.id)}
-                            />
-                            {bot.icon ? (
-                              <img
-                                src={`https://cdn.discordapp.com/app-icons/${bot.id}/${bot.icon}.png`}
-                                alt={bot.name}
-                                className="w-10 h-10 rounded-full"
-                                onError={(e) =>
-                                  (e.currentTarget.src = '/fallback-icon.png')
-                                }
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
-                                <Bot className="h-5 w-5 text-white" />
-                              </div>
-                            )}
-                            <div className="flex-1">
-                              <CardTitle className="text-sm text-white">
-                                {bot.name}
-                              </CardTitle>
-                              <CardDescription className="text-xs text-gray-400">
-                                {bot.description || 'No description'}
-                              </CardDescription>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge
-                                  variant={bot.public ? 'default' : 'secondary'}
-                                  className="text-xs"
-                                >
-                                  {bot.public ? 'Public' : 'Private'}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                    {bots.length === 0 && (
-                      <p className="text-gray-400 text-center py-4">
-                        No bots found in your Discord applications
-                      </p>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-            </div>
 
             <div className="flex justify-between items-center pt-4 border-t border-[#40444B]">
               <div className="text-sm text-gray-400">
