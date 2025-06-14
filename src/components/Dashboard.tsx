@@ -34,6 +34,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const fetchListings = async () => {
+    console.log('Dashboard: fetchListings called for user:', user?.id);
     try {
       const { data, error } = await supabase
         .from('listings')
@@ -41,9 +42,17 @@ const Dashboard = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Dashboard: Query result:', { data, error, userID: user?.id });
+      
+      if (error) {
+        console.error('Dashboard: Error fetching listings:', error);
+        throw error;
+      }
+      
+      console.log('Dashboard: Setting listings to:', data);
       setListings(data || []);
     } catch (error: any) {
+      console.error('Dashboard: fetchListings error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -56,6 +65,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('Dashboard: User found, fetching listings...');
       fetchListings();
     }
   }, [user]);
@@ -91,6 +101,13 @@ const Dashboard = () => {
     }
   };
 
+  const handleImportComplete = () => {
+    console.log('Dashboard: Import completed, refreshing listings...');
+    // Force a fresh fetch of listings
+    setLoading(true);
+    fetchListings();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
@@ -98,6 +115,8 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  console.log('Dashboard: Rendering with listings:', listings);
 
   return (
     <div className="min-h-screen bg-[#2C2F33]">
@@ -150,6 +169,7 @@ const Dashboard = () => {
                 <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
                 <h3 className="text-xl font-semibold text-white mb-2">No listings yet</h3>
                 <p>Get started by creating your first listing or importing from Discord</p>
+                <p className="text-xs mt-2 text-gray-500">Debug: User ID: {user?.id}</p>
               </div>
               <div className="flex gap-3 justify-center">
                 <Button
@@ -256,7 +276,7 @@ const Dashboard = () => {
       <DiscordImportModal
         open={showImportModal}
         onOpenChange={setShowImportModal}
-        onImportComplete={fetchListings}
+        onImportComplete={handleImportComplete}
       />
     </div>
   );
