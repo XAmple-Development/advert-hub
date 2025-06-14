@@ -5,69 +5,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Crown, Users, TrendingUp, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Plus, Server, Bot, Users, Eye, TrendingUp, LogOut, Download } from 'lucide-react';
 import CreateListingModal from './CreateListingModal';
+import DiscordImportModal from './DiscordImportModal';
+import { useNavigate } from 'react-router-dom';
 
 interface Listing {
   id: string;
+  type: 'server' | 'bot';
   name: string;
   description: string;
-  type: 'server' | 'bot';
-  status: 'active' | 'pending' | 'suspended';
   member_count: number;
   view_count: number;
   bump_count: number;
+  status: string;
   created_at: string;
-}
-
-interface Profile {
-  username: string;
-  subscription_tier: 'free' | 'premium';
+  avatar_url?: string;
 }
 
 const Dashboard = () => {
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchProfile();
-    fetchListings();
-  }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('username, subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load profile",
-      });
-    }
-  };
+  const navigate = useNavigate();
 
   const fetchListings = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data, error } = await supabase
         .from('listings')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -76,161 +47,199 @@ const Dashboard = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load listings",
+        description: "Failed to fetch your listings",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (user) {
+      fetchListings();
+    }
+  }, [user]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully.",
-    });
+    navigate('/');
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500';
-      case 'pending': return 'bg-yellow-500';
-      case 'suspended': return 'bg-red-500';
-      default: return 'bg-gray-500';
+  const handleBump = async (listingId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bumps')
+        .insert({
+          listing_id: listingId,
+          user_id: user?.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Your listing has been bumped to the top!",
+      });
+
+      fetchListings();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-white text-xl">Loading your dashboard...</div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#2C2F33]">
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Welcome back, {profile?.username || 'User'}!
-            </h1>
-            <div className="flex items-center gap-2">
-              <Badge className={`${profile?.subscription_tier === 'premium' ? 'bg-yellow-500' : 'bg-gray-500'} text-white`}>
-                {profile?.subscription_tier === 'premium' ? (
-                  <>
-                    <Crown className="w-3 h-3 mr-1" />
-                    Premium
-                  </>
-                ) : (
-                  'Free'
-                )}
-              </Badge>
-            </div>
+      <nav className="bg-[#36393F] border-b border-[#40444B] px-6 py-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <h1 className="text-2xl font-bold text-white">Discord Boost Dashboard</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-300">Welcome, {user?.email}</span>
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              size="sm"
+              className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
-          <Button onClick={handleSignOut} variant="outline" className="border-gray-400 text-gray-300 hover:bg-gray-800">
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-2">Your Listings</h2>
+            <p className="text-gray-400">Manage your Discord servers and bots</p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setShowImportModal(true)}
+              className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Import from Discord
+            </Button>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-[#57F287] hover:bg-[#3BA55C] text-black"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Listing
+            </Button>
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-[#36393F] border-[#40444B]">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-400">Total Listings</CardTitle>
-              <Users className="h-4 w-4 text-[#5865F2]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">{listings.length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#36393F] border-[#40444B]">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-400">Total Views</CardTitle>
-              <TrendingUp className="h-4 w-4 text-[#5865F2]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {listings.reduce((sum, listing) => sum + listing.view_count, 0)}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#36393F] border-[#40444B]">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-400">Total Bumps</CardTitle>
-              <TrendingUp className="h-4 w-4 text-[#5865F2]" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {listings.reduce((sum, listing) => sum + listing.bump_count, 0)}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Listings Section */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Your Listings</h2>
-          <Button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Listing
-          </Button>
-        </div>
-
-        {/* Listings Grid */}
         {listings.length === 0 ? (
           <Card className="bg-[#36393F] border-[#40444B] text-center py-12">
             <CardContent>
-              <div className="text-gray-400 mb-4">No listings yet</div>
-              <Button 
-                onClick={() => setShowCreateModal(true)}
-                className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-              >
-                Create Your First Listing
-              </Button>
+              <div className="text-gray-400 mb-4">
+                <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold text-white mb-2">No listings yet</h3>
+                <p>Get started by creating your first listing or importing from Discord</p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  onClick={() => setShowImportModal(true)}
+                  className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Import from Discord
+                </Button>
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-[#57F287] hover:bg-[#3BA55C] text-black"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Listing
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {listings.map((listing) => (
-              <Card key={listing.id} className="bg-[#36393F] border-[#40444B]">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-white">{listing.name}</CardTitle>
-                      <CardDescription className="text-gray-400">
-                        {listing.type === 'server' ? 'Discord Server' : 'Discord Bot'}
-                      </CardDescription>
+              <Card key={listing.id} className="bg-[#36393F] border-[#40444B] hover:border-[#5865F2] transition-colors">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center space-x-3">
+                    {listing.avatar_url ? (
+                      <img
+                        src={listing.avatar_url}
+                        alt={listing.name}
+                        className="w-12 h-12 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-[#5865F2] rounded-full flex items-center justify-center">
+                        {listing.type === 'server' ? (
+                          <Server className="h-6 w-6 text-white" />
+                        ) : (
+                          <Bot className="h-6 w-6 text-white" />
+                        )}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <CardTitle className="text-white text-lg">{listing.name}</CardTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant={listing.type === 'server' ? 'default' : 'secondary'}>
+                          {listing.type}
+                        </Badge>
+                        <Badge variant={listing.status === 'active' ? 'default' : 'destructive'}>
+                          {listing.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <Badge className={getStatusColor(listing.status)}>
-                      {listing.status}
-                    </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-gray-300 mb-4 line-clamp-2">{listing.description}</p>
+                <CardContent className="space-y-4">
+                  <CardDescription className="text-gray-300 line-clamp-2">
+                    {listing.description}
+                  </CardDescription>
+                  
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <div className="text-center">
-                      <div className="text-white font-semibold">{listing.member_count}</div>
-                      <div className="text-gray-400">Members</div>
+                      <div className="flex items-center justify-center text-gray-400 mb-1">
+                        <Users className="h-4 w-4" />
+                      </div>
+                      <div className="text-white font-semibold">{listing.member_count || 0}</div>
+                      <div className="text-gray-500 text-xs">Members</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-white font-semibold">{listing.view_count}</div>
-                      <div className="text-gray-400">Views</div>
+                      <div className="flex items-center justify-center text-gray-400 mb-1">
+                        <Eye className="h-4 w-4" />
+                      </div>
+                      <div className="text-white font-semibold">{listing.view_count || 0}</div>
+                      <div className="text-gray-500 text-xs">Views</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-white font-semibold">{listing.bump_count}</div>
-                      <div className="text-gray-400">Bumps</div>
+                      <div className="flex items-center justify-center text-gray-400 mb-1">
+                        <TrendingUp className="h-4 w-4" />
+                      </div>
+                      <div className="text-white font-semibold">{listing.bump_count || 0}</div>
+                      <div className="text-gray-500 text-xs">Bumps</div>
                     </div>
                   </div>
+
+                  <Button
+                    onClick={() => handleBump(listing.id)}
+                    className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                    size="sm"
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Bump Listing
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -238,10 +247,16 @@ const Dashboard = () => {
         )}
       </div>
 
-      <CreateListingModal 
-        open={showCreateModal} 
+      <CreateListingModal
+        open={showCreateModal}
         onOpenChange={setShowCreateModal}
         onSuccess={fetchListings}
+      />
+
+      <DiscordImportModal
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
+        onImportComplete={fetchListings}
       />
     </div>
   );

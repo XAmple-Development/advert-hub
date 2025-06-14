@@ -6,7 +6,6 @@ import Features from '@/components/Features';
 import HowItWorks from '@/components/HowItWorks';
 import Pricing from '@/components/Pricing';
 import Footer from '@/components/Footer';
-import AuthForm from '@/components/AuthForm';
 import Dashboard from '@/components/Dashboard';
 
 const Index = () => {
@@ -20,13 +19,22 @@ const Index = () => {
     );
   }
 
-  // Show auth form if not authenticated
-  if (!user) {
-    return <AuthForm />;
+  // Show dashboard if authenticated, otherwise show landing page
+  if (user) {
+    return <Dashboard />;
   }
 
-  // Show dashboard if authenticated
-  return <Dashboard />;
+  // Show the main landing page for non-authenticated users
+  return (
+    <div className="min-h-screen bg-[#2C2F33]">
+      <Navbar />
+      <Hero />
+      <Features />
+      <HowItWorks />
+      <Pricing />
+      <Footer />
+    </div>
+  );
 };
 
 export default Index;
