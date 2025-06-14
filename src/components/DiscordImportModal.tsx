@@ -19,7 +19,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Bot, Server, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, Users, Bot, Server, AlertCircle, RefreshCw, LogOut, LogIn } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface DiscordServer {
   id: string;
@@ -57,12 +58,18 @@ const DiscordImportModal = ({
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detailedError, setDetailedError] = useState<any>(null);
+  const [needsDiscordAuth, setNeedsDiscordAuth] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Check if user signed in with Discord
+  const isDiscordUser = user?.app_metadata?.providers?.includes('discord');
 
   const fetchDiscordData = async () => {
     setLoading(true);
     setError(null);
     setDetailedError(null);
+    setNeedsDiscordAuth(false);
     
     try {
       console.log('Fetching Discord data...');
@@ -95,6 +102,14 @@ const DiscordImportModal = ({
       if (error) {
         console.error('Supabase function error:', error);
         setDetailedError(error);
+        
+        // Check if this is a Discord token issue
+        if (error.message?.includes('FunctionsHttpError') || 
+            (typeof error.context === 'object' && error.context?.content && Object.keys(error.context.content).length === 0)) {
+          setNeedsDiscordAuth(true);
+          throw new Error('Discord authentication required. You need to sign in with Discord to import your servers and bots.');
+        }
+        
         throw new Error(error.message || 'Supabase function error');
       }
 
@@ -102,6 +117,12 @@ const DiscordImportModal = ({
       if (data && data.error) {
         console.error('Function returned error:', data);
         setDetailedError(data);
+        
+        // Check for Discord token related errors
+        if (data.code === 'NO_DISCORD_TOKEN' || data.error.includes('Discord access token')) {
+          setNeedsDiscordAuth(true);
+        }
+        
         throw new Error(data.details || data.error);
       }
 
@@ -132,9 +153,15 @@ const DiscordImportModal = ({
 
   useEffect(() => {
     if (open) {
+      // Check Discord authentication first
+      if (!isDiscordUser) {
+        setNeedsDiscordAuth(true);
+        setError('Discord authentication required. You need to sign in with Discord to import your servers and bots.');
+        return;
+      }
       fetchDiscordData();
     }
-  }, [open]);
+  }, [open, isDiscordUser]);
 
   const handleImport = async () => {
     setImporting(true);
@@ -200,6 +227,47 @@ const DiscordImportModal = ({
     fetchDiscordData();
   };
 
+  const handleSignInWithDiscord = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        console.error('Discord sign-in error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Sign-in failed',
+          description: error.message,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error signing in with Discord:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Sign-in failed',
+        description: 'Failed to sign in with Discord',
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Error signing out:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Sign-out failed',
+        description: error.message,
+      });
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(next) => !importing && onOpenChange(next)}>
       <DialogContent className="max-w-4xl max-h-[80vh] bg-[#36393F] border-[#40444B]">
@@ -210,7 +278,47 @@ const DiscordImportModal = ({
           </DialogDescription>
         </DialogHeader>
 
-        {error ? (
+        {needsDiscordAuth ? (
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <AlertCircle className="h-12 w-12 text-yellow-500" />
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold text-white">Discord Authentication Required</h3>
+              <p className="text-gray-400 max-w-md">
+                To import your Discord servers and bots, you need to sign in with Discord. 
+                {!isDiscordUser && ' You are currently signed in with email.'}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {!isDiscordUser ? (
+                <>
+                  <Button
+                    onClick={handleSignOut}
+                    variant="outline"
+                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                  <Button
+                    onClick={handleSignInWithDiscord}
+                    className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign In with Discord
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={handleRetry}
+                  className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : error ? (
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <AlertCircle className="h-12 w-12 text-red-500" />
             <div className="text-center space-y-2">
