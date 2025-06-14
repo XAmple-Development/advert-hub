@@ -92,6 +92,12 @@ serve(async (req) => {
       if (!guildsResponse.ok) {
         const errorText = await guildsResponse.text()
         console.error('Discord API error:', errorText)
+        
+        // If we get a 401, the token is invalid
+        if (guildsResponse.status === 401) {
+          throw new Error('Discord authentication expired. Please sign out and sign back in with Discord.')
+        }
+        
         throw new Error(`Failed to fetch Discord servers: ${guildsResponse.status} ${errorText}`)
       }
 
@@ -108,20 +114,29 @@ serve(async (req) => {
 
       console.log('Manageable guilds:', manageableGuilds.length)
 
-      // Fetch user's Discord applications (bots)
-      const appsResponse = await fetch('https://discord.com/api/v10/applications', {
-        headers: {
-          'Authorization': `Bearer ${discordToken}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
+      // For Discord applications, we need to try a different approach
+      // The /applications endpoint requires different permissions
       let applications: DiscordApplication[] = []
-      if (appsResponse.ok) {
-        applications = await appsResponse.json()
-        console.log('Found applications:', applications.length)
-      } else {
-        console.log('Could not fetch applications:', appsResponse.status)
+      
+      // Try to fetch applications - this might fail if user doesn't have any
+      try {
+        const appsResponse = await fetch('https://discord.com/api/v10/applications', {
+          headers: {
+            'Authorization': `Bearer ${discordToken}`,
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (appsResponse.ok) {
+          applications = await appsResponse.json()
+          console.log('Found applications:', applications.length)
+        } else {
+          console.log('Could not fetch applications:', appsResponse.status)
+          // This is not a critical error - many users don't have bot applications
+        }
+      } catch (error) {
+        console.log('Error fetching applications (non-critical):', error)
+        // Continue without applications
       }
 
       return new Response(
@@ -159,7 +174,7 @@ serve(async (req) => {
         // Get detailed server info
         const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${serverId}?with_counts=true`, {
           headers: {
-            'Authorization': `Bot ${discordToken}`, // Note: This might need a bot token instead
+            'Authorization': `Bearer ${discordToken}`,
             'Content-Type': 'application/json',
           },
         })
@@ -167,6 +182,9 @@ serve(async (req) => {
         let guildData: any = {}
         if (guildResponse.ok) {
           guildData = await guildResponse.json()
+        } else {
+          console.log(`Could not fetch detailed info for guild ${serverId}:`, guildResponse.status)
+          // Continue with basic info from the guilds list
         }
 
         // Create listing in database
@@ -192,6 +210,8 @@ serve(async (req) => {
 
         if (!listingError && listing) {
           importedListings.push(listing)
+        } else {
+          console.error('Error creating server listing:', listingError)
         }
       }
 
@@ -208,6 +228,8 @@ serve(async (req) => {
         let botData: any = {}
         if (botResponse.ok) {
           botData = await botResponse.json()
+        } else {
+          console.log(`Could not fetch detailed info for bot ${botId}:`, botResponse.status)
         }
 
         // Create listing in database
@@ -227,6 +249,8 @@ serve(async (req) => {
 
         if (!listingError && listing) {
           importedListings.push(listing)
+        } else {
+          console.error('Error creating bot listing:', listingError)
         }
       }
 
