@@ -180,7 +180,7 @@ serve(async (req: Request) => {
         const discordUser = await userResponse.json();
         console.log('[discord-import] Discord user verified:', discordUser.username);
 
-        // Fetch guilds
+        // Fetch guilds with member count data
         console.log('[discord-import] Fetching Discord guilds...');
         const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
           headers: {
@@ -225,49 +225,20 @@ serve(async (req: Request) => {
 
         console.log('[discord-import] Manageable servers:', manageableServers.length);
 
-        // Fetch detailed server information for each manageable server
-        const serversWithDetails = await Promise.all(
-          manageableServers.map(async (guild: any) => {
-            try {
-              // Fetch detailed guild information using bot token (if available) or user token
-              const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${guild.id}?with_counts=true`, {
-                headers: {
-                  'Authorization': `Bearer ${discordAccessToken}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-
-              let detailedGuild = guild;
-              if (guildResponse.ok) {
-                detailedGuild = await guildResponse.json();
-                console.log('[discord-import] Fetched detailed info for:', detailedGuild.name);
-              } else {
-                console.warn('[discord-import] Could not fetch detailed info for guild:', guild.id, guildResponse.status);
-              }
-
-              return {
-                id: guild.id,
-                name: guild.name,
-                icon: guild.icon,
-                permissions: guild.permissions,
-                member_count: detailedGuild.approximate_member_count || 0,
-                owner: guild.owner,
-                description: detailedGuild.description || null
-              };
-            } catch (error) {
-              console.error('[discord-import] Error fetching details for guild:', guild.id, error);
-              return {
-                id: guild.id,
-                name: guild.name,
-                icon: guild.icon,
-                permissions: guild.permissions,
-                member_count: 0,
-                owner: guild.owner,
-                description: null
-              };
-            }
-          })
-        );
+        // Use the guild data we already have instead of trying to fetch additional data
+        const serversWithDetails = manageableServers.map((guild: any) => {
+          console.log('[discord-import] Processing guild:', guild.name, 'Member count:', guild.approximate_member_count);
+          
+          return {
+            id: guild.id,
+            name: guild.name,
+            icon: guild.icon,
+            permissions: guild.permissions,
+            member_count: guild.approximate_member_count || 0,
+            owner: guild.owner,
+            description: guild.description || null
+          };
+        });
 
         console.log('[discord-import] Returning data:', { servers: serversWithDetails.length });
 
@@ -327,25 +298,15 @@ serve(async (req: Request) => {
             
             for (const server of serversToImport) {
               try {
-                // Fetch detailed server information
-                const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${server.id}?with_counts=true`, {
-                  headers: {
-                    'Authorization': `Bearer ${discordAccessToken}`,
-                    'Content-Type': 'application/json'
-                  }
-                });
-
-                let detailedServer = server;
-                if (guildResponse.ok) {
-                  detailedServer = await guildResponse.json();
-                }
+                // Use the member count from the guilds endpoint
+                const memberCount = server.approximate_member_count || 0;
+                console.log('[discord-import] Importing server:', server.name, 'with member count:', memberCount);
 
                 // Create a better description
                 let description = '';
-                if (detailedServer.description) {
-                  description = detailedServer.description;
+                if (server.description) {
+                  description = server.description;
                 } else {
-                  const memberCount = detailedServer.approximate_member_count || 0;
                   const ownerStatus = server.owner ? 'You are the owner of this server.' : 'You have manage permissions.';
                   description = `Discord server with ${memberCount.toLocaleString()} members. ${ownerStatus}`;
                 }
@@ -357,8 +318,8 @@ serve(async (req: Request) => {
                     type: 'server',
                     name: server.name,
                     description: description,
-                    long_description: detailedServer.description || null,
-                    member_count: detailedServer.approximate_member_count || 0,
+                    long_description: server.description || null,
+                    member_count: memberCount,
                     view_count: 0,
                     bump_count: 0,
                     status: 'active',
@@ -371,7 +332,7 @@ serve(async (req: Request) => {
                   console.error('[discord-import][ERROR] Failed to import server:', server.name, serverError);
                 } else {
                   importedServers++;
-                  console.log('[discord-import] Successfully imported server:', server.name);
+                  console.log('[discord-import] Successfully imported server:', server.name, 'with', memberCount, 'members');
                 }
               } catch (error) {
                 console.error('[discord-import][ERROR] Error processing server:', server.name, error);
