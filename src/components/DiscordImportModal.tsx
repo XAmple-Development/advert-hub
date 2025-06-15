@@ -28,9 +28,9 @@ interface DiscordServer {
   name: string;
   icon: string | null;
   permissions: string;
-  member_count?: number;
+  member_count: number;
   owner: boolean;
-  description?: string | null;
+  description?: string;
 }
 
 interface DiscordImportModalProps {
@@ -435,6 +435,13 @@ const DiscordImportModal = ({
                   )}
                 </div>
               </ScrollArea>
+            </div>
+
+            <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+              <p className="text-yellow-400 text-sm">
+                <strong>Note:</strong> Member counts cannot be retrieved automatically due to Discord API limitations. 
+                You can update them manually after importing.
+              </p>
             </div>
 
             <div className="flex justify-between items-center pt-4 border-t border-[#40444B]">

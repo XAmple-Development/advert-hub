@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Server, Bot, Users, Eye, TrendingUp, LogOut, Download } from 'lucide-react';
+import { Plus, Server, Bot, Users, Eye, TrendingUp, LogOut, Download, Edit } from 'lucide-react';
 import CreateListingModal from './CreateListingModal';
 import DiscordImportModal from './DiscordImportModal';
+import EditListingModal from './EditListingModal';
 import { useNavigate } from 'react-router-dom';
 
 interface Listing {
@@ -16,12 +17,16 @@ interface Listing {
   type: 'server' | 'bot';
   name: string;
   description: string;
+  long_description?: string;
   member_count: number;
   view_count: number;
   bump_count: number;
   status: string;
   created_at: string;
   avatar_url?: string;
+  invite_url?: string;
+  website_url?: string;
+  support_server_url?: string;
 }
 
 interface Profile {
@@ -35,6 +40,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -129,10 +136,19 @@ const Dashboard = () => {
     }
   };
 
+  const handleEditListing = (listing: Listing) => {
+    setEditingListing(listing);
+    setShowEditModal(true);
+  };
+
   const handleImportComplete = () => {
     console.log('Dashboard: Import completed, refreshing listings...');
-    // Force a fresh fetch of listings
     setLoading(true);
+    fetchListings();
+  };
+
+  const handleEditSuccess = () => {
+    console.log('Dashboard: Edit completed, refreshing listings...');
     fetchListings();
   };
 
@@ -282,14 +298,25 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  <Button
-                    onClick={() => handleBump(listing.id)}
-                    className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                    size="sm"
-                  >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Bump Listing
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleEditListing(listing)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => handleBump(listing.id)}
+                      className="flex-1 bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                      size="sm"
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Bump
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -308,6 +335,15 @@ const Dashboard = () => {
         onOpenChange={setShowImportModal}
         onImportComplete={handleImportComplete}
       />
+
+      {editingListing && (
+        <EditListingModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          listing={editingListing}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 };

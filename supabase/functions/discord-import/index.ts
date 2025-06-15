@@ -180,7 +180,7 @@ serve(async (req: Request) => {
         const discordUser = await userResponse.json();
         console.log('[discord-import] Discord user verified:', discordUser.username);
 
-        // Fetch guilds with member count data
+        // Fetch guilds - Note: User token can't access member counts
         console.log('[discord-import] Fetching Discord guilds...');
         const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
           headers: {
@@ -225,16 +225,16 @@ serve(async (req: Request) => {
 
         console.log('[discord-import] Manageable servers:', manageableServers.length);
 
-        // Use the guild data we already have instead of trying to fetch additional data
+        // Map guild data - Note: member_count will be 0 due to Discord API limitations
         const serversWithDetails = manageableServers.map((guild: any) => {
-          console.log('[discord-import] Processing guild:', guild.name, 'Member count:', guild.approximate_member_count);
+          console.log('[discord-import] Processing guild:', guild.name);
           
           return {
             id: guild.id,
             name: guild.name,
             icon: guild.icon,
             permissions: guild.permissions,
-            member_count: guild.approximate_member_count || 0,
+            member_count: 0, // User tokens can't access member counts
             owner: guild.owner,
             description: guild.description || null
           };
@@ -243,7 +243,8 @@ serve(async (req: Request) => {
         console.log('[discord-import] Returning data:', { servers: serversWithDetails.length });
 
         return new Response(JSON.stringify({
-          servers: serversWithDetails
+          servers: serversWithDetails,
+          note: "Member counts cannot be retrieved with user authentication - you'll need to update them manually after import."
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
@@ -298,9 +299,7 @@ serve(async (req: Request) => {
             
             for (const server of serversToImport) {
               try {
-                // Use the member count from the guilds endpoint
-                const memberCount = server.approximate_member_count || 0;
-                console.log('[discord-import] Importing server:', server.name, 'with member count:', memberCount);
+                console.log('[discord-import] Importing server:', server.name);
 
                 // Create a better description
                 let description = '';
@@ -308,7 +307,7 @@ serve(async (req: Request) => {
                   description = server.description;
                 } else {
                   const ownerStatus = server.owner ? 'You are the owner of this server.' : 'You have manage permissions.';
-                  description = `Discord server with ${memberCount.toLocaleString()} members. ${ownerStatus}`;
+                  description = `Discord server. ${ownerStatus} Member count needs to be updated manually.`;
                 }
 
                 const { error: serverError } = await supabaseClient
@@ -319,7 +318,7 @@ serve(async (req: Request) => {
                     name: server.name,
                     description: description,
                     long_description: server.description || null,
-                    member_count: memberCount,
+                    member_count: 0, // Will need manual update
                     view_count: 0,
                     bump_count: 0,
                     status: 'active',
@@ -332,7 +331,7 @@ serve(async (req: Request) => {
                   console.error('[discord-import][ERROR] Failed to import server:', server.name, serverError);
                 } else {
                   importedServers++;
-                  console.log('[discord-import] Successfully imported server:', server.name, 'with', memberCount, 'members');
+                  console.log('[discord-import] Successfully imported server:', server.name);
                 }
               } catch (error) {
                 console.error('[discord-import][ERROR] Error processing server:', server.name, error);
@@ -345,7 +344,7 @@ serve(async (req: Request) => {
 
         return new Response(JSON.stringify({
           success: true,
-          message: `Successfully imported ${importedServers} servers.`,
+          message: `Successfully imported ${importedServers} servers. Note: Member counts need to be updated manually.`,
           imported: {
             servers: importedServers
           }
