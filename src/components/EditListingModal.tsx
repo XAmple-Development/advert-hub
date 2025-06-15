@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -75,25 +74,36 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
   }, [listing, form]);
 
   const onSubmit = async (data: EditListingFormData) => {
+    console.log('Starting form submission with data:', data);
     setLoading(true);
+    
     try {
+      // Clean up the data before sending
       const updateData = {
-        name: data.name,
-        description: data.description,
-        long_description: data.long_description || null,
-        member_count: data.member_count,
-        invite_url: data.invite_url || null,
-        website_url: data.website_url || null,
-        support_server_url: data.support_server_url || null,
+        name: data.name.trim(),
+        description: data.description.trim(),
+        long_description: data.long_description?.trim() || null,
+        member_count: Number(data.member_count),
+        invite_url: data.invite_url?.trim() || null,
+        website_url: data.website_url?.trim() || null,
+        support_server_url: data.support_server_url?.trim() || null,
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase
+      console.log('Sending update data to Supabase:', updateData);
+
+      const { data: result, error } = await supabase
         .from('listings')
         .update(updateData)
-        .eq('id', listing.id);
+        .eq('id', listing.id)
+        .select();
 
-      if (error) throw error;
+      console.log('Supabase update result:', { result, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast({
         title: "Success!",
@@ -103,12 +113,14 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Form submission error:', error);
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message || "Failed to update listing. Please try again.",
       });
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -266,6 +278,7 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                disabled={loading}
               >
                 Cancel
               </Button>
