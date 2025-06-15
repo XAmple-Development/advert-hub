@@ -18,7 +18,6 @@ interface Listing {
   name: string;
   description: string;
   long_description?: string;
-  member_count: number;
   invite_url?: string;
   website_url?: string;
   support_server_url?: string;
@@ -35,7 +34,6 @@ const editListingSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   description: z.string().min(1, 'Description is required').max(500, 'Description must be less than 500 characters'),
   long_description: z.string().optional(),
-  member_count: z.number().min(0, 'Member count must be positive'),
   invite_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   website_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   support_server_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
@@ -53,7 +51,6 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
       name: listing.name,
       description: listing.description,
       long_description: listing.long_description || '',
-      member_count: listing.member_count,
       invite_url: listing.invite_url || '',
       website_url: listing.website_url || '',
       support_server_url: listing.support_server_url || '',
@@ -66,7 +63,6 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
       name: listing.name,
       description: listing.description,
       long_description: listing.long_description || '',
-      member_count: listing.member_count,
       invite_url: listing.invite_url || '',
       website_url: listing.website_url || '',
       support_server_url: listing.support_server_url || '',
@@ -74,34 +70,25 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
   }, [listing, form]);
 
   const onSubmit = async (data: EditListingFormData) => {
-    console.log('Starting form submission with data:', data);
     setLoading(true);
     
     try {
-      // Clean up the data before sending
       const updateData = {
         name: data.name.trim(),
         description: data.description.trim(),
         long_description: data.long_description?.trim() || null,
-        member_count: Number(data.member_count),
         invite_url: data.invite_url?.trim() || null,
         website_url: data.website_url?.trim() || null,
         support_server_url: data.support_server_url?.trim() || null,
         updated_at: new Date().toISOString(),
       };
 
-      console.log('Sending update data to Supabase:', updateData);
-
-      const { data: result, error } = await supabase
+      const { error } = await supabase
         .from('listings')
         .update(updateData)
-        .eq('id', listing.id)
-        .select();
-
-      console.log('Supabase update result:', { result, error });
+        .eq('id', listing.id);
 
       if (error) {
-        console.error('Supabase error:', error);
         throw error;
       }
 
@@ -113,14 +100,12 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Form submission error:', error);
       toast({
         variant: "destructive",
         title: "Error",
         description: error.message || "Failed to update listing. Please try again.",
       });
     } finally {
-      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -186,29 +171,6 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
                       className="bg-[#40444B] border-[#565A5E] text-white placeholder-gray-400"
                       placeholder="Detailed description for the listing page"
                       rows={4}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="member_count"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">
-                    {listing.type === 'server' ? 'Member Count' : 'Guild Count'}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      min="0"
-                      className="bg-[#40444B] border-[#565A5E] text-white placeholder-gray-400"
-                      placeholder="0"
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
