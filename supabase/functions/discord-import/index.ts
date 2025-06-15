@@ -225,20 +225,54 @@ serve(async (req: Request) => {
 
         console.log('[discord-import] Manageable servers:', manageableServers.length);
 
-        // Format response data
-        const servers = manageableServers.map((guild: any) => ({
-          id: guild.id,
-          name: guild.name,
-          icon: guild.icon,
-          permissions: guild.permissions,
-          member_count: guild.approximate_member_count || 0,
-          owner: guild.owner
-        }));
+        // Fetch detailed server information for each manageable server
+        const serversWithDetails = await Promise.all(
+          manageableServers.map(async (guild: any) => {
+            try {
+              // Fetch detailed guild information using bot token (if available) or user token
+              const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${guild.id}?with_counts=true`, {
+                headers: {
+                  'Authorization': `Bearer ${discordAccessToken}`,
+                  'Content-Type': 'application/json'
+                }
+              });
 
-        console.log('[discord-import] Returning data:', { servers: servers.length });
+              let detailedGuild = guild;
+              if (guildResponse.ok) {
+                detailedGuild = await guildResponse.json();
+                console.log('[discord-import] Fetched detailed info for:', detailedGuild.name);
+              } else {
+                console.warn('[discord-import] Could not fetch detailed info for guild:', guild.id, guildResponse.status);
+              }
+
+              return {
+                id: guild.id,
+                name: guild.name,
+                icon: guild.icon,
+                permissions: guild.permissions,
+                member_count: detailedGuild.approximate_member_count || 0,
+                owner: guild.owner,
+                description: detailedGuild.description || null
+              };
+            } catch (error) {
+              console.error('[discord-import] Error fetching details for guild:', guild.id, error);
+              return {
+                id: guild.id,
+                name: guild.name,
+                icon: guild.icon,
+                permissions: guild.permissions,
+                member_count: 0,
+                owner: guild.owner,
+                description: null
+              };
+            }
+          })
+        );
+
+        console.log('[discord-import] Returning data:', { servers: serversWithDetails.length });
 
         return new Response(JSON.stringify({
-          servers: servers
+          servers: serversWithDetails
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
@@ -279,7 +313,7 @@ serve(async (req: Request) => {
 
         // Import selected servers
         if (selectedServerIds?.length > 0) {
-          // Re-fetch guild data for import
+          // Re-fetch guild data for import with detailed information
           const guildsResponse = await fetch('https://discord.com/api/v10/users/@me/guilds', {
             headers: {
               'Authorization': `Bearer ${discordAccessToken}`,
@@ -292,27 +326,55 @@ serve(async (req: Request) => {
             const serversToImport = guilds.filter((server: any) => selectedServerIds.includes(server.id));
             
             for (const server of serversToImport) {
-              const { error: serverError } = await supabaseClient
-                .from('listings')
-                .insert({
-                  user_id: user.id,
-                  type: 'server',
-                  name: server.name,
-                  description: `Discord server with ${server.approximate_member_count || 0} members. ${server.owner ? 'You are the owner of this server.' : 'You have manage permissions.'}`,
-                  member_count: server.approximate_member_count || 0,
-                  view_count: 0,
-                  bump_count: 0,
-                  status: 'active',
-                  avatar_url: server.icon ? `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png` : null,
-                  discord_id: server.id,
-                  invite_url: null
+              try {
+                // Fetch detailed server information
+                const guildResponse = await fetch(`https://discord.com/api/v10/guilds/${server.id}?with_counts=true`, {
+                  headers: {
+                    'Authorization': `Bearer ${discordAccessToken}`,
+                    'Content-Type': 'application/json'
+                  }
                 });
 
-              if (serverError) {
-                console.error('[discord-import][ERROR] Failed to import server:', server.name, serverError);
-              } else {
-                importedServers++;
-                console.log('[discord-import] Successfully imported server:', server.name);
+                let detailedServer = server;
+                if (guildResponse.ok) {
+                  detailedServer = await guildResponse.json();
+                }
+
+                // Create a better description
+                let description = '';
+                if (detailedServer.description) {
+                  description = detailedServer.description;
+                } else {
+                  const memberCount = detailedServer.approximate_member_count || 0;
+                  const ownerStatus = server.owner ? 'You are the owner of this server.' : 'You have manage permissions.';
+                  description = `Discord server with ${memberCount.toLocaleString()} members. ${ownerStatus}`;
+                }
+
+                const { error: serverError } = await supabaseClient
+                  .from('listings')
+                  .insert({
+                    user_id: user.id,
+                    type: 'server',
+                    name: server.name,
+                    description: description,
+                    long_description: detailedServer.description || null,
+                    member_count: detailedServer.approximate_member_count || 0,
+                    view_count: 0,
+                    bump_count: 0,
+                    status: 'active',
+                    avatar_url: server.icon ? `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png` : null,
+                    discord_id: server.id,
+                    invite_url: null
+                  });
+
+                if (serverError) {
+                  console.error('[discord-import][ERROR] Failed to import server:', server.name, serverError);
+                } else {
+                  importedServers++;
+                  console.log('[discord-import] Successfully imported server:', server.name);
+                }
+              } catch (error) {
+                console.error('[discord-import][ERROR] Error processing server:', server.name, error);
               }
             }
           }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { Server, Bot, Users, Eye, TrendingUp, Search, ExternalLink } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
@@ -36,6 +38,7 @@ const ListingsPage = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchListings = async () => {
     try {
@@ -97,7 +100,9 @@ const ListingsPage = () => {
     setFilteredListings(filtered);
   }, [listings, searchTerm, sortBy, typeFilter]);
 
-  const handleBump = async (listingId: string) => {
+  const handleBump = async (listingId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click
+    
     if (!user) {
       toast({
         variant: "destructive",
@@ -132,22 +137,16 @@ const ListingsPage = () => {
     }
   };
 
-  const incrementView = async (listingId: string) => {
-    try {
-      await supabase
-        .from('listings')
-        .update({ view_count: listings.find(l => l.id === listingId)?.view_count + 1 })
-        .eq('id', listingId);
-    } catch (error) {
-      // Silent fail for view counting
+  const handleJoin = (listing: Listing, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click
+    
+    if (listing.invite_url) {
+      window.open(listing.invite_url, '_blank');
     }
   };
 
-  const handleJoin = (listing: Listing) => {
-    if (listing.invite_url) {
-      incrementView(listing.id);
-      window.open(listing.invite_url, '_blank');
-    }
+  const handleCardClick = (listingId: string) => {
+    navigate(`/listings/${listingId}`);
   };
 
   if (loading) {
@@ -218,7 +217,11 @@ const ListingsPage = () => {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredListings.map((listing) => (
-                <Card key={listing.id} className="bg-[#36393F] border-[#40444B] hover:border-[#5865F2] transition-colors">
+                <Card 
+                  key={listing.id} 
+                  className="bg-[#36393F] border-[#40444B] hover:border-[#5865F2] transition-colors cursor-pointer"
+                  onClick={() => handleCardClick(listing.id)}
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-center space-x-3">
                       {listing.avatar_url ? (
@@ -286,7 +289,7 @@ const ListingsPage = () => {
                     <div className="flex gap-2">
                       {listing.invite_url && (
                         <Button
-                          onClick={() => handleJoin(listing)}
+                          onClick={(e) => handleJoin(listing, e)}
                           className="flex-1 bg-[#57F287] hover:bg-[#3BA55C] text-black"
                           size="sm"
                         >
@@ -295,7 +298,7 @@ const ListingsPage = () => {
                         </Button>
                       )}
                       <Button
-                        onClick={() => handleBump(listing.id)}
+                        onClick={(e) => handleBump(listing.id, e)}
                         variant="outline"
                         size="sm"
                         className="border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white"

@@ -418,6 +418,11 @@ const DiscordImportModal = ({
                                 </div>
                               )}
                             </div>
+                            {server.description && (
+                              <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+                                {server.description}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </CardHeader>
