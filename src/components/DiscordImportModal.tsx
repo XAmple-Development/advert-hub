@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -31,6 +30,7 @@ interface DiscordServer {
   permissions: string;
   member_count?: number;
   owner: boolean;
+  description?: string | null;
 }
 
 interface DiscordImportModalProps {
