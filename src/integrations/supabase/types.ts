@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_actions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bumps: {
         Row: {
           bump_type: string | null
@@ -224,6 +259,7 @@ export type Database = {
           discord_token_updated_at: string | null
           discord_username: string | null
           id: string
+          is_admin: boolean | null
           subscription_expires_at: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
@@ -237,6 +273,7 @@ export type Database = {
           discord_token_updated_at?: string | null
           discord_username?: string | null
           id: string
+          is_admin?: boolean | null
           subscription_expires_at?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
@@ -250,6 +287,7 @@ export type Database = {
           discord_token_updated_at?: string | null
           discord_username?: string | null
           id?: string
+          is_admin?: boolean | null
           subscription_expires_at?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
