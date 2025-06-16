@@ -44,6 +44,35 @@ export type Database = {
           },
         ]
       }
+      bump_cooldowns: {
+        Row: {
+          id: string
+          last_bump_at: string
+          listing_id: string
+          user_discord_id: string
+        }
+        Insert: {
+          id?: string
+          last_bump_at?: string
+          listing_id: string
+          user_discord_id: string
+        }
+        Update: {
+          id?: string
+          last_bump_at?: string
+          listing_id?: string
+          user_discord_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bump_cooldowns_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bumps: {
         Row: {
           bump_type: string | null
@@ -103,6 +132,36 @@ export type Database = {
         }
         Relationships: []
       }
+      discord_bot_configs: {
+        Row: {
+          active: boolean | null
+          admin_user_id: string
+          created_at: string
+          discord_server_id: string
+          id: string
+          listing_channel_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          admin_user_id: string
+          created_at?: string
+          discord_server_id: string
+          id?: string
+          listing_channel_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          admin_user_id?: string
+          created_at?: string
+          discord_server_id?: string
+          id?: string
+          listing_channel_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listing_categories: {
         Row: {
           category_id: string
@@ -142,6 +201,7 @@ export type Database = {
           created_at: string
           description: string
           discord_id: string
+          discord_webhook_url: string | null
           featured: boolean | null
           id: string
           invite_url: string | null
@@ -170,6 +230,7 @@ export type Database = {
           created_at?: string
           description: string
           discord_id: string
+          discord_webhook_url?: string | null
           featured?: boolean | null
           id?: string
           invite_url?: string | null
@@ -198,6 +259,7 @@ export type Database = {
           created_at?: string
           description?: string
           discord_id?: string
+          discord_webhook_url?: string | null
           featured?: boolean | null
           id?: string
           invite_url?: string | null

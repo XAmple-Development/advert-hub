@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,6 +94,23 @@ const Dashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCreateSuccess = async (newListing: any) => {
+        console.log('Dashboard: New listing created, triggering Discord webhook...');
+        
+        // Trigger Discord webhook for new listing
+        try {
+            await supabase.functions.invoke('discord-listing-webhook', {
+                body: { listing_id: newListing.id }
+            });
+            console.log('Discord webhook triggered successfully');
+        } catch (error) {
+            console.error('Failed to trigger Discord webhook:', error);
+            // Don't show error to user as listing was created successfully
+        }
+        
+        fetchListings();
     };
 
     useEffect(() => {
@@ -320,7 +336,7 @@ const Dashboard = () => {
             <CreateListingModal
                 open={showCreateModal}
                 onOpenChange={setShowCreateModal}
-                onSuccess={fetchListings}
+                onSuccess={handleCreateSuccess}
             />
 
             <DiscordImportModal

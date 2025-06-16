@@ -1,1 +1,52 @@
+
 project_id = "aurrzqdypbshynbowpbs"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54322
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost:54321"
+
+[inbucket]
+enabled = true
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[functions.discord-import]
+verify_jwt = false
+
+[functions.discord-bot]
+verify_jwt = false
+
+[functions.discord-listing-webhook]
+verify_jwt = false
+
+[functions.discord-register-commands]
+verify_jwt = false
+
+[edge-runtime]
+enabled = true
+port = 54327
+
+[analytics]
+enabled = false
