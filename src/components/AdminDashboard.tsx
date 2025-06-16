@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -60,14 +59,27 @@ const AdminDashboard = () => {
     const [reason, setReason] = useState('');
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
 
     useEffect(() => {
-        if (user) {
-            checkAdminStatus();
+        // Wait for auth to finish loading
+        if (authLoading) return;
+
+        // If no user is authenticated, redirect to auth page
+        if (!user) {
+            toast({
+                variant: "destructive",
+                title: "Authentication Required",
+                description: "Please sign in to access the admin dashboard",
+            });
+            navigate('/auth');
+            return;
         }
-    }, [user]);
+
+        // Check admin status
+        checkAdminStatus();
+    }, [user, authLoading, navigate]);
 
     useEffect(() => {
         if (isAdmin) {
@@ -77,14 +89,25 @@ const AdminDashboard = () => {
     }, [isAdmin]);
 
     const checkAdminStatus = async () => {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
         try {
+            console.log('Checking admin status for user:', user.id);
             const { data, error } = await supabase
                 .from('profiles')
                 .select('is_admin')
-                .eq('id', user?.id)
+                .eq('id', user.id)
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error checking admin status:', error);
+                throw error;
+            }
+
+            console.log('Admin check result:', data);
 
             if (!data?.is_admin) {
                 toast({
@@ -98,6 +121,7 @@ const AdminDashboard = () => {
 
             setIsAdmin(true);
         } catch (error: any) {
+            console.error('Admin status check failed:', error);
             toast({
                 variant: "destructive",
                 title: "Error",
@@ -111,15 +135,22 @@ const AdminDashboard = () => {
 
     const fetchPendingListings = async () => {
         try {
+            console.log('Fetching pending listings...');
             const { data, error } = await supabase
                 .from('listings')
                 .select('*')
                 .eq('status', 'pending')
                 .order('created_at', { ascending: true });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error fetching pending listings:', error);
+                throw error;
+            }
+
+            console.log('Pending listings fetched:', data?.length || 0);
             setPendingListings(data || []);
         } catch (error: any) {
+            console.error('Failed to fetch pending listings:', error);
             toast({
                 variant: "destructive",
                 title: "Error",
@@ -130,6 +161,7 @@ const AdminDashboard = () => {
 
     const fetchRecentActions = async () => {
         try {
+            console.log('Fetching recent actions...');
             const { data, error } = await supabase
                 .from('admin_actions')
                 .select(`
@@ -139,7 +171,12 @@ const AdminDashboard = () => {
                 .order('created_at', { ascending: false })
                 .limit(10);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error fetching recent actions:', error);
+                throw error;
+            }
+
+            console.log('Recent actions fetched:', data?.length || 0);
             setRecentActions(data || []);
         } catch (error: any) {
             console.error('Failed to fetch recent actions:', error);
@@ -150,6 +187,8 @@ const AdminDashboard = () => {
         if (!user) return;
 
         try {
+            console.log(`Performing action ${action} on listing ${listingId}`);
+            
             // Update listing status
             const newStatus = action === 'approved' ? 'active' : 'suspended';
             const { error: updateError } = await supabase
@@ -157,7 +196,10 @@ const AdminDashboard = () => {
                 .update({ status: newStatus })
                 .eq('id', listingId);
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.error('Error updating listing:', updateError);
+                throw updateError;
+            }
 
             // Record admin action
             const { error: actionError } = await supabase
@@ -169,7 +211,10 @@ const AdminDashboard = () => {
                     reason: reason || null
                 });
 
-            if (actionError) throw actionError;
+            if (actionError) {
+                console.error('Error recording admin action:', actionError);
+                throw actionError;
+            }
 
             toast({
                 title: "Success!",
@@ -181,6 +226,7 @@ const AdminDashboard = () => {
             fetchPendingListings();
             fetchRecentActions();
         } catch (error: any) {
+            console.error('Action failed:', error);
             toast({
                 variant: "destructive",
                 title: "Error",
@@ -215,7 +261,8 @@ const AdminDashboard = () => {
         }
     };
 
-    if (loading) {
+    // Show loading state while checking auth and admin status
+    if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-[#2C2F33]">
                 <Navbar />
@@ -226,6 +273,12 @@ const AdminDashboard = () => {
         );
     }
 
+    // If user is not authenticated, this will be handled by the useEffect redirect
+    if (!user) {
+        return null;
+    }
+
+    // If user is not admin, this will be handled by the useEffect redirect
     if (!isAdmin) {
         return null;
     }
