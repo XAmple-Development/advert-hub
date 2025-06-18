@@ -1,4 +1,3 @@
-
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
@@ -21,7 +20,7 @@ const client = new Client({
     ]
 });
 
-// Commands
+// Define slash commands
 const commands = [
     new SlashCommandBuilder()
         .setName('bump')
@@ -36,12 +35,12 @@ const commands = [
         ),
 ];
 
-// Register commands
+// Register slash commands
 async function registerCommands() {
     try {
         console.log('Started refreshing application (/) commands.');
-
         const rest = new REST().setToken(DISCORD_TOKEN);
+
         await rest.put(
             Routes.applicationCommands(DISCORD_CLIENT_ID),
             { body: commands }
@@ -53,15 +52,15 @@ async function registerCommands() {
     }
 }
 
-// Handle bump command
+// Handle /bump command
 async function handleBumpCommand(interaction) {
     console.log('Processing bump command:', interaction.user.id, interaction.guild.id);
     
     const userId = interaction.user.id;
     const guildId = interaction.guild.id;
-    
+
     try {
-        // Find listing for this server
+        // Get listing
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select('*')
@@ -75,7 +74,7 @@ async function handleBumpCommand(interaction) {
             });
         }
 
-        // Check cooldown (2 hours)
+        // Check bump cooldown
         const { data: cooldown } = await supabase
             .from('bump_cooldowns')
             .select('*')
@@ -95,7 +94,7 @@ async function handleBumpCommand(interaction) {
             });
         }
 
-        // Update cooldown
+        // Update cooldown record
         await supabase
             .from('bump_cooldowns')
             .upsert({
@@ -104,20 +103,45 @@ async function handleBumpCommand(interaction) {
                 last_bump_at: now.toISOString(),
             });
 
-        // Update listing
+        // Update listing record
         await supabase
             .from('listings')
             .update({
                 last_bumped_at: now.toISOString(),
-                bump_count: listing.bump_count + 1,
+                bump_count: (listing.bump_count || 0) + 1,
                 updated_at: now.toISOString(),
             })
             .eq('id', listing.id);
 
+        // Respond to user
         const nextBumpTimestamp = Math.floor((now.getTime() + 2 * 60 * 60 * 1000) / 1000);
         await interaction.reply({
             content: `🚀 **${listing.name}** has been bumped to the top!\n\nNext bump available <t:${nextBumpTimestamp}:R>`
         });
+
+        // Fetch server config to get notification channel
+        const { data: config, error: configError } = await supabase
+            .from('discord_bot_configs')
+            .select('listing_channel_id')
+            .eq('discord_server_id', guildId)
+            .single();
+
+        if (configError) {
+            console.error('Error fetching bot config:', configError);
+        }
+
+        // Send bump notification if setup
+        if (config?.listing_channel_id) {
+            try {
+                const channel = await client.channels.fetch(config.listing_channel_id);
+                if (channel?.isTextBased()) {
+                    await channel.send(`🚀 **${listing.name}** was just bumped by <@${userId}>!`);
+                }
+            } catch (err) {
+                console.error(`Failed to post bump notification in channel ${config.listing_channel_id}:`, err);
+            }
+        }
+
     } catch (error) {
         console.error('Error in bump command:', error);
         await interaction.reply({
@@ -127,16 +151,15 @@ async function handleBumpCommand(interaction) {
     }
 }
 
-// Handle setup command
+// Handle /setup command
 async function handleSetupCommand(interaction) {
     console.log('Processing setup command:', interaction.user.id, interaction.guild.id);
-    
+
     const userId = interaction.user.id;
     const guildId = interaction.guild.id;
     const channel = interaction.options.getChannel('channel');
-    
+
     try {
-        // Save bot configuration
         await supabase
             .from('discord_bot_configs')
             .upsert({
@@ -160,12 +183,13 @@ async function handleSetupCommand(interaction) {
     }
 }
 
-// Event handlers
+// On bot ready
 client.once('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`✅ Logged in as ${client.user.tag}`);
     registerCommands();
 });
 
+// Handle command interactions
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -183,7 +207,6 @@ client.on('interactionCreate', async interaction => {
             content: 'There was an error while executing this command!',
             ephemeral: true
         };
-        
         if (interaction.replied || interaction.deferred) {
             await interaction.followUp(reply);
         } else {
@@ -192,5 +215,5 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-// Login
+// Login the bot
 client.login(DISCORD_TOKEN);
