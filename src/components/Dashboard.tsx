@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,24 +7,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Plus, TrendingUp, Users, Star, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { CreateListingModal } from '@/components/CreateListingModal';
-import { EditListingModal } from '@/components/EditListingModal';
-import { DiscordImportModal } from '@/components/DiscordImportModal';
+import CreateListingModal from '@/components/CreateListingModal';
+import EditListingModal from '@/components/EditListingModal';
+import DiscordImportModal from '@/components/DiscordImportModal';
 
 interface Listing {
   id: string;
   created_at: string;
+  updated_at: string;
+  user_id: string;
   name: string;
   description: string;
+  long_description: string | null;
   type: 'server' | 'bot';
-  invite_url: string;
-  avatar_url: string;
   discord_id: string;
-  owner_id: string;
+  invite_url: string | null;
+  website_url: string | null;
+  support_server_url: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
   member_count: number;
-  boost_count: number;
-  is_verified: boolean;
+  online_count: number;
+  boost_level: number;
+  featured: boolean;
+  nsfw: boolean;
+  verification_level: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  last_bumped_at: string | null;
+  bump_count: number;
+  view_count: number;
+  join_count: number;
   tags: string[];
+  discord_webhook_url: string | null;
 }
 
 interface StatsCardProps {
@@ -83,8 +98,8 @@ const Dashboard = () => {
     }
   };
 
-  const handleListingCreated = async (newListing: any) => {
-    console.log('New listing created:', newListing);
+  const handleListingCreated = async () => {
+    console.log('New listing created');
     fetchListings();
     setIsCreateModalOpen(false);
     toast({
@@ -93,8 +108,8 @@ const Dashboard = () => {
     });
   };
 
-  const handleListingUpdated = async (updatedListing: Listing) => {
-    console.log('Listing updated:', updatedListing);
+  const handleListingUpdated = async () => {
+    console.log('Listing updated');
     fetchListings();
     setIsEditModalOpen(false);
     setSelectedListing(null);
@@ -151,7 +166,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <StatsCard title="Total Listings" value={listings.length} icon={<TrendingUp className="h-5 w-5 text-gray-500" />} />
           <StatsCard title="Total Members" value={listings.reduce((acc, listing) => acc + listing.member_count, 0)} icon={<Users className="h-5 w-5 text-gray-500" />} />
-          <StatsCard title="Verified Listings" value={listings.filter(listing => listing.is_verified).length} icon={<Star className="h-5 w-5 text-gray-500" />} />
+          <StatsCard title="Approved Listings" value={listings.filter(listing => listing.status === 'approved').length} icon={<Star className="h-5 w-5 text-gray-500" />} />
         </div>
 
         <Card className="shadow-md">
@@ -169,7 +184,9 @@ const Dashboard = () => {
                     <CardHeader>
                       <CardTitle>{listing.name}</CardTitle>
                       <div className="flex items-center space-x-2">
-                        {listing.is_verified && <Badge>Verified</Badge>}
+                        {listing.status === 'approved' && <Badge>Approved</Badge>}
+                        {listing.status === 'pending' && <Badge variant="secondary">Pending</Badge>}
+                        {listing.status === 'rejected' && <Badge variant="destructive">Rejected</Badge>}
                         <CardDescription className="text-gray-500">{listing.type}</CardDescription>
                       </div>
                     </CardHeader>
@@ -189,27 +206,27 @@ const Dashboard = () => {
         </Card>
 
         <CreateListingModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onListingCreated={handleListingCreated}
+          open={isCreateModalOpen}
+          onOpenChange={setIsCreateModalOpen}
+          onSuccess={handleListingCreated}
         />
 
         {selectedListing && (
           <EditListingModal
-            isOpen={isEditModalOpen}
-            onClose={() => {
-              setIsEditModalOpen(false);
-              setSelectedListing(null);
+            open={isEditModalOpen}
+            onOpenChange={(open) => {
+              setIsEditModalOpen(open);
+              if (!open) setSelectedListing(null);
             }}
             listing={selectedListing}
-            onListingUpdated={handleListingUpdated}
-            onListingDeleted={handleListingDeleted}
+            onSuccess={handleListingUpdated}
           />
         )}
 
         <DiscordImportModal
-          isOpen={isDiscordImportModalOpen}
-          onClose={closeDiscordImportModal}
+          open={isDiscordImportModalOpen}
+          onOpenChange={setIsDiscordImportModalOpen}
+          onImportComplete={fetchListings}
         />
       </main>
     </div>
