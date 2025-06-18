@@ -32,7 +32,7 @@ interface Listing {
   featured: boolean;
   nsfw: boolean;
   verification_level: string | null;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'active' | 'suspended';
   last_bumped_at: string | null;
   bump_count: number;
   view_count: number;
@@ -166,7 +166,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <StatsCard title="Total Listings" value={listings.length} icon={<TrendingUp className="h-5 w-5 text-gray-500" />} />
           <StatsCard title="Total Members" value={listings.reduce((acc, listing) => acc + listing.member_count, 0)} icon={<Users className="h-5 w-5 text-gray-500" />} />
-          <StatsCard title="Approved Listings" value={listings.filter(listing => listing.status === 'approved').length} icon={<Star className="h-5 w-5 text-gray-500" />} />
+          <StatsCard title="Active Listings" value={listings.filter(listing => listing.status === 'active').length} icon={<Star className="h-5 w-5 text-gray-500" />} />
         </div>
 
         <Card className="shadow-md">
@@ -184,9 +184,9 @@ const Dashboard = () => {
                     <CardHeader>
                       <CardTitle>{listing.name}</CardTitle>
                       <div className="flex items-center space-x-2">
-                        {listing.status === 'approved' && <Badge>Approved</Badge>}
+                        {listing.status === 'active' && <Badge>Active</Badge>}
                         {listing.status === 'pending' && <Badge variant="secondary">Pending</Badge>}
-                        {listing.status === 'rejected' && <Badge variant="destructive">Rejected</Badge>}
+                        {listing.status === 'suspended' && <Badge variant="destructive">Suspended</Badge>}
                         <CardDescription className="text-gray-500">{listing.type}</CardDescription>
                       </div>
                     </CardHeader>
