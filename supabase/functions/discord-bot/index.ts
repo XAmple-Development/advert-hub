@@ -3,22 +3,22 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
 
-// Env vars
+// Environment variables
 const DISCORD_BOT_TOKEN = Deno.env.get('DISCORD_BOT_TOKEN');
 const DISCORD_PUBLIC_KEY = Deno.env.get('DISCORD_PUBLIC_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// Supabase client
+// Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// CORS
+// CORS headers
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-signature-ed25519, x-signature-timestamp',
 };
 
-// Discord constants
+// Discord interaction types
 const INTERACTION_TYPES = {
     PING: 1,
     APPLICATION_COMMAND: 2,
@@ -30,10 +30,12 @@ const INTERACTION_RESPONSE_TYPES = {
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE: 5,
 };
 
-// Signature verification helper
+// Verify Discord request signature
 function verifyDiscordRequest(req: Request, body: string): boolean {
-    const signature = req.headers.get("x-signature-ed25519")!;
-    const timestamp = req.headers.get("x-signature-timestamp")!;
+    const signature = req.headers.get("x-signature-ed25519");
+    const timestamp = req.headers.get("x-signature-timestamp");
+    
+    if (!signature || !timestamp) return false;
 
     const isVerified = nacl.sign.detached.verify(
         new TextEncoder().encode(timestamp + body),
@@ -48,9 +50,9 @@ function hexToUint8Array(hex: string): Uint8Array {
     return new Uint8Array(hex.match(/.{1,2}/g)!.map(b => parseInt(b, 16)));
 }
 
-// Bump command handler
+// Handle bump command
 async function handleBumpCommand(interaction: any) {
-    console.log('Handling bump command for interaction:', interaction);
+    console.log('Processing bump command:', interaction);
     
     const userId = interaction.member?.user?.id || interaction.user?.id;
     const guildId = interaction.guild_id;
@@ -66,7 +68,7 @@ async function handleBumpCommand(interaction: any) {
     }
 
     try {
-        // Check if user has a listing for this server
+        // Find listing for this server
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select('*')
@@ -77,14 +79,14 @@ async function handleBumpCommand(interaction: any) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: 'No listing found for this server. Please create a listing first.',
-                    flags: 64, // Ephemeral
+                    content: 'No listing found for this server. Please create a listing first at our website.',
+                    flags: 64,
                 },
             };
         }
 
-        // Check bump cooldown (2 hours = 7200 seconds)
-        const { data: cooldown, error: cooldownError } = await supabase
+        // Check cooldown (2 hours)
+        const { data: cooldown } = await supabase
             .from('bump_cooldowns')
             .select('*')
             .eq('user_discord_id', userId)
@@ -99,14 +101,14 @@ async function handleBumpCommand(interaction: any) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: `You can bump again <t:${Math.floor(nextBumpTime.getTime() / 1000)}:R>`,
-                    flags: 64, // Ephemeral
+                    content: `⏰ You can bump again <t:${Math.floor(nextBumpTime.getTime() / 1000)}:R>`,
+                    flags: 64,
                 },
             };
         }
 
-        // Update or insert bump cooldown
-        const { error: upsertError } = await supabase
+        // Update cooldown
+        await supabase
             .from('bump_cooldowns')
             .upsert({
                 user_discord_id: userId,
@@ -114,19 +116,8 @@ async function handleBumpCommand(interaction: any) {
                 last_bump_at: now.toISOString(),
             });
 
-        if (upsertError) {
-            console.error('Error updating bump cooldown:', upsertError);
-            return {
-                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-                data: {
-                    content: 'Error updating bump cooldown.',
-                    flags: 64, // Ephemeral
-                },
-            };
-        }
-
-        // Update listing's last_bumped_at and bump_count
-        const { error: updateError } = await supabase
+        // Update listing
+        await supabase
             .from('listings')
             .update({
                 last_bumped_at: now.toISOString(),
@@ -135,21 +126,10 @@ async function handleBumpCommand(interaction: any) {
             })
             .eq('id', listing.id);
 
-        if (updateError) {
-            console.error('Error updating listing:', updateError);
-            return {
-                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-                data: {
-                    content: 'Error updating listing.',
-                    flags: 64, // Ephemeral
-                },
-            };
-        }
-
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
-                content: `🚀 **${listing.name}** has been bumped to the top of the list!\n\nNext bump available <t:${Math.floor((now.getTime() + 2 * 60 * 60 * 1000) / 1000)}:R>`,
+                content: `🚀 **${listing.name}** has been bumped to the top!\n\nNext bump available <t:${Math.floor((now.getTime() + 2 * 60 * 60 * 1000) / 1000)}:R>`,
             },
         };
     } catch (error) {
@@ -158,15 +138,15 @@ async function handleBumpCommand(interaction: any) {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
                 content: 'An error occurred while processing the bump command.',
-                flags: 64, // Ephemeral
+                flags: 64,
             },
         };
     }
 }
 
-// Setup command handler
+// Handle setup command
 async function handleSetupCommand(interaction: any) {
-    console.log('Handling setup command for interaction:', interaction);
+    console.log('Processing setup command:', interaction);
     
     const userId = interaction.member?.user?.id || interaction.user?.id;
     const guildId = interaction.guild_id;
@@ -177,17 +157,14 @@ async function handleSetupCommand(interaction: any) {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
                 content: 'Error: Missing required information.',
-                flags: 64, // Ephemeral
+                flags: 64,
             },
         };
     }
 
     try {
-        // Check if user has admin permissions (this is a simplified check)
-        // In a real implementation, you'd verify Discord permissions
-        
-        // Upsert bot configuration
-        const { error: configError } = await supabase
+        // Save bot configuration
+        await supabase
             .from('discord_bot_configs')
             .upsert({
                 discord_server_id: guildId,
@@ -197,22 +174,11 @@ async function handleSetupCommand(interaction: any) {
                 updated_at: new Date().toISOString(),
             });
 
-        if (configError) {
-            console.error('Error updating bot config:', configError);
-            return {
-                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-                data: {
-                    content: 'Error setting up bot configuration.',
-                    flags: 64, // Ephemeral
-                },
-            };
-        }
-
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
                 content: `✅ Bot setup complete! New listings will be posted to <#${channelId}>.`,
-                flags: 64, // Ephemeral
+                flags: 64,
             },
         };
     } catch (error) {
@@ -221,20 +187,21 @@ async function handleSetupCommand(interaction: any) {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
                 content: 'An error occurred while setting up the bot.',
-                flags: 64, // Ephemeral
+                flags: 64,
             },
         };
     }
 }
 
-// Entry point
+// Main handler
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders });
     }
 
     const rawBody = await req.text();
-
+    
+    // Verify request signature
     if (!verifyDiscordRequest(req, rawBody)) {
         return new Response("Invalid request signature", { status: 401 });
     }
@@ -243,12 +210,14 @@ serve(async (req) => {
         const body = JSON.parse(rawBody);
         console.log('Received Discord interaction:', body);
 
+        // Handle ping
         if (body.type === INTERACTION_TYPES.PING) {
             return new Response(JSON.stringify({ type: INTERACTION_RESPONSE_TYPES.PONG }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
         }
 
+        // Handle commands
         if (body.type === INTERACTION_TYPES.APPLICATION_COMMAND) {
             const { name } = body.data;
 
