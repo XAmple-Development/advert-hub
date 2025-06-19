@@ -11,6 +11,8 @@ import Dashboard from '@/components/Dashboard';
 const Index = () => {
   const { user, loading } = useAuth();
 
+  console.log('Index component - User:', !!user, 'Loading:', loading);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
@@ -21,9 +23,11 @@ const Index = () => {
 
   // Show dashboard if authenticated, otherwise show landing page
   if (user) {
+    console.log('User authenticated, showing Dashboard');
     return <Dashboard />;
   }
 
+  console.log('No user found, showing landing page');
   // Show the main landing page for non-authenticated users
   return (
     <div className="min-h-screen bg-[#2C2F33]">
