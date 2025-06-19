@@ -11,6 +11,24 @@ const commands = [
     type: 1, // CHAT_INPUT
   },
   {
+    name: 'bumpstatus',
+    description: 'Check your bump cooldown status',
+    type: 1, // CHAT_INPUT
+  },
+  {
+    name: 'search',
+    description: 'Search server listings by name',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'query',
+        description: 'Name or part of the server name to search',
+        type: 3, // STRING
+        required: true,
+      },
+    ],
+  },
+  {
     name: 'setup',
     description: 'Setup the Discord bot for posting new listings',
     type: 1, // CHAT_INPUT
@@ -23,6 +41,36 @@ const commands = [
         channel_types: [0], // GUILD_TEXT
       },
     ],
+  },
+  {
+    name: 'leaderboard',
+    description: 'Show top servers by bump count',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'limit',
+        description: 'Number of servers to show (max 10)',
+        type: 4, // INTEGER
+        required: false,
+        min_value: 1,
+        max_value: 10,
+      },
+    ],
+  },
+  {
+    name: 'stats',
+    description: 'Show your server listing statistics',
+    type: 1, // CHAT_INPUT
+  },
+  {
+    name: 'featured',
+    description: 'Show featured server listings',
+    type: 1, // CHAT_INPUT
+  },
+  {
+    name: 'help',
+    description: 'Show bot commands and usage information',
+    type: 1, // CHAT_INPUT
   },
 ];
 

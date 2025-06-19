@@ -98,10 +98,13 @@ async function handleBumpCommand(interaction: any) {
 
         if (cooldown && new Date(cooldown.last_bump_at) > twoHoursAgo) {
             const nextBumpTime = new Date(new Date(cooldown.last_bump_at).getTime() + 2 * 60 * 60 * 1000);
+            const msLeft = nextBumpTime.getTime() - now.getTime();
+            const hours = Math.floor(msLeft / 3600000);
+            const min = Math.floor((msLeft % 3600000) / 60000);
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: `⏰ You can bump again <t:${Math.floor(nextBumpTime.getTime() / 1000)}:R>`,
+                    content: `⏳ Wait ${hours}h ${min}m to bump again.`,
                     flags: 64,
                 },
             };
@@ -129,7 +132,12 @@ async function handleBumpCommand(interaction: any) {
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
-                content: `🚀 **${listing.name}** has been bumped to the top!\n\nNext bump available <t:${Math.floor((now.getTime() + 2 * 60 * 60 * 1000) / 1000)}:R>`,
+                embeds: [{
+                    title: '🚀 Server Bumped!',
+                    description: `**${listing.name}** has been bumped to the top of the list!`,
+                    color: 0x00FF00,
+                    timestamp: now.toISOString(),
+                }],
             },
         };
     } catch (error) {
@@ -142,6 +150,342 @@ async function handleBumpCommand(interaction: any) {
             },
         };
     }
+}
+
+// Handle bumpstatus command
+async function handleBumpStatusCommand(interaction: any) {
+    const userId = interaction.member?.user?.id || interaction.user?.id;
+    const guildId = interaction.guild_id;
+    
+    if (!userId || !guildId) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Error: Unable to identify user or server.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        const { data: listing } = await supabase
+            .from('listings')
+            .select('id')
+            .eq('discord_id', guildId)
+            .single();
+
+        if (!listing) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '❌ No listing found for this server.',
+                    flags: 64,
+                },
+            };
+        }
+
+        const { data: cooldown } = await supabase
+            .from('bump_cooldowns')
+            .select('*')
+            .eq('user_discord_id', userId)
+            .eq('listing_id', listing.id)
+            .single();
+
+        const now = new Date();
+        const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+        if (!cooldown || new Date(cooldown.last_bump_at) <= twoHoursAgo) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '✅ You can bump now!',
+                    flags: 64,
+                },
+            };
+        }
+
+        const nextBumpTime = new Date(new Date(cooldown.last_bump_at).getTime() + 2 * 60 * 60 * 1000);
+        const msLeft = nextBumpTime.getTime() - now.getTime();
+        const hours = Math.floor(msLeft / 3600000);
+        const min = Math.floor((msLeft % 3600000) / 60000);
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: `⏳ Wait ${hours}h ${min}m to bump again.`,
+                flags: 64,
+            },
+        };
+    } catch (error) {
+        console.error('Error in bumpstatus command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while checking bump status.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle search command
+async function handleSearchCommand(interaction: any) {
+    const query = interaction.data?.options?.[0]?.value;
+    
+    if (!query) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Please provide a search term.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        const { data: listings, error } = await supabase
+            .from('listings')
+            .select('id, name, description, featured, member_count, created_at')
+            .ilike('name', `%${query}%`)
+            .eq('status', 'approved')
+            .limit(5);
+
+        if (error || !listings || listings.length === 0) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '🔍 No results found.',
+                    flags: 64,
+                },
+            };
+        }
+
+        const fields = listings.map(listing => ({
+            name: `${listing.name} ${listing.featured ? '✨ [Featured]' : ''}`,
+            value: `${listing.description.substring(0, 100)}...\n👥 ${listing.member_count || 0} members | Listed <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:R>`,
+            inline: false
+        }));
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: `🔍 Search results for "${query}"`,
+                    color: 0x0099ff,
+                    fields: fields,
+                    timestamp: new Date().toISOString(),
+                }],
+                flags: 64,
+            },
+        };
+    } catch (error) {
+        console.error('Error in search command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while searching.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle stats command
+async function handleStatsCommand(interaction: any) {
+    const guildId = interaction.guild_id;
+    
+    if (!guildId) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Error: Unable to identify server.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        const { data: listing, error } = await supabase
+            .from('listings')
+            .select('name, bump_count, view_count, join_count, last_bumped_at, created_at, featured')
+            .eq('discord_id', guildId)
+            .single();
+
+        if (error || !listing) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '❌ No listing found for this server. Create one on our website first!',
+                    flags: 64,
+                },
+            };
+        }
+
+        const lastBumped = listing.last_bumped_at ? `<t:${Math.floor(new Date(listing.last_bumped_at).getTime() / 1000)}:R>` : 'Never';
+        const created = `<t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:D>`;
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: `📊 Stats for ${listing.name}`,
+                    color: listing.featured ? 0xFFD700 : 0x0099ff,
+                    fields: [
+                        { name: '🚀 Total Bumps', value: (listing.bump_count || 0).toString(), inline: true },
+                        { name: '👀 Total Views', value: (listing.view_count || 0).toString(), inline: true },
+                        { name: '🎯 Total Joins', value: (listing.join_count || 0).toString(), inline: true },
+                        { name: '⏰ Last Bumped', value: lastBumped, inline: true },
+                        { name: '📅 Listed Since', value: created, inline: true },
+                        { name: '✨ Featured', value: listing.featured ? 'Yes' : 'No', inline: true },
+                    ],
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in stats command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while fetching stats.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle leaderboard command
+async function handleLeaderboardCommand(interaction: any) {
+    const limit = interaction.data?.options?.[0]?.value || 5;
+    
+    try {
+        const { data: listings, error } = await supabase
+            .from('listings')
+            .select('name, bump_count, last_bumped_at, featured')
+            .eq('status', 'approved')
+            .order('bump_count', { ascending: false })
+            .order('last_bumped_at', { ascending: false })
+            .limit(Math.min(limit, 10));
+
+        if (error || !listings || listings.length === 0) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '📊 No listings found.',
+                    flags: 64,
+                },
+            };
+        }
+
+        const fields = listings.map((listing, index) => {
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+            const lastBumped = listing.last_bumped_at ? `<t:${Math.floor(new Date(listing.last_bumped_at).getTime() / 1000)}:R>` : 'Never';
+            
+            return {
+                name: `${medal} ${listing.name} ${listing.featured ? '✨' : ''}`,
+                value: `🚀 ${listing.bump_count || 0} bumps | Last bumped: ${lastBumped}`,
+                inline: false
+            };
+        });
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: '🏆 Top Servers by Bump Count',
+                    color: 0xFFD700,
+                    fields: fields,
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in leaderboard command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while fetching leaderboard.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle featured command
+async function handleFeaturedCommand(interaction: any) {
+    try {
+        const { data: listings, error } = await supabase
+            .from('listings')
+            .select('name, description, member_count, created_at')
+            .eq('featured', true)
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        if (error || !listings || listings.length === 0) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '✨ No featured listings found.',
+                    flags: 64,
+                },
+            };
+        }
+
+        const fields = listings.map(listing => ({
+            name: `✨ ${listing.name}`,
+            value: `${listing.description.substring(0, 100)}...\n👥 ${listing.member_count || 0} members | Listed <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:R>`,
+            inline: false
+        }));
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: '✨ Featured Server Listings',
+                    color: 0xFFD700,
+                    fields: fields,
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in featured command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while fetching featured listings.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle help command
+async function handleHelpCommand(interaction: any) {
+    return {
+        type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+            embeds: [{
+                title: '🤖 Discord Bot Commands',
+                description: 'Here are all the available commands:',
+                color: 0x0099ff,
+                fields: [
+                    { name: '🚀 /bump', value: 'Bump your server listing to the top (2hr cooldown)', inline: false },
+                    { name: '⏰ /bumpstatus', value: 'Check your bump cooldown status', inline: false },
+                    { name: '🔍 /search <query>', value: 'Search for server listings by name', inline: false },
+                    { name: '⚙️ /setup <channel>', value: 'Configure where new listings are posted (Admin only)', inline: false },
+                    { name: '🏆 /leaderboard [limit]', value: 'Show top servers by bump count', inline: false },
+                    { name: '📊 /stats', value: 'Show your server listing statistics', inline: false },
+                    { name: '✨ /featured', value: 'Show featured server listings', inline: false },
+                    { name: '❓ /help', value: 'Show this help message', inline: false },
+                ],
+                footer: { text: 'Bot created for Discord Server Listings' },
+                timestamp: new Date().toISOString(),
+            }],
+            flags: 64,
+        },
+    };
 }
 
 // Handle setup command
@@ -177,8 +521,12 @@ async function handleSetupCommand(interaction: any) {
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
-                content: `✅ Bot setup complete! New listings will be posted to <#${channelId}>.`,
-                flags: 64,
+                embeds: [{
+                    title: '⚙️ Bot Configuration Updated',
+                    description: `New listings will now be posted to <#${channelId}>`,
+                    color: 0x00FF00,
+                    timestamp: new Date().toISOString(),
+                }],
             },
         };
     } catch (error) {
@@ -222,18 +570,39 @@ serve(async (req) => {
             const { name } = body.data;
 
             let response;
-            if (name === 'bump') {
-                response = await handleBumpCommand(body);
-            } else if (name === 'setup') {
-                response = await handleSetupCommand(body);
-            } else {
-                response = {
-                    type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-                    data: {
-                        content: 'Unknown command.',
-                        flags: 64,
-                    },
-                };
+            switch (name) {
+                case 'bump':
+                    response = await handleBumpCommand(body);
+                    break;
+                case 'bumpstatus':
+                    response = await handleBumpStatusCommand(body);
+                    break;
+                case 'search':
+                    response = await handleSearchCommand(body);
+                    break;
+                case 'stats':
+                    response = await handleStatsCommand(body);
+                    break;
+                case 'leaderboard':
+                    response = await handleLeaderboardCommand(body);
+                    break;
+                case 'featured':
+                    response = await handleFeaturedCommand(body);
+                    break;
+                case 'help':
+                    response = await handleHelpCommand(body);
+                    break;
+                case 'setup':
+                    response = await handleSetupCommand(body);
+                    break;
+                default:
+                    response = {
+                        type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                        data: {
+                            content: 'Unknown command.',
+                            flags: 64,
+                        },
+                    };
             }
 
             return new Response(JSON.stringify(response), {
