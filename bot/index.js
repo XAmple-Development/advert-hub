@@ -1,221 +1,219 @@
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-const {
-    Client,
-    GatewayIntentBits,
-    SlashCommandBuilder,
-    Routes,
-    REST,
-    EmbedBuilder
-} = require('discord.js');
+// Environment variables
+const DISCORD_TOKEN = process.env.DISCORD_BOT_TOKEN;
+const DISCORD_CLIENT_ID = process.env.DISCORD_APPLICATION_ID;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const { createClient } = require('@supabase/supabase-js');
+// Initialize Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Create Discord client
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent
+    ]
+});
 
-const TOKEN = process.env.DISCORD_BOT_TOKEN;
-const CLIENT_ID = process.env.DISCORD_APPLICATION_ID;
-
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-const BUMP_COOLDOWN_MINUTES = 60;
-
+// Define slash commands
 const commands = [
     new SlashCommandBuilder()
         .setName('bump')
-        .setDescription('Bump your server listing if cooldown expired'),
+        .setDescription('Bump your server listing to the top of the list'),
     new SlashCommandBuilder()
-        .setName('bumpstatus')
-        .setDescription('Check your bump cooldown status'),
-    new SlashCommandBuilder()
-        .setName('search')
-        .setDescription('Search server listings by name')
-        .addStringOption(option =>
-            option.setName('query').setDescription('Name or part of the server name to search').setRequired(true)
+        .setName('setup')
+        .setDescription('Setup the Discord bot for posting new listings')
+        .addChannelOption(option =>
+            option.setName('channel')
+                .setDescription('Channel where new listings will be posted')
+                .setRequired(true)
         ),
-].map(cmd => cmd.toJSON());
+];
 
-const rest = new REST({ version: '10' }).setToken(TOKEN);
-
-(async () => {
+// Register slash commands
+async function registerCommands() {
     try {
-        console.log('🔄 Registering slash commands...');
-        await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log('✅ Slash commands registered.');
+        console.log('Started refreshing application (/) commands.');
+        const rest = new REST().setToken(DISCORD_TOKEN);
+
+        await rest.put(
+            Routes.applicationCommands(DISCORD_CLIENT_ID),
+            { body: commands }
+        );
+
+        console.log('Successfully reloaded application (/) commands.');
     } catch (error) {
-        console.error('❌ Failed to register commands:', error);
+        console.error('Error registering commands:', error);
     }
-})();
-
-client.once('ready', () => {
-    console.log(`✅ Logged in as ${client.user.tag}`);
-});
-
-// --- Cooldown Management ---
-async function canBump(userId) {
-    const { data, error } = await supabase
-        .from('bumps')
-        .select('last_bump')
-        .eq('user_id', userId)
-        .single();
-
-    if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching bump cooldown:', error);
-        return false;
-    }
-
-    if (!data) return true;
-
-    const lastBump = new Date(data.last_bump);
-    const now = new Date();
-    const diff = now - lastBump;
-    return diff >= BUMP_COOLDOWN_MINUTES * 60 * 1000;
 }
 
-async function timeUntilNextBump(userId) {
-    const { data, error } = await supabase
-        .from('bumps')
-        .select('last_bump')
-        .eq('user_id', userId)
-        .single();
-
-    if (error || !data) return 0;
-
-    const lastBump = new Date(data.last_bump);
-    const now = new Date();
-    const diff = now - lastBump;
-    return BUMP_COOLDOWN_MINUTES * 60 * 1000 - diff;
-}
-
-// --- Interaction Handling ---
-client.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-
+// Handle /bump command
+async function handleBumpCommand(interaction) {
+    console.log('Processing bump command:', interaction.user.id, interaction.guild.id);
+    
     const userId = interaction.user.id;
+    const guildId = interaction.guild.id;
 
-    if (interaction.commandName === 'bump') {
-        if (!(await canBump(userId))) {
-            const msLeft = await timeUntilNextBump(userId);
-            const min = Math.floor(msLeft / 60000);
-            const sec = Math.floor((msLeft % 60000) / 1000);
-            return interaction.reply({ content: `⏳ Wait ${min}m ${sec}s to bump again.`, ephemeral: true });
-        }
-
-        const now = new Date().toISOString();
-
-        const { error } = await supabase
-            .from('bumps')
-            .upsert({ user_id: userId, last_bump: now }, { onConflict: 'user_id' });
-
-        if (error) {
-            console.error('Error updating bump time:', error);
-            return interaction.reply({ content: '❌ Error registering your bump.', ephemeral: true });
-        }
-
-        await interaction.reply({ content: '✅ Server bumped!', ephemeral: true });
-
-    } else if (interaction.commandName === 'bumpstatus') {
-        if (await canBump(userId)) {
-            return interaction.reply({ content: '✅ You can bump now!', ephemeral: true });
-        }
-
-        const msLeft = await timeUntilNextBump(userId);
-        const min = Math.floor(msLeft / 60000);
-        const sec = Math.floor((msLeft % 60000) / 1000);
-        return interaction.reply({ content: `⏳ Wait ${min}m ${sec}s to bump again.`, ephemeral: true });
-
-    } else if (interaction.commandName === 'search') {
-        const query = interaction.options.getString('query');
-
-        const { data: listings, error } = await supabase
+    try {
+        // Get listing
+        const { data: listing, error: listingError } = await supabase
             .from('listings')
-            .select('id, name, featured, created_at')
-            .ilike('name', `%${query}%`)
-            .limit(5);
+            .select('*')
+            .eq('discord_id', guildId)
+            .single();
 
-        if (error || !listings || listings.length === 0) {
-            return interaction.reply({ content: '🔍 No results found.', ephemeral: true });
+        if (listingError || !listing) {
+            return await interaction.reply({
+                content: 'No listing found for this server. Please create a listing first at our website.',
+                ephemeral: true
+            });
         }
 
-        const embed = new EmbedBuilder()
-            .setTitle(`Search results for "${query}"`)
-            .setColor('#0099ff')
-            .setTimestamp(new Date());
+        // Check bump cooldown
+        const { data: cooldown } = await supabase
+            .from('bump_cooldowns')
+            .select('*')
+            .eq('user_discord_id', userId)
+            .eq('listing_id', listing.id)
+            .single();
 
-        listings.forEach(listing => {
-            embed.addFields({
-                name: `${listing.name} ${listing.featured ? '✅ [Featured]' : ''}`,
-                value: `Listed on <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:d>`,
-                inline: false
+        const now = new Date();
+        const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+        if (cooldown && new Date(cooldown.last_bump_at) > twoHoursAgo) {
+            const nextBumpTime = new Date(new Date(cooldown.last_bump_at).getTime() + 2 * 60 * 60 * 1000);
+            const timestamp = Math.floor(nextBumpTime.getTime() / 1000);
+            return await interaction.reply({
+                content: `⏰ You can bump again <t:${timestamp}:R>`,
+                ephemeral: true
             });
+        }
+
+        // Update cooldown record
+        await supabase
+            .from('bump_cooldowns')
+            .upsert({
+                user_discord_id: userId,
+                listing_id: listing.id,
+                last_bump_at: now.toISOString(),
+            });
+
+        // Update listing record
+        await supabase
+            .from('listings')
+            .update({
+                last_bumped_at: now.toISOString(),
+                bump_count: (listing.bump_count || 0) + 1,
+                updated_at: now.toISOString(),
+            })
+            .eq('id', listing.id);
+
+        // Respond to user
+        const nextBumpTimestamp = Math.floor((now.getTime() + 2 * 60 * 60 * 1000) / 1000);
+        await interaction.reply({
+            content: `🚀 **${listing.name}** has been bumped to the top!\n\nNext bump available <t:${nextBumpTimestamp}:R>`
         });
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-    }
-});
-
-// --- New Listing Notifications ---
-let lastCheck = new Date();
-
-async function notifyNewListings() {
-    try {
-        const { data: newListings, error: listingError } = await supabase
-            .from('listings')
-            .select('id, name, featured, created_at')
-            .gt('created_at', lastCheck.toISOString());
-
-        if (listingError) {
-            console.error('Error fetching listings:', listingError);
-            return;
-        }
-
-        if (!newListings || newListings.length === 0) return;
-
-        console.log(`🆕 Found ${newListings.length} new listing(s).`);
-
-        const { data: configs, error: configError } = await supabase
+        // Fetch server config to get notification channel
+        const { data: config, error: configError } = await supabase
             .from('discord_bot_configs')
-            .select('discord_server_id, listing_channel_id');
+            .select('listing_channel_id')
+            .eq('discord_server_id', guildId)
+            .single();
 
         if (configError) {
-            console.error('Error fetching configs:', configError);
-            return;
+            console.error('Error fetching bot config:', configError);
         }
 
-        for (const config of configs) {
+        // Send bump notification if setup
+        if (config?.listing_channel_id) {
             try {
                 const channel = await client.channels.fetch(config.listing_channel_id);
-                if (!channel?.isTextBased()) continue;
-
-                for (const listing of newListings) {
-                    const embed = new EmbedBuilder()
-                        .setTitle(`${listing.name} ${listing.featured ? '✅ [Featured]' : ''}`)
-                        .setDescription(`A new server listing has been added!`)
-                        .setColor(listing.featured ? '#00FF00' : '#0099ff')
-                        .setTimestamp(new Date(listing.created_at));
-
-                    await channel.send({ embeds: [embed] });
+                if (channel?.isTextBased()) {
+                    await channel.send(`🚀 **${listing.name}** was just bumped by <@${userId}>!`);
                 }
-
-                console.log(`✅ Sent ${newListings.length} to guild ${config.discord_server_id}`);
             } catch (err) {
-                console.error(`❌ Failed to send to channel ${config.listing_channel_id}:`, err.message);
+                console.error(`Failed to post bump notification in channel ${config.listing_channel_id}:`, err);
             }
         }
 
-        const newestTime = newListings
-            .map(l => new Date(l.created_at))
-            .sort((a, b) => b - a)[0];
-        lastCheck = new Date(newestTime.getTime() + 1000);
-
-    } catch (err) {
-        console.error('Unexpected error in notifyNewListings:', err);
+    } catch (error) {
+        console.error('Error in bump command:', error);
+        await interaction.reply({
+            content: 'An error occurred while processing the bump command.',
+            ephemeral: true
+        });
     }
 }
 
-// Run every 10 seconds
-setInterval(notifyNewListings, 10 * 1000);
+// Handle /setup command
+async function handleSetupCommand(interaction) {
+    console.log('Processing setup command:', interaction.user.id, interaction.guild.id);
 
-// Start the bot
-client.login(TOKEN);
+    const userId = interaction.user.id;
+    const guildId = interaction.guild.id;
+    const channel = interaction.options.getChannel('channel');
+
+    try {
+        await supabase
+            .from('discord_bot_configs')
+            .upsert({
+                discord_server_id: guildId,
+                listing_channel_id: channel.id,
+                admin_user_id: userId,
+                active: true,
+                updated_at: new Date().toISOString(),
+            });
+
+        await interaction.reply({
+            content: `✅ Bot setup complete! New listings will be posted to ${channel}.`,
+            ephemeral: true
+        });
+    } catch (error) {
+        console.error('Error in setup command:', error);
+        await interaction.reply({
+            content: 'An error occurred while setting up the bot.',
+            ephemeral: true
+        });
+    }
+}
+
+// On bot ready
+client.once('ready', () => {
+    console.log(`✅ Logged in as ${client.user.tag}`);
+    registerCommands();
+});
+
+// Handle command interactions
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const { commandName } = interaction;
+
+    try {
+        if (commandName === 'bump') {
+            await handleBumpCommand(interaction);
+        } else if (commandName === 'setup') {
+            await handleSetupCommand(interaction);
+        }
+    } catch (error) {
+        console.error('Error handling interaction:', error);
+        const reply = {
+            content: 'There was an error while executing this command!',
+            ephemeral: true
+        };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(reply);
+        } else {
+            await interaction.reply(reply);
+        }
+    }
+});
+
+// Login the bot
+client.login(DISCORD_TOKEN);
