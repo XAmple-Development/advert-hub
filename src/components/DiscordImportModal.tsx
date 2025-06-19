@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -279,7 +280,7 @@ const DiscordImportModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !importing && onOpenChange(next)}>
-      <DialogContent className="max-w-2xl max-h-[80vh] bg-[#36393F] border-[#40444B]">
+      <DialogContent className="max-w-2xl max-h-[80vh] bg-[#1A1A1A] border-[#333] text-white">
         <DialogHeader>
           <DialogTitle className="text-white">Import from Discord</DialogTitle>
           <DialogDescription className="text-gray-400">
@@ -301,7 +302,7 @@ const DiscordImportModal = ({
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                className="border-[#333] text-gray-300 hover:bg-[#333]"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -329,7 +330,7 @@ const DiscordImportModal = ({
                   <Button
                     onClick={handleSignOut}
                     variant="outline"
-                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                    className="border-[#333] text-gray-300 hover:bg-[#333]"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
@@ -354,7 +355,7 @@ const DiscordImportModal = ({
                   <Button
                     variant="outline"
                     onClick={() => onOpenChange(false)}
-                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                    className="border-[#333] text-gray-300 hover:bg-[#333]"
                   >
                     Close
                   </Button>
@@ -377,7 +378,7 @@ const DiscordImportModal = ({
               <ScrollArea className="h-[400px]">
                 <div className="space-y-3">
                   {servers.map((server) => (
-                    <Card key={server.id} className="bg-[#2C2F33] border-[#40444B]">
+                    <Card key={server.id} className="bg-[#0F0F0F] border-[#333]">
                       <CardHeader className="pb-2">
                         <div className="flex items-center space-x-3">
                           <Checkbox
@@ -406,7 +407,7 @@ const DiscordImportModal = ({
                               {server.owner && (
                                 <Badge
                                   variant="secondary"
-                                  className="text-xs"
+                                  className="text-xs bg-green-900 text-green-200"
                                 >
                                   Owner
                                 </Badge>
@@ -444,7 +445,7 @@ const DiscordImportModal = ({
               </p>
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t border-[#40444B]">
+            <div className="flex justify-between items-center pt-4 border-t border-[#333]">
               <div className="text-sm text-gray-400">
                 Selected: {selectedServers.length} servers
               </div>
@@ -453,7 +454,7 @@ const DiscordImportModal = ({
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={importing}
-                  className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                  className="border-[#333] text-gray-300 hover:bg-[#333]"
                 >
                   Cancel
                 </Button>

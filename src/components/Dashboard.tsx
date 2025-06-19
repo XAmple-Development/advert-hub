@@ -1,344 +1,396 @@
-
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { Plus, Server, Bot, Eye, TrendingUp, LogOut, Download, Edit } from 'lucide-react';
-import CreateListingModal from './CreateListingModal';
-import DiscordImportModal from './DiscordImportModal';
-import EditListingModal from './EditListingModal';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CreateListingModal from './CreateListingModal';
+import EditListingModal from './EditListingModal';
+import DiscordImportModal from './DiscordImportModal';
+import { 
+  Plus, 
+  Edit, 
+  Eye, 
+  TrendingUp, 
+  Users, 
+  Calendar,
+  Star,
+  Download,
+  Trash2
+} from 'lucide-react';
 
-interface Listing {
-    id: string;
-    type: 'server' | 'bot';
-    name: string;
-    description: string;
-    long_description?: string;
-    member_count: number;
-    view_count: number;
-    bump_count: number;
-    status: string;
-    created_at: string;
-    avatar_url?: string;
-    invite_url?: string;
-    website_url?: string;
-    support_server_url?: string;
-}
-
-interface Profile {
-    username?: string;
-    discord_username?: string;
-}
+type Listing = Database['public']['Tables']['listings']['Row'];
 
 const Dashboard = () => {
-    const [listings, setListings] = useState<Listing[]>([]);
-    const [profile, setProfile] = useState<Profile | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showImportModal, setShowImportModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [editingListing, setEditingListing] = useState<Listing | null>(null);
-    const { user } = useAuth();
-    const { toast } = useToast();
-    const navigate = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [stats, setStats] = useState({
+    totalListings: 0,
+    totalViews: 0,
+    totalBumps: 0,
+    totalJoins: 0,
+  });
 
-    const fetchProfile = async () => {
-        if (!user?.id) return;
-
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('username, discord_username')
-                .eq('id', user.id)
-                .single();
-
-            if (error) {
-                console.error('Error fetching profile:', error);
-                return;
-            }
-
-            setProfile(data);
-        } catch (error: any) {
-            console.error('fetchProfile error:', error);
-        }
-    };
-
-    const fetchListings = async () => {
-        console.log('Dashboard: fetchListings called for user:', user?.id);
-        try {
-            const { data, error } = await supabase
-                .from('listings')
-                .select('*')
-                .eq('user_id', user?.id)
-                .order('created_at', { ascending: false });
-
-            console.log('Dashboard: Query result:', { data, error, userID: user?.id });
-
-            if (error) {
-                console.error('Dashboard: Error fetching listings:', error);
-                throw error;
-            }
-
-            console.log('Dashboard: Setting listings to:', data);
-            setListings(data || []);
-        } catch (error: any) {
-            console.error('Dashboard: fetchListings error:', error);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to fetch your listings",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (user) {
-            console.log('Dashboard: User found, fetching data...');
-            fetchProfile();
-            fetchListings();
-        }
-    }, [user]);
-
-    const handleSignOut = async () => {
-        await supabase.auth.signOut();
-        navigate('/');
-    };
-
-    const handleBump = async (listingId: string) => {
-        try {
-            const { error } = await supabase
-                .from('bumps')
-                .insert({
-                    listing_id: listingId,
-                    user_id: user?.id
-                });
-
-            if (error) throw error;
-
-            toast({
-                title: "Success!",
-                description: "Your listing has been bumped to the top!",
-            });
-
-            fetchListings();
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: error.message,
-            });
-        }
-    };
-
-    const handleEditListing = (listing: Listing) => {
-        setEditingListing(listing);
-        setShowEditModal(true);
-    };
-
-    const handleImportComplete = () => {
-        console.log('Dashboard: Import completed, refreshing listings...');
-        setLoading(true);
-        fetchListings();
-    };
-
-    const handleEditSuccess = () => {
-        console.log('Dashboard: Edit completed, refreshing listings...');
-        fetchListings();
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
-                <div className="text-white text-xl">Loading your dashboard...</div>
-            </div>
-        );
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+      return;
     }
+    fetchListings();
+  }, [user, navigate]);
 
-    console.log('Dashboard: Rendering with listings:', listings);
+  const fetchListings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
 
-    const displayName = profile?.username || profile?.discord_username || user?.email || 'User';
+      if (error) throw error;
 
+      setListings(data || []);
+      
+      // Calculate stats
+      const totalListings = data?.length || 0;
+      const totalViews = data?.reduce((sum, listing) => sum + (listing.view_count || 0), 0) || 0;
+      const totalBumps = data?.reduce((sum, listing) => sum + (listing.bump_count || 0), 0) || 0;
+      const totalJoins = data?.reduce((sum, listing) => sum + (listing.join_count || 0), 0) || 0;
+      
+      setStats({ totalListings, totalViews, totalBumps, totalJoins });
+    } catch (error: any) {
+      console.error('Error fetching listings:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch your listings.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (listing: Listing) => {
+    setSelectedListing(listing);
+    setEditModalOpen(true);
+  };
+
+  const handleDelete = async (listingId: string) => {
+    if (!confirm('Are you sure you want to delete this listing?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', listingId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Listing deleted successfully.',
+      });
+      
+      fetchListings();
+    } catch (error: any) {
+      console.error('Error deleting listing:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete listing.',
+      });
+    }
+  };
+
+  const handleBump = async (listing: Listing) => {
+    try {
+      // Check if user can bump (2 hour cooldown)
+      const { data: cooldown } = await supabase
+        .from('bump_cooldowns')
+        .select('last_bump_at')
+        .eq('user_discord_id', user?.id)
+        .eq('listing_id', listing.id)
+        .single();
+
+      const now = new Date();
+      const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+      if (cooldown && new Date(cooldown.last_bump_at) > twoHoursAgo) {
+        const nextBumpTime = new Date(new Date(cooldown.last_bump_at).getTime() + 2 * 60 * 60 * 1000);
+        const timeLeft = nextBumpTime.getTime() - now.getTime();
+        const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+        const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+        
+        toast({
+          variant: 'destructive',
+          title: 'Cooldown Active',
+          description: `You can bump again in ${hours}h ${minutes}m.`,
+        });
+        return;
+      }
+
+      // Update cooldown
+      await supabase
+        .from('bump_cooldowns')
+        .upsert({
+          user_discord_id: user?.id,
+          listing_id: listing.id,
+          last_bump_at: now.toISOString(),
+        });
+
+      // Update listing
+      const { error } = await supabase
+        .from('listings')
+        .update({
+          last_bumped_at: now.toISOString(),
+          bump_count: (listing.bump_count || 0) + 1,
+          updated_at: now.toISOString(),
+        })
+        .eq('id', listing.id);
+
+      if (error) throw error;
+
+      // Create bump record
+      await supabase
+        .from('bumps')
+        .insert({
+          listing_id: listing.id,
+          user_id: user?.id,
+          bump_type: 'manual',
+          bumped_at: now.toISOString(),
+        });
+
+      toast({
+        title: 'Success',
+        description: 'Listing bumped successfully! Next bump available in 2 hours.',
+      });
+      
+      fetchListings();
+    } catch (error: any) {
+      console.error('Error bumping listing:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to bump listing.',
+      });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { variant: 'secondary' as const, label: 'Pending' },
+      active: { variant: 'default' as const, label: 'Active' },
+      suspended: { variant: 'destructive' as const, label: 'Suspended' },
+    };
+    
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  if (loading) {
     return (
-        <div className="min-h-screen bg-[#2C2F33]">
-            <nav className="bg-[#36393F] border-b border-[#40444B] px-6 py-4">
-                <div className="flex items-center justify-between max-w-7xl mx-auto">
-                    <h1 className="text-2xl font-bold text-white">Discord Boost Dashboard</h1>
-                    <div className="flex items-center gap-4">
-                        <span className="text-gray-300">Welcome, {displayName}</span>
-                        <Button
-                            onClick={handleSignOut}
-                            variant="outline"
-                            size="sm"
-                            className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
-                        >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Sign Out
-                        </Button>
-                    </div>
-                </div>
-            </nav>
-
-            <div className="max-w-7xl mx-auto p-6">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Your Listings</h2>
-                        <p className="text-gray-400">Manage your Discord servers and bots</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <Button
-                            onClick={() => setShowImportModal(true)}
-                            className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                        >
-                            <Download className="h-4 w-4 mr-2" />
-                            Import Servers from Discord
-                        </Button>
-                        <Button
-                            onClick={() => setShowCreateModal(true)}
-                            className="bg-[#57F287] hover:bg-[#3BA55C] text-black"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Create Listing
-                        </Button>
-                    </div>
-                </div>
-
-                {listings.length === 0 ? (
-                    <Card className="bg-[#36393F] border-[#40444B] text-center py-12">
-                        <CardContent>
-                            <div className="text-gray-400 mb-4">
-                                <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                                <h3 className="text-xl font-semibold text-white mb-2">No listings yet</h3>
-                                <p>Get started by creating your first listing or importing from Discord</p>
-                                <p className="text-xs mt-2 text-gray-500">Debug: User ID: {user?.id}</p>
-                            </div>
-                            <div className="flex gap-3 justify-center">
-                                <Button
-                                    onClick={() => setShowImportModal(true)}
-                                    className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                                >
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Import from Discord
-                                </Button>
-                                <Button
-                                    onClick={() => setShowCreateModal(true)}
-                                    className="bg-[#57F287] hover:bg-[#3BA55C] text-black"
-                                >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Create Listing
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {listings.map((listing) => (
-                            <Card key={listing.id} className="bg-[#36393F] border-[#40444B] hover:border-[#5865F2] transition-colors">
-                                <CardHeader className="pb-3">
-                                    <div className="flex items-center space-x-3">
-                                        {listing.avatar_url ? (
-                                            <img
-                                                src={listing.avatar_url}
-                                                alt={listing.name}
-                                                className="w-12 h-12 rounded-full"
-                                            />
-                                        ) : (
-                                            <div className="w-12 h-12 bg-[#5865F2] rounded-full flex items-center justify-center">
-                                                {listing.type === 'server' ? (
-                                                    <Server className="h-6 w-6 text-white" />
-                                                ) : (
-                                                    <Bot className="h-6 w-6 text-white" />
-                                                )}
-                                            </div>
-                                        )}
-                                        <div className="flex-1">
-                                            <CardTitle className="text-white text-lg">{listing.name}</CardTitle>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <Badge variant={listing.type === 'server' ? 'default' : 'secondary'}>
-                                                    {listing.type}
-                                                </Badge>
-                                                <Badge variant={listing.status === 'active' ? 'default' : 'destructive'}>
-                                                    {listing.status}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <CardDescription className="text-gray-300 line-clamp-2">
-                                        {listing.description}
-                                    </CardDescription>
-
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div className="text-center">
-                                            <div className="flex items-center justify-center text-gray-400 mb-1">
-                                                <Eye className="h-4 w-4" />
-                                            </div>
-                                            <div className="text-white font-semibold">{listing.view_count || 0}</div>
-                                            <div className="text-gray-500 text-xs">Views</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="flex items-center justify-center text-gray-400 mb-1">
-                                                <TrendingUp className="h-4 w-4" />
-                                            </div>
-                                            <div className="text-white font-semibold">{listing.bump_count || 0}</div>
-                                            <div className="text-gray-500 text-xs">Bumps</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2">
-                                        <Button
-                                            onClick={() => handleEditListing(listing)}
-                                            variant="outline"
-                                            size="sm"
-                                            className="flex-1 border-[#40444B] text-gray-300 hover:bg-[#40444B]"
-                                        >
-                                            <Edit className="h-4 w-4 mr-2" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            onClick={() => handleBump(listing.id)}
-                                            className="flex-1 bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                                            size="sm"
-                                        >
-                                            <TrendingUp className="h-4 w-4 mr-2" />
-                                            Bump
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <CreateListingModal
-                open={showCreateModal}
-                onOpenChange={setShowCreateModal}
-                onSuccess={fetchListings}
-            />
-
-            <DiscordImportModal
-                open={showImportModal}
-                onOpenChange={setShowImportModal}
-                onImportComplete={handleImportComplete}
-            />
-
-            {editingListing && (
-                <EditListingModal
-                    open={showEditModal}
-                    onOpenChange={setShowEditModal}
-                    listing={editingListing}
-                    onSuccess={handleEditSuccess}
-                />
-            )}
-        </div>
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
     );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0F0F0F] text-white">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-gray-400 mt-2">Manage your server listings and track performance</p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setImportModalOpen(true)}
+              variant="outline"
+              className="border-[#333] text-white hover:bg-[#1A1A1A]"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Import from Discord
+            </Button>
+            <Button 
+              onClick={() => setCreateModalOpen(true)}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Listing
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-[#1A1A1A] border-[#333]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Total Listings</CardTitle>
+              <Users className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.totalListings}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-[#1A1A1A] border-[#333]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Total Views</CardTitle>
+              <Eye className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.totalViews.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-[#1A1A1A] border-[#333]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Total Bumps</CardTitle>
+              <TrendingUp className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.totalBumps}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-[#1A1A1A] border-[#333]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-400">Total Joins</CardTitle>
+              <Users className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{stats.totalJoins}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Listings */}
+        <Card className="bg-[#1A1A1A] border-[#333]">
+          <CardHeader>
+            <CardTitle className="text-white">Your Listings</CardTitle>
+            <CardDescription className="text-gray-400">
+              Manage and track your server listings
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {listings.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">You haven't created any listings yet.</p>
+                <Button 
+                  onClick={() => setCreateModalOpen(true)}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Listing
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {listings.map((listing) => (
+                  <div key={listing.id} className="flex items-center justify-between p-4 bg-[#0F0F0F] rounded-lg border border-[#333]">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-white">{listing.name}</h3>
+                        {listing.featured && <Star className="h-4 w-4 text-yellow-500" />}
+                        {getStatusBadge(listing.status)}
+                      </div>
+                      <p className="text-gray-400 text-sm mb-2">{listing.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {listing.member_count || 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {listing.view_count || 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          {listing.bump_count || 0}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(listing.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleBump(listing)}
+                        className="border-[#333] text-white hover:bg-[#333]"
+                      >
+                        <TrendingUp className="h-4 w-4 mr-1" />
+                        Bump
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(listing)}
+                        className="border-[#333] text-white hover:bg-[#333]"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDelete(listing.id)}
+                        className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Modals */}
+        <CreateListingModal
+          open={createModalOpen}
+          onOpenChange={setCreateModalOpen}
+          onSuccess={fetchListings}
+        />
+        
+        <EditListingModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          listing={selectedListing}
+          onSuccess={fetchListings}
+        />
+
+        <DiscordImportModal
+          open={importModalOpen}
+          onOpenChange={setImportModalOpen}
+          onImportComplete={fetchListings}
+        />
+      </div>
+    </div>
+  );
 };
 
 export default Dashboard;
