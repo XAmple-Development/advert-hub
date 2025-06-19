@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,6 +37,7 @@ interface Listing {
   bump_count: number;
   join_count: number;
   status: string;
+  type: string;
   featured: boolean;
   last_bumped_at: string | null;
   created_at: string;
@@ -210,8 +210,8 @@ const Dashboard = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { variant: 'secondary' as const, label: 'Pending' },
-      approved: { variant: 'default' as const, label: 'Active' },
-      rejected: { variant: 'destructive' as const, label: 'Rejected' },
+      active: { variant: 'default' as const, label: 'Active' },
+      suspended: { variant: 'destructive' as const, label: 'Suspended' },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
