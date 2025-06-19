@@ -50,6 +50,55 @@ function hexToUint8Array(hex: string): Uint8Array {
     return new Uint8Array(hex.match(/.{1,2}/g)!.map(b => parseInt(b, 16)));
 }
 
+// Check if user can bump (2 hour cooldown)
+async function canBump(userId: string, listingId: string): Promise<boolean> {
+    const { data, error } = await supabase
+        .from('bump_cooldowns')
+        .select('last_bump_at')
+        .eq('user_discord_id', userId)
+        .eq('listing_id', listingId)
+        .single();
+
+    if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching bump cooldown:', error);
+        return false;
+    }
+
+    if (!data) return true;
+
+    const lastBump = new Date(data.last_bump_at);
+    const now = new Date();
+    const diff = now.getTime() - lastBump.getTime();
+    const twoHoursInMs = 2 * 60 * 60 * 1000;
+    
+    return diff >= twoHoursInMs;
+}
+
+// Get time until next bump
+async function getTimeUntilNextBump(userId: string, listingId: string): Promise<string> {
+    const { data } = await supabase
+        .from('bump_cooldowns')
+        .select('last_bump_at')
+        .eq('user_discord_id', userId)
+        .eq('listing_id', listingId)
+        .single();
+
+    if (!data) return '0h 0m';
+
+    const lastBump = new Date(data.last_bump_at);
+    const now = new Date();
+    const twoHoursInMs = 2 * 60 * 60 * 1000;
+    const timeSinceLastBump = now.getTime() - lastBump.getTime();
+    const timeLeft = twoHoursInMs - timeSinceLastBump;
+
+    if (timeLeft <= 0) return '0h 0m';
+
+    const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+    const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+
+    return `${hours}h ${minutes}m`;
+}
+
 // Handle bump command
 async function handleBumpCommand(interaction: any) {
     console.log('Processing bump command:', interaction);
@@ -73,42 +122,33 @@ async function handleBumpCommand(interaction: any) {
             .from('listings')
             .select('*')
             .eq('discord_id', guildId)
+            .eq('status', 'approved')
             .single();
 
         if (listingError || !listing) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: 'No listing found for this server. Please create a listing first at our website.',
+                    content: '❌ No approved listing found for this server. Please create a listing first at our website.',
                     flags: 64,
                 },
             };
         }
 
-        // Check cooldown (2 hours)
-        const { data: cooldown } = await supabase
-            .from('bump_cooldowns')
-            .select('*')
-            .eq('user_discord_id', userId)
-            .eq('listing_id', listing.id)
-            .single();
-
-        const now = new Date();
-        const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-
-        if (cooldown && new Date(cooldown.last_bump_at) > twoHoursAgo) {
-            const nextBumpTime = new Date(new Date(cooldown.last_bump_at).getTime() + 2 * 60 * 60 * 1000);
-            const msLeft = nextBumpTime.getTime() - now.getTime();
-            const hours = Math.floor(msLeft / 3600000);
-            const min = Math.floor((msLeft % 3600000) / 60000);
+        // Check cooldown
+        const canUserBump = await canBump(userId, listing.id);
+        if (!canUserBump) {
+            const timeLeft = await getTimeUntilNextBump(userId, listing.id);
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: `⏳ Wait ${hours}h ${min}m to bump again.`,
+                    content: `⏳ You can bump again in ${timeLeft}.`,
                     flags: 64,
                 },
             };
         }
+
+        const now = new Date();
 
         // Update cooldown
         await supabase
@@ -124,17 +164,27 @@ async function handleBumpCommand(interaction: any) {
             .from('listings')
             .update({
                 last_bumped_at: now.toISOString(),
-                bump_count: listing.bump_count + 1,
+                bump_count: (listing.bump_count || 0) + 1,
                 updated_at: now.toISOString(),
             })
             .eq('id', listing.id);
+
+        // Create bump record
+        await supabase
+            .from('bumps')
+            .insert({
+                listing_id: listing.id,
+                user_id: userId,
+                bump_type: 'discord',
+                bumped_at: now.toISOString(),
+            });
 
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
                 embeds: [{
                     title: '🚀 Server Bumped!',
-                    description: `**${listing.name}** has been bumped to the top of the list!`,
+                    description: `**${listing.name}** has been bumped to the top of the list!\n\nNext bump available in 2 hours.`,
                     color: 0x00FF00,
                     timestamp: now.toISOString(),
                 }],
@@ -170,31 +220,24 @@ async function handleBumpStatusCommand(interaction: any) {
     try {
         const { data: listing } = await supabase
             .from('listings')
-            .select('id')
+            .select('id, name')
             .eq('discord_id', guildId)
+            .eq('status', 'approved')
             .single();
 
         if (!listing) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: '❌ No listing found for this server.',
+                    content: '❌ No approved listing found for this server.',
                     flags: 64,
                 },
             };
         }
 
-        const { data: cooldown } = await supabase
-            .from('bump_cooldowns')
-            .select('*')
-            .eq('user_discord_id', userId)
-            .eq('listing_id', listing.id)
-            .single();
-
-        const now = new Date();
-        const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-
-        if (!cooldown || new Date(cooldown.last_bump_at) <= twoHoursAgo) {
+        const canUserBump = await canBump(userId, listing.id);
+        
+        if (canUserBump) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
@@ -204,15 +247,11 @@ async function handleBumpStatusCommand(interaction: any) {
             };
         }
 
-        const nextBumpTime = new Date(new Date(cooldown.last_bump_at).getTime() + 2 * 60 * 60 * 1000);
-        const msLeft = nextBumpTime.getTime() - now.getTime();
-        const hours = Math.floor(msLeft / 3600000);
-        const min = Math.floor((msLeft % 3600000) / 60000);
-
+        const timeLeft = await getTimeUntilNextBump(userId, listing.id);
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
-                content: `⏳ Wait ${hours}h ${min}m to bump again.`,
+                content: `⏳ You can bump again in ${timeLeft}.`,
                 flags: 64,
             },
         };
@@ -248,13 +287,14 @@ async function handleSearchCommand(interaction: any) {
             .select('id, name, description, featured, member_count, created_at')
             .ilike('name', `%${query}%`)
             .eq('status', 'approved')
+            .order('bump_count', { ascending: false })
             .limit(5);
 
         if (error || !listings || listings.length === 0) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: '🔍 No results found.',
+                    content: `🔍 No results found for "${query}".`,
                     flags: 64,
                 },
             };
@@ -262,7 +302,7 @@ async function handleSearchCommand(interaction: any) {
 
         const fields = listings.map(listing => ({
             name: `${listing.name} ${listing.featured ? '✨ [Featured]' : ''}`,
-            value: `${listing.description.substring(0, 100)}...\n👥 ${listing.member_count || 0} members | Listed <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:R>`,
+            value: `${listing.description.substring(0, 100)}${listing.description.length > 100 ? '...' : ''}\n👥 ${listing.member_count || 0} members | Listed <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:R>`,
             inline: false
         }));
 
@@ -290,73 +330,9 @@ async function handleSearchCommand(interaction: any) {
     }
 }
 
-// Handle stats command
-async function handleStatsCommand(interaction: any) {
-    const guildId = interaction.guild_id;
-    
-    if (!guildId) {
-        return {
-            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-            data: {
-                content: 'Error: Unable to identify server.',
-                flags: 64,
-            },
-        };
-    }
-
-    try {
-        const { data: listing, error } = await supabase
-            .from('listings')
-            .select('name, bump_count, view_count, join_count, last_bumped_at, created_at, featured')
-            .eq('discord_id', guildId)
-            .single();
-
-        if (error || !listing) {
-            return {
-                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-                data: {
-                    content: '❌ No listing found for this server. Create one on our website first!',
-                    flags: 64,
-                },
-            };
-        }
-
-        const lastBumped = listing.last_bumped_at ? `<t:${Math.floor(new Date(listing.last_bumped_at).getTime() / 1000)}:R>` : 'Never';
-        const created = `<t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:D>`;
-
-        return {
-            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-            data: {
-                embeds: [{
-                    title: `📊 Stats for ${listing.name}`,
-                    color: listing.featured ? 0xFFD700 : 0x0099ff,
-                    fields: [
-                        { name: '🚀 Total Bumps', value: (listing.bump_count || 0).toString(), inline: true },
-                        { name: '👀 Total Views', value: (listing.view_count || 0).toString(), inline: true },
-                        { name: '🎯 Total Joins', value: (listing.join_count || 0).toString(), inline: true },
-                        { name: '⏰ Last Bumped', value: lastBumped, inline: true },
-                        { name: '📅 Listed Since', value: created, inline: true },
-                        { name: '✨ Featured', value: listing.featured ? 'Yes' : 'No', inline: true },
-                    ],
-                    timestamp: new Date().toISOString(),
-                }],
-            },
-        };
-    } catch (error) {
-        console.error('Error in stats command:', error);
-        return {
-            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
-            data: {
-                content: 'An error occurred while fetching stats.',
-                flags: 64,
-            },
-        };
-    }
-}
-
 // Handle leaderboard command
 async function handleLeaderboardCommand(interaction: any) {
-    const limit = interaction.data?.options?.[0]?.value || 5;
+    const limit = Math.min(interaction.data?.options?.[0]?.value || 5, 10);
     
     try {
         const { data: listings, error } = await supabase
@@ -365,7 +341,7 @@ async function handleLeaderboardCommand(interaction: any) {
             .eq('status', 'approved')
             .order('bump_count', { ascending: false })
             .order('last_bumped_at', { ascending: false })
-            .limit(Math.min(limit, 10));
+            .limit(limit);
 
         if (error || !listings || listings.length === 0) {
             return {
@@ -434,7 +410,7 @@ async function handleFeaturedCommand(interaction: any) {
 
         const fields = listings.map(listing => ({
             name: `✨ ${listing.name}`,
-            value: `${listing.description.substring(0, 100)}...\n👥 ${listing.member_count || 0} members | Listed <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:R>`,
+            value: `${listing.description.substring(0, 100)}${listing.description.length > 100 ? '...' : ''}\n👥 ${listing.member_count || 0} members | Listed <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:R>`,
             inline: false
         }));
 
@@ -455,6 +431,71 @@ async function handleFeaturedCommand(interaction: any) {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
                 content: 'An error occurred while fetching featured listings.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle stats command
+async function handleStatsCommand(interaction: any) {
+    const guildId = interaction.guild_id;
+    
+    if (!guildId) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Error: Unable to identify server.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        const { data: listing, error } = await supabase
+            .from('listings')
+            .select('name, bump_count, view_count, join_count, last_bumped_at, created_at, featured')
+            .eq('discord_id', guildId)
+            .eq('status', 'approved')
+            .single();
+
+        if (error || !listing) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '❌ No approved listing found for this server. Create one on our website first!',
+                    flags: 64,
+                },
+            };
+        }
+
+        const lastBumped = listing.last_bumped_at ? `<t:${Math.floor(new Date(listing.last_bumped_at).getTime() / 1000)}:R>` : 'Never';
+        const created = `<t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:D>`;
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: `📊 Stats for ${listing.name}`,
+                    color: listing.featured ? 0xFFD700 : 0x0099ff,
+                    fields: [
+                        { name: '🚀 Total Bumps', value: (listing.bump_count || 0).toString(), inline: true },
+                        { name: '👀 Total Views', value: (listing.view_count || 0).toString(), inline: true },
+                        { name: '🎯 Total Joins', value: (listing.join_count || 0).toString(), inline: true },
+                        { name: '⏰ Last Bumped', value: lastBumped, inline: true },
+                        { name: '📅 Listed Since', value: created, inline: true },
+                        { name: '✨ Featured', value: listing.featured ? 'Yes' : 'No', inline: true },
+                    ],
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in stats command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while fetching stats.',
                 flags: 64,
             },
         };
