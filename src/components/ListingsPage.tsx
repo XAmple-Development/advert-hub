@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Server, Bot, Eye, TrendingUp, Search, ExternalLink, Crown, Star, Clock } from 'lucide-react';
+import { Server, Bot, Eye, TrendingUp, Search, ExternalLink } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
 interface Listing {
@@ -22,12 +23,10 @@ interface Listing {
     bump_count: number;
     status: string;
     created_at: string;
-    last_bumped_at: string;
     avatar_url?: string;
     invite_url?: string;
     discord_id: string;
     tags: string[];
-    featured: boolean;
 }
 
 const ListingsPage = () => {
@@ -37,7 +36,6 @@ const ListingsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('recent');
     const [typeFilter, setTypeFilter] = useState('all');
-    const [categoryTab, setCategoryTab] = useState('all');
     const { user } = useAuth();
     const { toast } = useToast();
     const navigate = useNavigate();
@@ -67,27 +65,8 @@ const ListingsPage = () => {
         fetchListings();
     }, []);
 
-    const getFilteredByCategory = (listings: Listing[]) => {
-        const now = new Date();
-        const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-        switch (categoryTab) {
-            case 'premium':
-                return listings.filter(listing => listing.bump_count >= 10);
-            case 'featured':
-                return listings.filter(listing => listing.featured);
-            case 'recent':
-                return listings.filter(listing => 
-                    listing.last_bumped_at && 
-                    new Date(listing.last_bumped_at) > twentyFourHoursAgo
-                );
-            default:
-                return listings;
-        }
-    };
-
     useEffect(() => {
-        let filtered = getFilteredByCategory(listings);
+        let filtered = listings;
 
         // Filter by type
         if (typeFilter !== 'all') {
@@ -103,44 +82,23 @@ const ListingsPage = () => {
             );
         }
 
-        // Sort listings - prioritize bumped listings
+        // Sort listings
         switch (sortBy) {
             case 'bumps':
-                filtered.sort((a, b) => {
-                    // First sort by bump count (highest first)
-                    if (b.bump_count !== a.bump_count) {
-                        return (b.bump_count || 0) - (a.bump_count || 0);
-                    }
-                    // Then by last bumped time (most recent first)
-                    if (a.last_bumped_at && b.last_bumped_at) {
-                        return new Date(b.last_bumped_at).getTime() - new Date(a.last_bumped_at).getTime();
-                    }
-                    if (a.last_bumped_at) return -1;
-                    if (b.last_bumped_at) return 1;
-                    return 0;
-                });
+                filtered.sort((a, b) => (b.bump_count || 0) - (a.bump_count || 0));
                 break;
             case 'views':
                 filtered.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
                 break;
             default: // recent
-                filtered.sort((a, b) => {
-                    // First prioritize listings with recent bumps
-                    if (a.last_bumped_at && b.last_bumped_at) {
-                        return new Date(b.last_bumped_at).getTime() - new Date(a.last_bumped_at).getTime();
-                    }
-                    if (a.last_bumped_at) return -1;
-                    if (b.last_bumped_at) return 1;
-                    // Then by creation date
-                    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-                });
+                filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         }
 
         setFilteredListings(filtered);
-    }, [listings, searchTerm, sortBy, typeFilter, categoryTab]);
+    }, [listings, searchTerm, sortBy, typeFilter]);
 
     const handleBump = async (listingId: string, event: React.MouseEvent) => {
-        event.stopPropagation();
+        event.stopPropagation(); // Prevent card click
 
         if (!user) {
             toast({
@@ -234,40 +192,6 @@ const ListingsPage = () => {
                         </div>
                     </div>
 
-                    {/* Category Tabs */}
-                    <Tabs value={categoryTab} onValueChange={setCategoryTab} className="mb-6">
-                        <TabsList className="bg-[#36393F] border-[#40444B] grid grid-cols-4 w-full max-w-2xl">
-                            <TabsTrigger 
-                                value="all" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
-                            >
-                                <Server className="h-4 w-4" />
-                                All Listings
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="premium" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
-                            >
-                                <Crown className="h-4 w-4" />
-                                Premium Bumps
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="featured" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
-                            >
-                                <Star className="h-4 w-4" />
-                                Featured Bumps
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="recent" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
-                            >
-                                <Clock className="h-4 w-4" />
-                                Recently Bumped
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-
                     <Tabs value={typeFilter} onValueChange={setTypeFilter} className="mb-8">
                         <TabsList className="bg-[#36393F] border-[#40444B]">
                             <TabsTrigger value="all" className="data-[state=active]:bg-[#5865F2]">All</TabsTrigger>
@@ -291,26 +215,9 @@ const ListingsPage = () => {
                             {filteredListings.map((listing) => (
                                 <Card
                                     key={listing.id}
-                                    className={`bg-[#36393F] border-[#40444B] hover:border-[#5865F2] transition-colors cursor-pointer relative ${
-                                        listing.featured ? 'ring-2 ring-yellow-500' : ''
-                                    } ${
-                                        listing.bump_count >= 10 ? 'ring-2 ring-purple-500' : ''
-                                    }`}
+                                    className="bg-[#36393F] border-[#40444B] hover:border-[#5865F2] transition-colors cursor-pointer"
                                     onClick={() => handleCardClick(listing.id)}
                                 >
-                                    {listing.featured && (
-                                        <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                                            <Star className="h-3 w-3" />
-                                            Featured
-                                        </div>
-                                    )}
-                                    {listing.bump_count >= 10 && !listing.featured && (
-                                        <div className="absolute -top-2 -right-2 bg-purple-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                                            <Crown className="h-3 w-3" />
-                                            Premium
-                                        </div>
-                                    )}
-                                    
                                     <CardHeader className="pb-3">
                                         <div className="flex items-center space-x-3">
                                             {listing.avatar_url ? (
