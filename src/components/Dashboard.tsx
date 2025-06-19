@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
 import {
   Card,
   CardContent,
@@ -28,22 +29,7 @@ import {
   Trash2
 } from 'lucide-react';
 
-interface Listing {
-  id: string;
-  name: string;
-  description: string;
-  member_count: number;
-  view_count: number;
-  bump_count: number;
-  join_count: number;
-  status: string;
-  type: string;
-  featured: boolean;
-  last_bumped_at: string | null;
-  created_at: string;
-  discord_id: string;
-  invite_url: string | null;
-}
+type Listing = Database['public']['Tables']['listings']['Row'];
 
 const Dashboard = () => {
   const { user } = useAuth();
