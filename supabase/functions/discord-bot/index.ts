@@ -117,19 +117,19 @@ async function handleBumpCommand(interaction: any) {
     }
 
     try {
-        // Find listing for this server - changed from 'approved' to 'active'
+        // Find listing for this server
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select('*')
             .eq('discord_id', guildId)
-            .eq('status', 'active')
+            .eq('status', 'approved')
             .single();
 
         if (listingError || !listing) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: '❌ No active listing found for this server. Please create a listing first at our website.',
+                    content: '❌ No approved listing found for this server. Please create a listing first at our website.',
                     flags: 64,
                 },
             };
@@ -222,14 +222,14 @@ async function handleBumpStatusCommand(interaction: any) {
             .from('listings')
             .select('id, name')
             .eq('discord_id', guildId)
-            .eq('status', 'active')
+            .eq('status', 'approved')
             .single();
 
         if (!listing) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: '❌ No active listing found for this server.',
+                    content: '❌ No approved listing found for this server.',
                     flags: 64,
                 },
             };
@@ -286,7 +286,7 @@ async function handleSearchCommand(interaction: any) {
             .from('listings')
             .select('id, name, description, featured, member_count, created_at')
             .ilike('name', `%${query}%`)
-            .eq('status', 'active')
+            .eq('status', 'approved')
             .order('bump_count', { ascending: false })
             .limit(5);
 
@@ -338,7 +338,7 @@ async function handleLeaderboardCommand(interaction: any) {
         const { data: listings, error } = await supabase
             .from('listings')
             .select('name, bump_count, last_bumped_at, featured')
-            .eq('status', 'active')
+            .eq('status', 'approved')
             .order('bump_count', { ascending: false })
             .order('last_bumped_at', { ascending: false })
             .limit(limit);
@@ -394,7 +394,7 @@ async function handleFeaturedCommand(interaction: any) {
             .from('listings')
             .select('name, description, member_count, created_at')
             .eq('featured', true)
-            .eq('status', 'active')
+            .eq('status', 'approved')
             .order('created_at', { ascending: false })
             .limit(5);
 
@@ -456,14 +456,14 @@ async function handleStatsCommand(interaction: any) {
             .from('listings')
             .select('name, bump_count, view_count, join_count, last_bumped_at, created_at, featured')
             .eq('discord_id', guildId)
-            .eq('status', 'active')
+            .eq('status', 'approved')
             .single();
 
         if (error || !listing) {
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: '❌ No active listing found for this server. Create one on our website first!',
+                    content: '❌ No approved listing found for this server. Create one on our website first!',
                     flags: 64,
                 },
             };
