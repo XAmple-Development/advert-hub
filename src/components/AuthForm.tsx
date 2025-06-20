@@ -82,10 +82,11 @@ const AuthForm = () => {
   const handleDiscordLogin = async () => {
     setLoading(true);
     try {
+      console.log('Starting Discord OAuth...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          scopes: 'identify email guilds applications.builds.read',
+          scopes: 'identify email guilds',
           redirectTo: `${window.location.origin}/`,
           queryParams: {
             access_type: 'offline',
@@ -94,12 +95,18 @@ const AuthForm = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Discord OAuth] Error:', error);
+        throw error;
+      }
+
+      console.log('[Discord OAuth] Initiated successfully');
     } catch (error: any) {
+      console.error('[Discord OAuth] Failed:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message,
+        title: "Discord Login Error",
+        description: error.message || 'Failed to sign in with Discord',
       });
       setLoading(false);
     }
