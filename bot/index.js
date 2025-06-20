@@ -125,16 +125,17 @@ client.on('interactionCreate', async interaction => {
             return interaction.reply({ content: `⏳ Wait ${hours}h ${min}m to bump again.`, ephemeral: true });
         }
 
-        // Find user's listing for this server
+        // Find user's listing for this server - changed from 'approved' to 'active'
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select('id, name')
             .eq('discord_id', guildId)
+            .eq('status', 'active')
             .single();
 
         if (listingError || !listing) {
             return interaction.reply({ 
-                content: '❌ No listing found for this server. Please create a listing first on our website.', 
+                content: '❌ No active listing found for this server. Please create a listing first on our website.', 
                 ephemeral: true 
             });
         }
@@ -194,7 +195,7 @@ client.on('interactionCreate', async interaction => {
             .from('listings')
             .select('id, name, description, featured, member_count, created_at')
             .ilike('name', `%${query}%`)
-            .eq('status', 'approved')
+            .eq('status', 'active')
             .limit(5);
 
         if (error || !listings || listings.length === 0) {
@@ -251,7 +252,7 @@ client.on('interactionCreate', async interaction => {
         const { data: listings, error } = await supabase
             .from('listings')
             .select('name, bump_count, last_bumped_at, featured')
-            .eq('status', 'approved')
+            .eq('status', 'active')
             .order('bump_count', { ascending: false })
             .order('last_bumped_at', { ascending: false })
             .limit(limit);
@@ -283,11 +284,12 @@ client.on('interactionCreate', async interaction => {
             .from('listings')
             .select('name, bump_count, view_count, join_count, last_bumped_at, created_at, featured')
             .eq('discord_id', guildId)
+            .eq('status', 'active')
             .single();
 
         if (error || !listing) {
             return interaction.reply({ 
-                content: '❌ No listing found for this server. Create one on our website first!', 
+                content: '❌ No active listing found for this server. Create one on our website first!', 
                 ephemeral: true 
             });
         }
@@ -315,7 +317,7 @@ client.on('interactionCreate', async interaction => {
             .from('listings')
             .select('name, description, member_count, created_at')
             .eq('featured', true)
-            .eq('status', 'approved')
+            .eq('status', 'active')
             .order('created_at', { ascending: false })
             .limit(5);
 
