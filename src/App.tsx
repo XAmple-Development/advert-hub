@@ -36,10 +36,3 @@ const App = () => (
 );
 
 export default App;
-const auth = useAuth();
-
-if (!auth) {
-  return <div>Something went wrong</div>; // fallback
-}
-
-const { user, loading } = auth;
