@@ -1,59 +1,75 @@
-import { useState, useEffect, createContext, useContext } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
-const AuthContext = createContext(null);
+// Define types for context
+interface AuthContextType {
+  user: any;
+  session: any;
+  loading: boolean;
+}
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  loading: true,
+});
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+    const initSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session:', error);
+        console.error("Error fetching session:", error);
       }
 
-      setSession(session);
-      setUser(session?.user ?? null);
+      if (data?.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+      }
+
       setLoading(false);
     };
 
-    const { data: subscription } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('[AuthStateChange]', event);
-      setSession(session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("[Auth State Change]", event);
+
       setUser(session?.user ?? null);
+      setSession(session ?? null);
       setLoading(false);
 
-      // Optional: Store Discord token
-      if (session?.user?.app_metadata?.provider === 'discord') {
+      // If signed in with Discord, save the provider token
+      if (session?.user?.app_metadata?.provider === "discord") {
         const providerToken =
-          session.provider_token ||
-          session?.user?.user_metadata?.provider_token;
+          session.provider_token || session.user?.user_metadata?.provider_token;
 
         if (providerToken) {
           try {
-            const { error } = await supabase
-              .from('profiles')
-              .upsert({
-                id: session.user.id,
-                discord_access_token: providerToken,
-                discord_token_updated_at: new Date().toISOString(),
-              });
+            const { error } = await supabase.from("profiles").upsert({
+              id: session.user.id,
+              discord_access_token: providerToken,
+              discord_token_updated_at: new Date().toISOString(),
+            });
 
-            if (error) console.error('Error saving Discord token:', error);
-          } catch (e) {
-            console.error('Exception storing Discord token:', e);
+            if (error) {
+              console.error("Error storing Discord token:", error);
+            }
+          } catch (err) {
+            console.error("Exception storing Discord token:", err);
           }
         }
       }
     });
 
-    initializeAuth();
+    initSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe(); // ✅ Correct usage for Supabase v2
+    };
   }, []);
 
   return (
@@ -63,6 +79,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
