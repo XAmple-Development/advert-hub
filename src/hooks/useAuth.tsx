@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -16,24 +17,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   useEffect(() => {
-    console.log('AuthProvider: Setting up auth state');
-    
+    let mounted = true;
+
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Error getting session:', error);
-        } else {
-          console.log('Initial session:', session?.user?.email || 'No user');
+        } else if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -42,23 +54,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email || 'No user');
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
 
-        // Handle Discord provider token storage
-        if (session?.user?.app_metadata?.provider === "discord" && event === 'SIGNED_IN') {
-          const token = session.provider_token || session.user?.user_metadata?.provider_token;
-          if (token) {
-            try {
-              await supabase.from("profiles").upsert({
-                id: session.user.id,
-                discord_access_token: token,
-                discord_token_updated_at: new Date().toISOString(),
-              });
-            } catch (error) {
-              console.error('Error storing Discord token:', error);
+          // Handle Discord provider token storage
+          if (session?.user?.app_metadata?.provider === "discord" && event === 'SIGNED_IN') {
+            const token = session.provider_token || session.user?.user_metadata?.provider_token;
+            if (token) {
+              try {
+                await supabase.from("profiles").upsert({
+                  id: session.user.id,
+                  discord_access_token: token,
+                  discord_token_updated_at: new Date().toISOString(),
+                });
+              } catch (error) {
+                console.error('Error storing Discord token:', error);
+              }
             }
           }
         }
@@ -66,6 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -73,7 +87,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     user,
     session,
-    loading
+    loading,
+    signOut
   };
 
   return (
@@ -83,6 +98,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = (): AuthContextType | null => {
-  return useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

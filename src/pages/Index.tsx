@@ -1,5 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
@@ -7,24 +9,26 @@ import HowItWorks from '@/components/HowItWorks';
 import Pricing from '@/components/Pricing';
 import Footer from '@/components/Footer';
 import Dashboard from '@/components/Dashboard';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Index = () => {
-  const authData = useAuth();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
-  console.log('Index page - Auth data:', authData);
+  useEffect(() => {
+    // Handle any auth redirects or state changes here if needed
+  }, [user, navigate]);
 
-  // Handle case where useAuth returns null or is loading
-  if (!authData || authData.loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="flex flex-col items-center space-y-4">
+          <LoadingSpinner size="lg" />
+          <div className="text-white text-xl">Loading...</div>
+        </div>
       </div>
     );
   }
-
-  const { user } = authData;
-
-  console.log('Index page - User:', user?.email || 'Not logged in');
 
   if (user) {
     return (

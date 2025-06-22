@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import CreateListingModal from './CreateListingModal';
 import EditListingModal from './EditListingModal';
+import LoadingSpinner from './LoadingSpinner';
 import { 
   Plus, 
   Edit, 
@@ -30,7 +31,7 @@ import {
 type Listing = Database['public']['Tables']['listings']['Row'];
 
 const Dashboard = () => {
-  const authData = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
@@ -45,17 +46,6 @@ const Dashboard = () => {
     totalJoins: 0,
   });
 
-  // Handle auth loading
-  if (!authData) {
-    return (
-      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
-  const { user } = authData;
-
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -68,6 +58,7 @@ const Dashboard = () => {
     if (!user) return;
     
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('listings')
         .select('*')
@@ -98,7 +89,6 @@ const Dashboard = () => {
   };
 
   const handleEdit = (listing: Listing) => {
-    console.log('Opening edit modal for listing:', listing);
     setSelectedListing(listing);
     setEditModalOpen(true);
   };
@@ -220,7 +210,10 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="flex flex-col items-center space-y-4">
+          <LoadingSpinner size="lg" />
+          <div className="text-white text-xl">Loading dashboard...</div>
+        </div>
       </div>
     );
   }
@@ -229,26 +222,24 @@ const Dashboard = () => {
     <div className="min-h-screen bg-[#0F0F0F] text-white">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Dashboard
             </h1>
             <p className="text-gray-400 mt-2">Manage your server listings and track performance</p>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => setCreateModalOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Listing
-            </Button>
-          </div>
+          <Button 
+            onClick={() => setCreateModalOpen(true)}
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Listing
+          </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-[#1A1A1A] border-[#333]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-400">Total Listings</CardTitle>
@@ -300,8 +291,8 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             {listings.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-400 mb-4">You haven't created any listings yet.</p>
+              <div className="text-center py-12">
+                <div className="text-gray-400 text-lg mb-4">You haven't created any listings yet.</div>
                 <Button 
                   onClick={() => setCreateModalOpen(true)}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
@@ -313,26 +304,26 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-4">
                 {listings.map((listing) => (
-                  <div key={listing.id} className="flex items-center justify-between p-4 bg-[#0F0F0F] rounded-lg border border-[#333]">
+                  <div key={listing.id} className="flex flex-col lg:flex-row lg:items-center justify-between p-6 bg-[#0F0F0F] rounded-lg border border-[#333] space-y-4 lg:space-y-0">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-white">{listing.name}</h3>
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h3 className="font-semibold text-white text-lg">{listing.name}</h3>
                         {listing.featured && <Star className="h-4 w-4 text-yellow-500" />}
                         {getStatusBadge(listing.status)}
                       </div>
-                      <p className="text-gray-400 text-sm mb-2">{listing.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <p className="text-gray-400 text-sm mb-3 line-clamp-2">{listing.description}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {listing.member_count || 0}
+                          {listing.member_count || 0} members
                         </span>
                         <span className="flex items-center gap-1">
                           <Eye className="h-3 w-3" />
-                          {listing.view_count || 0}
+                          {listing.view_count || 0} views
                         </span>
                         <span className="flex items-center gap-1">
                           <TrendingUp className="h-3 w-3" />
-                          {listing.bump_count || 0}
+                          {listing.bump_count || 0} bumps
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
@@ -340,7 +331,7 @@ const Dashboard = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button
                         size="sm"
                         variant="outline"
@@ -356,7 +347,8 @@ const Dashboard = () => {
                         onClick={() => handleEdit(listing)}
                         className="border-[#333] text-white hover:bg-[#333]"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
                       </Button>
                       <Button
                         size="sm"
@@ -364,7 +356,8 @@ const Dashboard = () => {
                         onClick={() => handleDelete(listing.id)}
                         className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </div>
@@ -381,12 +374,17 @@ const Dashboard = () => {
           onSuccess={fetchListings}
         />
         
-        <EditListingModal
-          open={editModalOpen}
-          onOpenChange={setEditModalOpen}
-          listing={selectedListing}
-          onSuccess={fetchListings}
-        />
+        {selectedListing && (
+          <EditListingModal
+            open={editModalOpen}
+            onOpenChange={setEditModalOpen}
+            listing={selectedListing}
+            onSuccess={() => {
+              fetchListings();
+              setSelectedListing(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
