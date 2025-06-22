@@ -26,7 +26,7 @@ interface Listing {
 interface EditListingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  listing: Listing;
+  listing: Listing | null;
   onSuccess: () => void;
 }
 
@@ -45,11 +45,16 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Don't render if no listing provided
+  if (!listing) {
+    return null;
+  }
+
   const form = useForm<EditListingFormData>({
     resolver: zodResolver(editListingSchema),
     defaultValues: {
-      name: listing.name,
-      description: listing.description,
+      name: listing.name || '',
+      description: listing.description || '',
       long_description: listing.long_description || '',
       invite_url: listing.invite_url || '',
       website_url: listing.website_url || '',
@@ -59,17 +64,21 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
 
   // Reset form when listing changes
   useEffect(() => {
-    form.reset({
-      name: listing.name,
-      description: listing.description,
-      long_description: listing.long_description || '',
-      invite_url: listing.invite_url || '',
-      website_url: listing.website_url || '',
-      support_server_url: listing.support_server_url || '',
-    });
+    if (listing) {
+      form.reset({
+        name: listing.name || '',
+        description: listing.description || '',
+        long_description: listing.long_description || '',
+        invite_url: listing.invite_url || '',
+        website_url: listing.website_url || '',
+        support_server_url: listing.support_server_url || '',
+      });
+    }
   }, [listing, form]);
 
   const onSubmit = async (data: EditListingFormData) => {
+    if (!listing) return;
+    
     setLoading(true);
     
     try {
