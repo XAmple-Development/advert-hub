@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { LogOut, Shield } from 'lucide-react';
+import { LogOut, Shield, Home } from 'lucide-react';
 
 const Navbar = () => {
   const authData = useAuth();
@@ -55,6 +55,15 @@ const Navbar = () => {
         </Link>
 
         <div className="flex items-center space-x-4">
+          {user && (
+            <Link to="/">
+              <Button variant="ghost" className="text-gray-300 hover:text-white">
+                <Home className="h-4 w-4 mr-2" />
+                Home
+              </Button>
+            </Link>
+          )}
+
           <Link to="/listings">
             <Button variant="ghost" className="text-gray-300 hover:text-white">
               Browse

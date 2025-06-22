@@ -99,6 +99,7 @@ const Dashboard = () => {
   };
 
   const handleEdit = (listing: Listing) => {
+    console.log('Opening edit modal for listing:', listing);
     setSelectedListing(listing);
     setEditModalOpen(true);
   };
