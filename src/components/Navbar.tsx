@@ -55,15 +55,6 @@ const Navbar = () => {
         </Link>
 
         <div className="flex items-center space-x-4">
-          {user && (
-            <Link to="/">
-              <Button variant="ghost" className="text-gray-300 hover:text-white">
-                <Home className="h-4 w-4 mr-2" />
-                Home
-              </Button>
-            </Link>
-          )}
-
           <Link to="/listings">
             <Button variant="ghost" className="text-gray-300 hover:text-white">
               Browse
@@ -72,6 +63,13 @@ const Navbar = () => {
 
           {user ? (
             <>
+              <Link to="/">
+                <Button variant="ghost" className="text-gray-300 hover:text-white">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
+
               {isAdmin && (
                 <Link to="/admin">
                   <Button variant="outline" className="border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white">
@@ -80,10 +78,11 @@ const Navbar = () => {
                   </Button>
                 </Link>
               )}
+              
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out

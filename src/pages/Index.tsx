@@ -11,6 +11,8 @@ import Dashboard from '@/components/Dashboard';
 const Index = () => {
   const authData = useAuth();
 
+  console.log('Index page - Auth data:', authData);
+
   // Handle case where useAuth returns null or is loading
   if (!authData || authData.loading) {
     return (
@@ -22,8 +24,15 @@ const Index = () => {
 
   const { user } = authData;
 
+  console.log('Index page - User:', user?.email || 'Not logged in');
+
   if (user) {
-    return <Dashboard />;
+    return (
+      <div className="min-h-screen bg-[#2C2F33]">
+        <Navbar />
+        <Dashboard />
+      </div>
+    );
   }
 
   return (
