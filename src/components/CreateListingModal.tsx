@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CreateListingModalProps {
   open: boolean;
@@ -27,7 +28,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
     name: '',
     description: '',
     long_description: '',
-    type: 'server' as 'server' | 'bot',
+    type: 'bot' as 'server' | 'bot',
     discord_id: '',
     invite_url: '',
     website_url: '',
@@ -36,6 +37,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
     category_id: ''
   });
   const { toast } = useToast();
+  const authData = useAuth();
 
   useEffect(() => {
     if (open) {
@@ -63,25 +65,41 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!authData?.user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in to create a listing",
+      });
+      return;
+    }
+
+    if (!formData.name.trim() || !formData.description.trim() || !formData.discord_id.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill in all required fields",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
       // Create the listing
       const { data: listing, error: listingError } = await supabase
         .from('listings')
         .insert({
-          user_id: user.id,
-          name: formData.name,
-          description: formData.description,
-          long_description: formData.long_description,
+          user_id: authData.user.id,
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          long_description: formData.long_description.trim() || null,
           type: formData.type,
-          discord_id: formData.discord_id,
-          invite_url: formData.invite_url || null,
-          website_url: formData.website_url || null,
-          support_server_url: formData.support_server_url || null,
+          discord_id: formData.discord_id.trim(),
+          invite_url: formData.invite_url.trim() || null,
+          website_url: formData.website_url.trim() || null,
+          support_server_url: formData.support_server_url.trim() || null,
           member_count: parseInt(formData.member_count) || 0,
           status: 'pending'
         })
@@ -91,7 +109,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
       if (listingError) throw listingError;
 
       // Add category if selected
-      if (formData.category_id) {
+      if (formData.category_id && listing) {
         const { error: categoryError } = await supabase
           .from('listing_categories')
           .insert({
@@ -99,7 +117,10 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
             category_id: formData.category_id
           });
 
-        if (categoryError) throw categoryError;
+        if (categoryError) {
+          console.error('Category assignment error:', categoryError);
+          // Don't throw here, listing was created successfully
+        }
       }
 
       toast({
@@ -112,7 +133,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         name: '',
         description: '',
         long_description: '',
-        type: 'server',
+        type: 'bot',
         discord_id: '',
         invite_url: '',
         website_url: '',
@@ -124,10 +145,11 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
+      console.error('Create listing error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create listing. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -183,7 +205,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
               className="bg-[#2C2F33] border-[#40444B]"
-              placeholder="Enter server/bot name"
+              placeholder="Enter bot name"
             />
           </div>
 
@@ -195,7 +217,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
               onChange={(e) => setFormData({ ...formData, discord_id: e.target.value })}
               required
               className="bg-[#2C2F33] border-[#40444B]"
-              placeholder="Enter Discord server/bot ID"
+              placeholder="Enter Discord bot ID"
             />
           </div>
 
@@ -219,7 +241,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
               value={formData.long_description}
               onChange={(e) => setFormData({ ...formData, long_description: e.target.value })}
               className="bg-[#2C2F33] border-[#40444B]"
-              placeholder="Detailed description of your server/bot"
+              placeholder="Detailed description of your bot"
               rows={4}
             />
           </div>
@@ -233,7 +255,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
                 value={formData.invite_url}
                 onChange={(e) => setFormData({ ...formData, invite_url: e.target.value })}
                 className="bg-[#2C2F33] border-[#40444B]"
-                placeholder="https://discord.gg/..."
+                placeholder="https://discord.com/api/oauth2/..."
               />
             </div>
 
@@ -281,6 +303,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
               variant="outline"
               onClick={() => onOpenChange(false)}
               className="border-gray-400 text-gray-300 hover:bg-gray-800"
+              disabled={loading}
             >
               Cancel
             </Button>

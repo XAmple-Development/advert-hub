@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,10 +14,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CreateListingModal from './CreateListingModal';
 import EditListingModal from './EditListingModal';
-import DiscordImportModal from './DiscordImportModal';
 import { 
   Plus, 
   Edit, 
@@ -32,14 +31,13 @@ import {
 type Listing = Database['public']['Tables']['listings']['Row'];
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const authData = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [importModalOpen, setImportModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [stats, setStats] = useState({
     totalListings: 0,
@@ -47,6 +45,17 @@ const Dashboard = () => {
     totalBumps: 0,
     totalJoins: 0,
   });
+
+  // Handle auth loading
+  if (!authData) {
+    return (
+      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  const { user } = authData;
 
   useEffect(() => {
     if (!user) {
@@ -57,11 +66,13 @@ const Dashboard = () => {
   }, [user, navigate]);
 
   const fetchListings = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('listings')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -120,12 +131,14 @@ const Dashboard = () => {
   };
 
   const handleBump = async (listing: Listing) => {
+    if (!user) return;
+
     try {
       // Check if user can bump (2 hour cooldown)
       const { data: cooldown } = await supabase
         .from('bump_cooldowns')
         .select('last_bump_at')
-        .eq('user_discord_id', user?.id)
+        .eq('user_discord_id', user.id)
         .eq('listing_id', listing.id)
         .single();
 
@@ -150,7 +163,7 @@ const Dashboard = () => {
       await supabase
         .from('bump_cooldowns')
         .upsert({
-          user_discord_id: user?.id,
+          user_discord_id: user.id,
           listing_id: listing.id,
           last_bump_at: now.toISOString(),
         });
@@ -172,7 +185,7 @@ const Dashboard = () => {
         .from('bumps')
         .insert({
           listing_id: listing.id,
-          user_id: user?.id,
+          user_id: user.id,
           bump_type: 'manual',
           bumped_at: now.toISOString(),
         });
@@ -224,14 +237,6 @@ const Dashboard = () => {
             <p className="text-gray-400 mt-2">Manage your server listings and track performance</p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              onClick={() => setImportModalOpen(true)}
-              variant="outline"
-              className="border-[#333] text-white hover:bg-[#1A1A1A]"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Import from Discord
-            </Button>
             <Button 
               onClick={() => setCreateModalOpen(true)}
               className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
@@ -381,12 +386,6 @@ const Dashboard = () => {
           onOpenChange={setEditModalOpen}
           listing={selectedListing}
           onSuccess={fetchListings}
-        />
-
-        <DiscordImportModal
-          open={importModalOpen}
-          onOpenChange={setImportModalOpen}
-          onImportComplete={fetchListings}
         />
       </div>
     </div>

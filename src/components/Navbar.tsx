@@ -7,33 +7,44 @@ import { useAuth } from '@/hooks/useAuth';
 import { LogOut, Shield } from 'lucide-react';
 
 const Navbar = () => {
-  const { user } = useAuth();
+  const authData = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
+
+  const user = authData?.user;
 
   useEffect(() => {
     if (user) {
       checkAdminStatus();
+    } else {
+      setIsAdmin(false);
     }
   }, [user]);
 
   const checkAdminStatus = async () => {
+    if (!user) return;
+    
     try {
       const { data } = await supabase
         .from('profiles')
         .select('is_admin')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       setIsAdmin(data?.is_admin || false);
     } catch (error) {
       console.error('Error checking admin status:', error);
+      setIsAdmin(false);
     }
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
