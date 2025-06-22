@@ -11,24 +11,16 @@ import Dashboard from '@/components/Dashboard';
 const Index = () => {
   const authData = useAuth();
 
-  // Handle case where useAuth returns null
-  if (!authData) {
-    return (
-      <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
-        <div className="text-white text-xl">Initializing...</div>
-      </div>
-    );
-  }
-
-  const { user, loading } = authData;
-
-  if (loading) {
+  // Handle case where useAuth returns null or is loading
+  if (!authData || authData.loading) {
     return (
       <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
   }
+
+  const { user } = authData;
 
   if (user) {
     return <Dashboard />;

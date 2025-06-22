@@ -24,7 +24,6 @@ import {
   Users, 
   Calendar,
   Star,
-  Download,
   Trash2
 } from 'lucide-react';
 
