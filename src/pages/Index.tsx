@@ -13,11 +13,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 
 const Index = () => {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Handle any auth redirects or state changes here if needed
-  }, [user, navigate]);
+  console.log('Index: Rendering with loading:', loading, 'user:', !!user);
 
   if (loading) {
     return (

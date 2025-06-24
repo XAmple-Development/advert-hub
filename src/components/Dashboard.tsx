@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,26 +49,40 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
+    console.log('Dashboard: Auth state changed, user:', !!user);
+    
     if (!user) {
+      console.log('Dashboard: No user, redirecting to auth');
       navigate('/auth');
       return;
     }
+    
+    console.log('Dashboard: User found, fetching listings');
     fetchListings();
-  }, [user, navigate]);
+  }, [user]);
 
   const fetchListings = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Dashboard: fetchListings called without user');
+      return;
+    }
     
     try {
+      console.log('Dashboard: Starting to fetch listings...');
       setLoading(true);
+      
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Dashboard: Error fetching listings:', error);
+        throw error;
+      }
 
+      console.log('Dashboard: Successfully fetched listings:', data?.length || 0);
       setListings(data || []);
       
       // Calculate stats
@@ -80,13 +93,14 @@ const Dashboard = () => {
       
       setStats({ totalListings, totalViews, totalBumps, totalJoins });
     } catch (error: any) {
-      console.error('Error fetching listings:', error);
+      console.error('Dashboard: Error in fetchListings:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: 'Failed to fetch your listings.',
       });
     } finally {
+      console.log('Dashboard: Setting loading to false');
       setLoading(false);
     }
   };
@@ -210,12 +224,15 @@ const Dashboard = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
+  console.log('Dashboard: Rendering with loading:', loading, 'user:', !!user);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
           <LoadingSpinner size="lg" />
           <div className="text-white text-xl">Loading dashboard...</div>
+          <div className="text-gray-400 text-sm">If this takes too long, try refreshing the page</div>
         </div>
       </div>
     );
