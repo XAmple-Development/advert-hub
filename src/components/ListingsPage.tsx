@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Server, Bot, Eye, TrendingUp, Search, ExternalLink, Crown, Star, Clock } from 'lucide-react';
+import { Server, Bot, Eye, TrendingUp, Search, ExternalLink, Crown, Star, Clock, Sparkles } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
 interface Listing {
@@ -190,42 +190,71 @@ const ListingsPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#2C2F33]">
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
                 <Navbar />
-                <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-                    <div className="text-white text-xl">Loading listings...</div>
+                <div className="flex items-center justify-center min-h-[calc(100vh-64px)] relative">
+                    {/* Background Elements */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
+                    </div>
+                    <div className="relative z-10 text-center">
+                        <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+                            Loading Listings...
+                        </div>
+                        <div className="text-gray-300">Discovering amazing communities...</div>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#2C2F33]">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
             <Navbar />
-            <div className="py-8">
+            
+            {/* Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
+            </div>
+
+            <div className="relative z-10 py-12">
                 <div className="max-w-7xl mx-auto px-6">
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-white mb-4">Browse Discord Servers & Bots</h1>
-                        <p className="text-gray-400 text-lg">Discover amazing Discord communities and useful bots</p>
+                    <div className="mb-12">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full mb-8 backdrop-blur-sm">
+                            <Star className="h-4 w-4 text-purple-300" />
+                            <span className="text-purple-200 font-medium">Discover Communities</span>
+                        </div>
+                        
+                        <h1 className="text-4xl md:text-6xl font-black text-white mb-6">
+                            Browse Discord 
+                            <span className="block bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                Servers & Bots
+                            </span>
+                        </h1>
+                        <p className="text-xl md:text-2xl text-gray-300 max-w-4xl leading-relaxed">
+                            Discover amazing Discord communities and useful bots to enhance your experience.
+                        </p>
                     </div>
 
                     {/* Search and Filters */}
-                    <div className="mb-8 space-y-4">
-                        <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="mb-12 space-y-6">
+                        <div className="flex flex-col sm:flex-row gap-6">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                                 <Input
                                     placeholder="Search servers and bots..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 bg-[#36393F] border-[#40444B] text-white"
+                                    className="pl-12 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 text-white placeholder-gray-400 rounded-2xl h-14 text-lg focus:border-purple-500/50"
                                 />
                             </div>
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-40 bg-[#36393F] border-[#40444B] text-white">
+                                <SelectTrigger className="min-w-48 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 text-white rounded-2xl h-14">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-gray-800 border-gray-700">
                                     <SelectItem value="recent">Recent</SelectItem>
                                     <SelectItem value="bumps">Most Bumped</SelectItem>
                                     <SelectItem value="views">Most Viewed</SelectItem>
@@ -235,144 +264,153 @@ const ListingsPage = () => {
                     </div>
 
                     {/* Category Tabs */}
-                    <Tabs value={categoryTab} onValueChange={setCategoryTab} className="mb-6">
-                        <TabsList className="bg-[#36393F] border-[#40444B] grid grid-cols-4 w-full max-w-2xl">
+                    <Tabs value={categoryTab} onValueChange={setCategoryTab} className="mb-10">
+                        <TabsList className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2 grid grid-cols-4 w-full max-w-3xl">
                             <TabsTrigger 
                                 value="all" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
+                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
                             >
                                 <Server className="h-4 w-4" />
                                 All Listings
                             </TabsTrigger>
                             <TabsTrigger 
                                 value="premium" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
+                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
                             >
                                 <Crown className="h-4 w-4" />
-                                Premium Bumps
+                                Premium
                             </TabsTrigger>
                             <TabsTrigger 
                                 value="featured" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
+                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
                             >
                                 <Star className="h-4 w-4" />
-                                Featured Bumps
+                                Featured
                             </TabsTrigger>
                             <TabsTrigger 
                                 value="recent" 
-                                className="data-[state=active]:bg-[#5865F2] flex items-center gap-2"
+                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
                             >
                                 <Clock className="h-4 w-4" />
-                                Recently Bumped
+                                Recent
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
 
-                    <Tabs value={typeFilter} onValueChange={setTypeFilter} className="mb-8">
-                        <TabsList className="bg-[#36393F] border-[#40444B]">
-                            <TabsTrigger value="all" className="data-[state=active]:bg-[#5865F2]">All</TabsTrigger>
-                            <TabsTrigger value="server" className="data-[state=active]:bg-[#5865F2]">Servers</TabsTrigger>
-                            <TabsTrigger value="bot" className="data-[state=active]:bg-[#5865F2]">Bots</TabsTrigger>
+                    <Tabs value={typeFilter} onValueChange={setTypeFilter} className="mb-12">
+                        <TabsList className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2">
+                            <TabsTrigger value="all" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-6 py-3">All</TabsTrigger>
+                            <TabsTrigger value="server" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-6 py-3">Servers</TabsTrigger>
+                            <TabsTrigger value="bot" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-6 py-3">Bots</TabsTrigger>
                         </TabsList>
                     </Tabs>
 
                     {filteredListings.length === 0 ? (
-                        <Card className="bg-[#36393F] border-[#40444B] text-center py-12">
+                        <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl text-center py-20">
                             <CardContent>
                                 <div className="text-gray-400">
-                                    <Server className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                                    <h3 className="text-xl font-semibold text-white mb-2">No listings found</h3>
-                                    <p>Try adjusting your search terms or filters</p>
+                                    <Server className="h-20 w-20 mx-auto mb-6 opacity-50" />
+                                    <h3 className="text-2xl font-bold text-white mb-3">No listings found</h3>
+                                    <p className="text-lg">Try adjusting your search terms or filters</p>
                                 </div>
                             </CardContent>
                         </Card>
                     ) : (
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                             {filteredListings.map((listing) => (
                                 <Card
                                     key={listing.id}
-                                    className={`bg-[#36393F] border-[#40444B] hover:border-[#5865F2] transition-colors cursor-pointer relative ${
-                                        listing.featured ? 'ring-2 ring-yellow-500' : ''
+                                    className={`group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-3 cursor-pointer rounded-3xl overflow-hidden ${
+                                        listing.featured ? 'ring-2 ring-yellow-500/50' : ''
                                     } ${
-                                        listing.bump_count >= 10 ? 'ring-2 ring-purple-500' : ''
+                                        listing.bump_count >= 10 ? 'ring-2 ring-purple-500/50' : ''
                                     }`}
                                     onClick={() => handleCardClick(listing.id)}
                                 >
+                                    <div className={`absolute inset-0 bg-gradient-to-br ${
+                                        listing.featured ? 'from-yellow-500/10 to-orange-500/10' : 
+                                        listing.bump_count >= 10 ? 'from-purple-500/10 to-pink-500/10' : 
+                                        'from-gray-500/10 to-gray-600/10'
+                                    } opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                                    
                                     {listing.featured && (
-                                        <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 z-10">
                                             <Star className="h-3 w-3" />
                                             Featured
                                         </div>
                                     )}
                                     {listing.bump_count >= 10 && !listing.featured && (
-                                        <div className="absolute -top-2 -right-2 bg-purple-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 z-10">
                                             <Crown className="h-3 w-3" />
                                             Premium
                                         </div>
                                     )}
                                     
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-center space-x-3">
+                                    <CardHeader className="relative z-10 pb-4">
+                                        <div className="flex items-center space-x-4">
                                             {listing.avatar_url ? (
                                                 <img
                                                     src={listing.avatar_url}
                                                     alt={listing.name}
-                                                    className="w-12 h-12 rounded-full"
+                                                    className="w-14 h-14 rounded-2xl"
                                                 />
                                             ) : (
-                                                <div className="w-12 h-12 bg-[#5865F2] rounded-full flex items-center justify-center">
+                                                <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center">
                                                     {listing.type === 'server' ? (
-                                                        <Server className="h-6 w-6 text-white" />
+                                                        <Server className="h-7 w-7 text-white" />
                                                     ) : (
-                                                        <Bot className="h-6 w-6 text-white" />
+                                                        <Bot className="h-7 w-7 text-white" />
                                                     )}
                                                 </div>
                                             )}
                                             <div className="flex-1">
-                                                <CardTitle className="text-white text-lg">{listing.name}</CardTitle>
-                                                <Badge variant={listing.type === 'server' ? 'default' : 'secondary'}>
+                                                <CardTitle className="text-white text-xl font-bold group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">{listing.name}</CardTitle>
+                                                <Badge 
+                                                    variant={listing.type === 'server' ? 'default' : 'secondary'}
+                                                    className="mt-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 text-purple-300"
+                                                >
                                                     {listing.type}
                                                 </Badge>
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <CardDescription className="text-gray-300 line-clamp-3">
+                                    <CardContent className="relative z-10 space-y-6">
+                                        <CardDescription className="text-gray-300 text-base leading-relaxed line-clamp-3">
                                             {listing.description}
                                         </CardDescription>
 
                                         {listing.tags && listing.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
+                                            <div className="flex flex-wrap gap-2">
                                                 {listing.tags.slice(0, 3).map((tag, index) => (
-                                                    <Badge key={index} variant="outline" className="text-xs">
+                                                    <Badge key={index} variant="outline" className="text-xs bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-gray-600/50 text-gray-300">
                                                         {tag}
                                                     </Badge>
                                                 ))}
                                             </div>
                                         )}
 
-                                        <div className="grid grid-cols-2 gap-2 text-sm">
-                                            <div className="text-center">
-                                                <div className="flex items-center justify-center text-gray-400 mb-1">
-                                                    <Eye className="h-4 w-4" />
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div className="text-center bg-gradient-to-r from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-2xl p-3 border border-gray-700/30">
+                                                <div className="flex items-center justify-center text-gray-400 mb-2">
+                                                    <Eye className="h-5 w-5 text-green-400" />
                                                 </div>
-                                                <div className="text-white font-semibold">{listing.view_count || 0}</div>
+                                                <div className="text-white font-bold text-lg">{listing.view_count || 0}</div>
                                                 <div className="text-gray-500 text-xs">Views</div>
                                             </div>
-                                            <div className="text-center">
-                                                <div className="flex items-center justify-center text-gray-400 mb-1">
-                                                    <TrendingUp className="h-4 w-4" />
+                                            <div className="text-center bg-gradient-to-r from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-2xl p-3 border border-gray-700/30">
+                                                <div className="flex items-center justify-center text-gray-400 mb-2">
+                                                    <TrendingUp className="h-5 w-5 text-purple-400" />
                                                 </div>
-                                                <div className="text-white font-semibold">{listing.bump_count || 0}</div>
+                                                <div className="text-white font-bold text-lg">{listing.bump_count || 0}</div>
                                                 <div className="text-gray-500 text-xs">Bumps</div>
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-3">
                                             {listing.invite_url && (
                                                 <Button
                                                     onClick={(e) => handleJoin(listing, e)}
-                                                    className="flex-1 bg-[#57F287] hover:bg-[#3BA55C] text-black"
+                                                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl"
                                                     size="sm"
                                                 >
                                                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -381,15 +419,17 @@ const ListingsPage = () => {
                                             )}
                                             <Button
                                                 onClick={(e) => handleBump(listing.id, e)}
-                                                variant="outline"
                                                 size="sm"
-                                                className="border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white"
+                                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl px-4"
                                             >
                                                 <TrendingUp className="h-4 w-4 mr-2" />
                                                 Bump
                                             </Button>
                                         </div>
                                     </CardContent>
+
+                                    {/* Sparkle Effect */}
+                                    <Sparkles className="absolute top-4 right-4 h-5 w-5 text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                 </Card>
                             ))}
                         </div>

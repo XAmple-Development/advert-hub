@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,7 +29,9 @@ import {
   Download,
   Sparkles,
   BarChart3,
-  Activity
+  Activity,
+  Zap,
+  Crown
 } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -232,17 +233,25 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#0F0F0F] to-gray-900 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 flex items-center justify-center overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="relative z-10 flex flex-col items-center space-y-6">
           <div className="relative">
-            <LoadingSpinner size="lg" className="text-blue-500" />
+            <LoadingSpinner size="lg" className="text-purple-400" />
             <div className="absolute inset-0 animate-ping">
-              <LoadingSpinner size="lg" className="text-blue-400 opacity-20" />
+              <LoadingSpinner size="lg" className="text-purple-300 opacity-20" />
             </div>
           </div>
           <div className="text-center">
-            <div className="text-white text-2xl font-bold mb-2">Loading Dashboard</div>
-            <div className="text-gray-400 text-sm">Setting up your workspace...</div>
+            <div className="text-white text-3xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Loading Dashboard
+            </div>
+            <div className="text-gray-300 text-lg">Setting up your workspace...</div>
           </div>
         </div>
       </div>
@@ -250,244 +259,266 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-[#0F0F0F] to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
       {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
+      <div className="relative z-10 container mx-auto px-4 py-12">
         {/* Enhanced Header */}
-        <div className="mb-12">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
-                  <BarChart3 className="h-6 w-6 text-white" />
-                </div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Dashboard
-                </h1>
+        <div className="mb-16">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full mb-6 backdrop-blur-sm">
+                <Star className="h-4 w-4 text-purple-300" />
+                <span className="text-purple-200 font-medium">Premium Dashboard</span>
               </div>
-              <p className="text-gray-400 text-lg">
-                Manage your server listings and track performance metrics
+              
+              <h1 className="text-5xl md:text-7xl font-black text-white mb-6">
+                Your
+                <span className="block bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Dashboard
+                </span>
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-300 max-w-3xl leading-relaxed">
+                Command center for your Discord empire. Monitor, manage, and maximize your community growth.
               </p>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Activity className="h-4 w-4" />
-                <span>Real-time analytics and insights</span>
+              <div className="flex items-center gap-3 text-gray-400">
+                <Activity className="h-5 w-5 text-cyan-400" />
+                <span className="text-lg">Real-time analytics and insights</span>
               </div>
             </div>
             
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-4">
               <Button 
                 onClick={() => setDiscordImportModalOpen(true)}
-                variant="outline"
                 size="lg"
-                className="bg-[#5865F2]/10 border-[#5865F2]/30 text-[#5865F2] hover:bg-[#5865F2]/20 hover:border-[#5865F2]/50 transition-all duration-200"
+                className="group bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 text-white hover:scale-105 transition-all duration-300 rounded-2xl px-8 py-4"
               >
-                <Download className="h-5 w-5 mr-2" />
+                <Download className="h-5 w-5 mr-3 text-purple-400 group-hover:text-purple-300" />
                 Import from Discord
               </Button>
               <Button 
                 onClick={() => setCreateModalOpen(true)}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 rounded-2xl px-8 py-4"
               >
-                <Plus className="h-5 w-5 mr-2" />
-                Create Listing
+                <Plus className="h-5 w-5 mr-3" />
+                Create New Listing
               </Button>
             </div>
           </div>
         </div>
 
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 backdrop-blur-sm hover:border-blue-500/30 transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+          <Card className="group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-cyan-500/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 rounded-3xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors">
                 Total Listings
               </CardTitle>
-              <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
-                <Users className="h-4 w-4 text-blue-400" />
+              <div className="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Users className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white mb-1">{stats.totalListings}</div>
-              <div className="text-xs text-gray-500">Active servers</div>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-black text-white mb-2">{stats.totalListings}</div>
+              <div className="text-sm text-gray-400">Active communities</div>
             </CardContent>
+            <Sparkles className="absolute top-4 right-4 h-4 w-4 text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </Card>
           
-          <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 backdrop-blur-sm hover:border-green-500/30 transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-green-500/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 rounded-3xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors">
                 Total Views
               </CardTitle>
-              <div className="p-2 bg-green-500/10 rounded-lg group-hover:bg-green-500/20 transition-colors">
-                <Eye className="h-4 w-4 text-green-400" />
+              <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Eye className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white mb-1">{stats.totalViews.toLocaleString()}</div>
-              <div className="text-xs text-gray-500">Profile visits</div>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-black text-white mb-2">{stats.totalViews.toLocaleString()}</div>
+              <div className="text-sm text-gray-400">Profile visits</div>
             </CardContent>
+            <Sparkles className="absolute top-4 right-4 h-4 w-4 text-green-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </Card>
           
-          <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 backdrop-blur-sm hover:border-purple-500/30 transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 rounded-3xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors">
                 Total Bumps
               </CardTitle>
-              <div className="p-2 bg-purple-500/10 rounded-lg group-hover:bg-purple-500/20 transition-colors">
-                <TrendingUp className="h-4 w-4 text-purple-400" />
+              <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white mb-1">{stats.totalBumps}</div>
-              <div className="text-xs text-gray-500">Promotions sent</div>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-black text-white mb-2">{stats.totalBumps}</div>
+              <div className="text-sm text-gray-400">Promotions sent</div>
             </CardContent>
+            <Sparkles className="absolute top-4 right-4 h-4 w-4 text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </Card>
           
-          <Card className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50 backdrop-blur-sm hover:border-orange-500/30 transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Card className="group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-orange-500/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 rounded-3xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-sm font-medium text-gray-400 group-hover:text-gray-300 transition-colors">
                 Total Joins
               </CardTitle>
-              <div className="p-2 bg-orange-500/10 rounded-lg group-hover:bg-orange-500/20 transition-colors">
-                <Users className="h-4 w-4 text-orange-400" />
+              <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <Users className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white mb-1">{stats.totalJoins}</div>
-              <div className="text-xs text-gray-500">New members</div>
+            <CardContent className="relative z-10">
+              <div className="text-4xl font-black text-white mb-2">{stats.totalJoins}</div>
+              <div className="text-sm text-gray-400">New members</div>
             </CardContent>
+            <Sparkles className="absolute top-4 right-4 h-4 w-4 text-orange-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </Card>
         </div>
 
         {/* Enhanced Listings Section */}
-        <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 border-gray-700/50 backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-700/50">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                <Sparkles className="h-5 w-5 text-white" />
+        <Card className="relative bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5"></div>
+          <CardHeader className="relative z-10 border-b border-gray-700/50 p-8">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl">
+                <BarChart3 className="h-6 w-6 text-white" />
               </div>
               <div>
-                <CardTitle className="text-white text-xl">Your Server Listings</CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardTitle className="text-white text-2xl font-bold">Your Server Listings</CardTitle>
+                <CardDescription className="text-gray-300 text-lg">
                   Manage and optimize your Discord server presence
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-8">
+          <CardContent className="relative z-10 p-8">
             {listings.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="mb-6">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full mb-4">
-                    <Plus className="h-10 w-10 text-gray-400" />
+              <div className="text-center py-20">
+                <div className="mb-8">
+                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full mb-6">
+                    <Plus className="h-12 w-12 text-gray-400" />
                   </div>
                 </div>
-                <div className="space-y-3 mb-8">
-                  <h3 className="text-xl font-semibold text-white">No listings yet</h3>
-                  <p className="text-gray-400 max-w-md mx-auto">
+                <div className="space-y-4 mb-10">
+                  <h3 className="text-3xl font-bold text-white">No listings yet</h3>
+                  <p className="text-gray-300 text-xl max-w-lg mx-auto leading-relaxed">
                     Start growing your Discord community by creating your first server listing or importing from Discord.
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-4 justify-center">
+                <div className="flex flex-wrap gap-6 justify-center">
                   <Button 
                     onClick={() => setDiscordImportModalOpen(true)}
-                    variant="outline"
                     size="lg"
-                    className="bg-[#5865F2]/10 border-[#5865F2]/30 text-[#5865F2] hover:bg-[#5865F2]/20 hover:border-[#5865F2]/50"
+                    className="group bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 text-white hover:scale-105 transition-all duration-300 rounded-2xl px-8 py-4"
                   >
-                    <Download className="h-5 w-5 mr-2" />
+                    <Download className="h-5 w-5 mr-3 text-purple-400 group-hover:text-purple-300" />
                     Import from Discord
                   </Button>
                   <Button 
                     onClick={() => setCreateModalOpen(true)}
                     size="lg"
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 rounded-2xl px-8 py-4"
                   >
-                    <Plus className="h-5 w-5 mr-2" />
+                    <Plus className="h-5 w-5 mr-3" />
                     Create Your First Listing
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {listings.map((listing) => (
                   <div key={listing.id} className="group">
-                    <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                          <div className="flex-1 space-y-4">
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <h3 className="font-bold text-white text-xl group-hover:text-blue-300 transition-colors">
+                    <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/10 rounded-3xl overflow-hidden transform hover:scale-[1.02] hover:-translate-y-1">
+                      <CardContent className="p-8">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                          <div className="flex-1 space-y-6">
+                            <div className="flex items-center gap-4 flex-wrap">
+                              <h3 className="font-bold text-white text-2xl group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                                 {listing.name}
                               </h3>
                               {listing.featured && (
-                                <div className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full">
-                                  <Star className="h-3 w-3 text-yellow-400" />
-                                  <span className="text-xs text-yellow-300 font-medium">Featured</span>
+                                <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-full backdrop-blur-sm">
+                                  <Star className="h-4 w-4 text-yellow-400" />
+                                  <span className="text-sm text-yellow-300 font-medium">Featured</span>
                                 </div>
                               )}
-                              {getStatusBadge(listing.status)}
+                              <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full backdrop-blur-sm">
+                                <Crown className="h-3 w-3 text-purple-400" />
+                                <span className="text-xs text-purple-300 font-medium">{getStatusBadge(listing.status)}</span>
+                              </div>
                             </div>
                             
-                            <p className="text-gray-300 text-base leading-relaxed line-clamp-2">
+                            <p className="text-gray-300 text-lg leading-relaxed line-clamp-2">
                               {listing.description}
                             </p>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              <div className="flex items-center gap-2 text-gray-400 bg-gray-800/50 rounded-lg px-3 py-2">
-                                <Users className="h-4 w-4 text-blue-400" />
-                                <span className="text-white font-medium">{listing.member_count || 0}</span>
-                                <span>members</span>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="flex items-center gap-3 text-gray-400 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-4 py-3 border border-gray-700/30">
+                                <Users className="h-5 w-5 text-cyan-400" />
+                                <div>
+                                  <div className="text-white font-bold text-lg">{listing.member_count || 0}</div>
+                                  <div className="text-xs text-gray-500">members</div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 text-gray-400 bg-gray-800/50 rounded-lg px-3 py-2">
-                                <Eye className="h-4 w-4 text-green-400" />
-                                <span className="text-white font-medium">{listing.view_count || 0}</span>
-                                <span>views</span>
+                              <div className="flex items-center gap-3 text-gray-400 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-4 py-3 border border-gray-700/30">
+                                <Eye className="h-5 w-5 text-green-400" />
+                                <div>
+                                  <div className="text-white font-bold text-lg">{listing.view_count || 0}</div>
+                                  <div className="text-xs text-gray-500">views</div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 text-gray-400 bg-gray-800/50 rounded-lg px-3 py-2">
-                                <TrendingUp className="h-4 w-4 text-purple-400" />
-                                <span className="text-white font-medium">{listing.bump_count || 0}</span>
-                                <span>bumps</span>
+                              <div className="flex items-center gap-3 text-gray-400 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-4 py-3 border border-gray-700/30">
+                                <TrendingUp className="h-5 w-5 text-purple-400" />
+                                <div>
+                                  <div className="text-white font-bold text-lg">{listing.bump_count || 0}</div>
+                                  <div className="text-xs text-gray-500">bumps</div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 text-gray-400 bg-gray-800/50 rounded-lg px-3 py-2">
-                                <Calendar className="h-4 w-4 text-orange-400" />
-                                <span className="text-white font-medium">
-                                  {new Date(listing.created_at).toLocaleDateString()}
-                                </span>
+                              <div className="flex items-center gap-3 text-gray-400 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-sm rounded-2xl px-4 py-3 border border-gray-700/30">
+                                <Calendar className="h-5 w-5 text-orange-400" />
+                                <div>
+                                  <div className="text-white font-bold text-sm">
+                                    {new Date(listing.created_at).toLocaleDateString()}
+                                  </div>
+                                  <div className="text-xs text-gray-500">created</div>
+                                </div>
                               </div>
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap">
+                          <div className="flex items-center gap-4 flex-wrap lg:flex-nowrap">
                             <Button
-                              size="sm"
+                              size="lg"
                               onClick={() => handleBump(listing)}
-                              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                              className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl px-6 py-3"
                             >
-                              <TrendingUp className="h-4 w-4 mr-1" />
+                              <Zap className="h-5 w-5 mr-2" />
                               Bump
                             </Button>
                             <Button
-                              size="sm"
+                              size="lg"
                               variant="outline"
                               onClick={() => handleEdit(listing)}
-                              className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
+                              className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-cyan-500/50 text-gray-300 hover:text-white transition-all duration-300 rounded-2xl px-6 py-3"
                             >
-                              <Edit className="h-4 w-4 mr-1" />
+                              <Edit className="h-5 w-5 mr-2" />
                               Edit
                             </Button>
                             <Button
-                              size="sm"
+                              size="lg"
                               variant="outline"
                               onClick={() => handleDelete(listing.id)}
-                              className="border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500"
+                              className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-300 rounded-2xl px-6 py-3"
                             >
-                              <Trash2 className="h-4 w-4 mr-1" />
+                              <Trash2 className="h-5 w-5 mr-2" />
                               Delete
                             </Button>
                           </div>
