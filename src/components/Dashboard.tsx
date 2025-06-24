@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import CreateListingModal from './CreateListingModal';
 import EditListingModal from './EditListingModal';
+import DiscordImportModal from './DiscordImportModal';
 import LoadingSpinner from './LoadingSpinner';
 import { 
   Plus, 
@@ -25,7 +26,8 @@ import {
   Users, 
   Calendar,
   Star,
-  Trash2
+  Trash2,
+  Download
 } from 'lucide-react';
 
 type Listing = Database['public']['Tables']['listings']['Row'];
@@ -38,6 +40,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [discordImportModalOpen, setDiscordImportModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [stats, setStats] = useState({
     totalListings: 0,
@@ -229,13 +232,23 @@ const Dashboard = () => {
             </h1>
             <p className="text-gray-400 mt-2">Manage your server listings and track performance</p>
           </div>
-          <Button 
-            onClick={() => setCreateModalOpen(true)}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Listing
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={() => setDiscordImportModalOpen(true)}
+              variant="outline"
+              className="border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Import from Discord
+            </Button>
+            <Button 
+              onClick={() => setCreateModalOpen(true)}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Listing
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -293,13 +306,23 @@ const Dashboard = () => {
             {listings.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-gray-400 text-lg mb-4">You haven't created any listings yet.</div>
-                <Button 
-                  onClick={() => setCreateModalOpen(true)}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Listing
-                </Button>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Button 
+                    onClick={() => setDiscordImportModalOpen(true)}
+                    variant="outline"
+                    className="border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Import from Discord
+                  </Button>
+                  <Button 
+                    onClick={() => setCreateModalOpen(true)}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Listing
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -385,6 +408,12 @@ const Dashboard = () => {
             }}
           />
         )}
+
+        <DiscordImportModal
+          open={discordImportModalOpen}
+          onOpenChange={setDiscordImportModalOpen}
+          onImportComplete={fetchListings}
+        />
       </div>
     </div>
   );
