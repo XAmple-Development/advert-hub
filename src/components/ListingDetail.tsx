@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -43,6 +42,8 @@ const ListingDetail = () => {
     const navigate = useNavigate();
     const [listing, setListing] = useState<Listing | null>(null);
     const [loading, setLoading] = useState(true);
+    const [canBump, setCanBump] = useState(true);
+    const [nextBumpTime, setNextBumpTime] = useState<string>('');
     const { user } = useAuth();
     const { toast } = useToast();
 
@@ -50,8 +51,57 @@ const ListingDetail = () => {
         if (id) {
             fetchListing();
             incrementView();
+            if (user) {
+                checkBumpCooldown();
+            }
         }
-    }, [id]);
+    }, [id, user]);
+
+    const checkBumpCooldown = async () => {
+        if (!user || !id) return;
+
+        try {
+            const { data: cooldown, error } = await supabase
+                .from('bump_cooldowns')
+                .select('last_bump_at')
+                .eq('user_discord_id', user.id)
+                .eq('listing_id', id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error checking bump cooldown:', error);
+                return;
+            }
+
+            if (cooldown) {
+                const lastBump = new Date(cooldown.last_bump_at);
+                const now = new Date();
+                const twoHoursInMs = 2 * 60 * 60 * 1000;
+                const timeSinceLastBump = now.getTime() - lastBump.getTime();
+
+                if (timeSinceLastBump < twoHoursInMs) {
+                    setCanBump(false);
+                    const nextBump = new Date(lastBump.getTime() + twoHoursInMs);
+                    const timeLeft = nextBump.getTime() - now.getTime();
+                    const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+                    const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+                    setNextBumpTime(`${hours}h ${minutes}m`);
+
+                    // Update the cooldown status every minute
+                    const interval = setInterval(() => {
+                        checkBumpCooldown();
+                    }, 60000);
+
+                    return () => clearInterval(interval);
+                } else {
+                    setCanBump(true);
+                    setNextBumpTime('');
+                }
+            }
+        } catch (error) {
+            console.error('Error checking bump cooldown:', error);
+        }
+    };
 
     const fetchListing = async () => {
         try {
@@ -108,25 +158,50 @@ const ListingDetail = () => {
             return;
         }
 
+        if (!canBump) {
+            toast({
+                variant: "destructive",
+                title: "Cooldown Active",
+                description: `You can bump again in ${nextBumpTime}`,
+            });
+            return;
+        }
+
         if (!listing) return;
 
         try {
-            const { error } = await supabase
+            const now = new Date();
+
+            // Update cooldown first
+            const { error: cooldownError } = await supabase
+                .from('bump_cooldowns')
+                .upsert({
+                    user_discord_id: user.id,
+                    listing_id: listing.id,
+                    last_bump_at: now.toISOString(),
+                });
+
+            if (cooldownError) throw cooldownError;
+
+            // Create bump record
+            const { error: bumpError } = await supabase
                 .from('bumps')
                 .insert({
                     listing_id: listing.id,
-                    user_id: user.id
+                    user_id: user.id,
+                    bump_type: 'manual'
                 });
 
-            if (error) throw error;
+            if (bumpError) throw bumpError;
 
             toast({
                 title: "Success!",
-                description: "Listing bumped to the top!",
+                description: "Listing bumped to the top! Next bump available in 2 hours.",
             });
 
-            // Refresh the listing to show updated bump count
+            // Refresh the listing and cooldown status
             fetchListing();
+            checkBumpCooldown();
         } catch (error: any) {
             toast({
                 variant: "destructive",
@@ -185,14 +260,14 @@ const ListingDetail = () => {
                     </Button>
 
                     <Card className="bg-[#36393F] border-[#40444B]">
-                        {listing.banner_url && (
+                        {listing?.banner_url && (
                             <div className="h-48 bg-cover bg-center rounded-t-lg"
                                 style={{ backgroundImage: `url(${listing.banner_url})` }} />
                         )}
 
                         <CardHeader className="pb-4">
                             <div className="flex items-start space-x-4">
-                                {listing.avatar_url ? (
+                                {listing?.avatar_url ? (
                                     <img
                                         src={listing.avatar_url}
                                         alt={listing.name}
@@ -200,7 +275,7 @@ const ListingDetail = () => {
                                     />
                                 ) : (
                                     <div className="w-16 h-16 bg-[#5865F2] rounded-full flex items-center justify-center flex-shrink-0">
-                                        {listing.type === 'server' ? (
+                                        {listing?.type === 'server' ? (
                                             <Server className="h-8 w-8 text-white" />
                                         ) : (
                                             <Bot className="h-8 w-8 text-white" />
@@ -209,18 +284,18 @@ const ListingDetail = () => {
                                 )}
 
                                 <div className="flex-1">
-                                    <CardTitle className="text-white text-2xl mb-2">{listing.name}</CardTitle>
+                                    <CardTitle className="text-white text-2xl mb-2">{listing?.name}</CardTitle>
                                     <div className="flex items-center gap-2 mb-3">
-                                        <Badge variant={listing.type === 'server' ? 'default' : 'secondary'}>
-                                            {listing.type}
+                                        <Badge variant={listing?.type === 'server' ? 'default' : 'secondary'}>
+                                            {listing?.type}
                                         </Badge>
                                         <Badge variant="outline">
                                             <Calendar className="h-3 w-3 mr-1" />
-                                            {new Date(listing.created_at).toLocaleDateString()}
+                                            {listing && new Date(listing.created_at).toLocaleDateString()}
                                         </Badge>
                                     </div>
 
-                                    {listing.tags && listing.tags.length > 0 && (
+                                    {listing?.tags && listing.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-2">
                                             {listing.tags.map((tag, index) => (
                                                 <Badge key={index} variant="outline" className="text-xs">
@@ -237,7 +312,7 @@ const ListingDetail = () => {
                             <div>
                                 <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
                                 <p className="text-gray-300 leading-relaxed">
-                                    {listing.long_description || listing.description}
+                                    {listing?.long_description || listing?.description}
                                 </p>
                             </div>
 
@@ -246,20 +321,20 @@ const ListingDetail = () => {
                                     <div className="flex items-center justify-center text-gray-400 mb-2">
                                         <Eye className="h-5 w-5" />
                                     </div>
-                                    <div className="text-white font-semibold text-xl">{listing.view_count || 0}</div>
+                                    <div className="text-white font-semibold text-xl">{listing?.view_count || 0}</div>
                                     <div className="text-gray-500 text-sm">Views</div>
                                 </div>
                                 <div className="text-center p-4 bg-[#2C2F33] rounded-lg">
                                     <div className="flex items-center justify-center text-gray-400 mb-2">
                                         <TrendingUp className="h-5 w-5" />
                                     </div>
-                                    <div className="text-white font-semibold text-xl">{listing.bump_count || 0}</div>
+                                    <div className="text-white font-semibold text-xl">{listing?.bump_count || 0}</div>
                                     <div className="text-gray-500 text-sm">Bumps</div>
                                 </div>
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-3">
-                                {listing.invite_url && (
+                                {listing?.invite_url && (
                                     <Button
                                         onClick={handleJoin}
                                         className="flex-1 bg-[#57F287] hover:bg-[#3BA55C] text-black"
@@ -269,7 +344,7 @@ const ListingDetail = () => {
                                     </Button>
                                 )}
 
-                                {listing.website_url && (
+                                {listing?.website_url && (
                                     <Button
                                         onClick={handleWebsite}
                                         variant="outline"
@@ -283,10 +358,14 @@ const ListingDetail = () => {
                                 <Button
                                     onClick={handleBump}
                                     variant="outline"
-                                    className="border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white"
+                                    disabled={!canBump}
+                                    className={`border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white ${
+                                        !canBump ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
+                                    title={!canBump ? `Next bump available in ${nextBumpTime}` : 'Bump listing to the top'}
                                 >
                                     <TrendingUp className="h-4 w-4 mr-2" />
-                                    Bump Listing
+                                    {canBump ? 'Bump Listing' : `Cooldown: ${nextBumpTime}`}
                                 </Button>
                             </div>
                         </CardContent>

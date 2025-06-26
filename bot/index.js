@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 
 const {
@@ -75,11 +74,12 @@ client.once('ready', () => {
 });
 
 // --- Cooldown Management ---
-async function canBump(userId) {
+async function canBump(userId, listingId) {
     const { data, error } = await supabase
         .from('bump_cooldowns')
         .select('last_bump_at')
         .eq('user_discord_id', userId)
+        .eq('listing_id', listingId)
         .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -95,11 +95,12 @@ async function canBump(userId) {
     return diff >= BUMP_COOLDOWN_MINUTES * 60 * 1000;
 }
 
-async function timeUntilNextBump(userId) {
+async function timeUntilNextBump(userId, listingId) {
     const { data, error } = await supabase
         .from('bump_cooldowns')
         .select('last_bump_at')
         .eq('user_discord_id', userId)
+        .eq('listing_id', listingId)
         .single();
 
     if (error || !data) return 0;
@@ -118,14 +119,7 @@ client.on('interactionCreate', async interaction => {
     const guildId = interaction.guild?.id;
 
     if (interaction.commandName === 'bump') {
-        if (!(await canBump(userId))) {
-            const msLeft = await timeUntilNextBump(userId);
-            const hours = Math.floor(msLeft / 3600000);
-            const min = Math.floor((msLeft % 3600000) / 60000);
-            return interaction.reply({ content: `⏳ Wait ${hours}h ${min}m to bump again.`, ephemeral: true });
-        }
-
-        // Find user's listing for this server - changed from 'approved' to 'active'
+        // Find user's listing for this server
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select('id, name')
@@ -140,9 +134,17 @@ client.on('interactionCreate', async interaction => {
             });
         }
 
+        // Check cooldown with listing ID
+        if (!(await canBump(userId, listing.id))) {
+            const msLeft = await timeUntilNextBump(userId, listing.id);
+            const hours = Math.floor(msLeft / 3600000);
+            const min = Math.floor((msLeft % 3600000) / 60000);
+            return interaction.reply({ content: `⏳ Wait ${hours}h ${min}m to bump again.`, ephemeral: true });
+        }
+
         const now = new Date().toISOString();
 
-        // Update cooldown
+        // Update cooldown with listing ID
         const { error: cooldownError } = await supabase
             .from('bump_cooldowns')
             .upsert({ 
@@ -172,18 +174,33 @@ client.on('interactionCreate', async interaction => {
 
         const embed = new EmbedBuilder()
             .setTitle('🚀 Server Bumped!')
-            .setDescription(`**${listing.name}** has been bumped to the top of the list!`)
+            .setDescription(`**${listing.name}** has been bumped to the top of the list!\n\nNext bump available in 2 hours.`)
             .setColor('#00FF00')
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
 
     } else if (interaction.commandName === 'bumpstatus') {
-        if (await canBump(userId)) {
+        // Find user's listing for this server
+        const { data: listing, error: listingError } = await supabase
+            .from('listings')
+            .select('id, name')
+            .eq('discord_id', guildId)
+            .eq('status', 'active')
+            .single();
+
+        if (listingError || !listing) {
+            return interaction.reply({ 
+                content: '❌ No active listing found for this server.', 
+                ephemeral: true 
+            });
+        }
+
+        if (await canBump(userId, listing.id)) {
             return interaction.reply({ content: '✅ You can bump now!', ephemeral: true });
         }
 
-        const msLeft = await timeUntilNextBump(userId);
+        const msLeft = await timeUntilNextBump(userId, listing.id);
         const hours = Math.floor(msLeft / 3600000);
         const min = Math.floor((msLeft % 3600000) / 60000);
         return interaction.reply({ content: `⏳ Wait ${hours}h ${min}m to bump again.`, ephemeral: true });

@@ -147,12 +147,16 @@ const Dashboard = () => {
 
     try {
       // Check if user can bump (2 hour cooldown)
-      const { data: cooldown } = await supabase
+      const { data: cooldown, error: cooldownError } = await supabase
         .from('bump_cooldowns')
         .select('last_bump_at')
         .eq('user_discord_id', user.id)
         .eq('listing_id', listing.id)
         .single();
+
+      if (cooldownError && cooldownError.code !== 'PGRST116') {
+        throw cooldownError;
+      }
 
       const now = new Date();
       const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);

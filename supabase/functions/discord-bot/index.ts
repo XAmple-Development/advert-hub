@@ -117,7 +117,7 @@ async function handleBumpCommand(interaction: any) {
     }
 
     try {
-        // Find listing for this server - changed from 'approved' to 'active'
+        // Find listing for this server
         const { data: listing, error: listingError } = await supabase
             .from('listings')
             .select('*')

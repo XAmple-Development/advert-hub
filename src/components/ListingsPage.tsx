@@ -152,18 +152,65 @@ const ListingsPage = () => {
         }
 
         try {
+            // Check cooldown first
+            const { data: cooldown, error: cooldownError } = await supabase
+                .from('bump_cooldowns')
+                .select('last_bump_at')
+                .eq('user_discord_id', user.id)
+                .eq('listing_id', listingId)
+                .single();
+
+            if (cooldownError && cooldownError.code !== 'PGRST116') {
+                throw cooldownError;
+            }
+
+            if (cooldown) {
+                const lastBump = new Date(cooldown.last_bump_at);
+                const now = new Date();
+                const twoHoursInMs = 2 * 60 * 60 * 1000;
+                const timeSinceLastBump = now.getTime() - lastBump.getTime();
+
+                if (timeSinceLastBump < twoHoursInMs) {
+                    const timeLeft = twoHoursInMs - timeSinceLastBump;
+                    const hours = Math.floor(timeLeft / (60 * 60 * 1000));
+                    const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+                    
+                    toast({
+                        variant: "destructive",
+                        title: "Cooldown Active",
+                        description: `You can bump again in ${hours}h ${minutes}m`,
+                    });
+                    return;
+                }
+            }
+
+            const now = new Date();
+
+            // Update cooldown
+            const { error: cooldownUpdateError } = await supabase
+                .from('bump_cooldowns')
+                .upsert({
+                    user_discord_id: user.id,
+                    listing_id: listingId,
+                    last_bump_at: now.toISOString(),
+                });
+
+            if (cooldownUpdateError) throw cooldownUpdateError;
+
+            // Create bump record
             const { error } = await supabase
                 .from('bumps')
                 .insert({
                     listing_id: listingId,
-                    user_id: user.id
+                    user_id: user.id,
+                    bump_type: 'manual'
                 });
 
             if (error) throw error;
 
             toast({
                 title: "Success!",
-                description: "Listing bumped to the top!",
+                description: "Listing bumped to the top! Next bump available in 2 hours.",
             });
 
             fetchListings();
