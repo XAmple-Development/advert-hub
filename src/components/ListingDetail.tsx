@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +17,6 @@ import {
     Calendar,
     Globe
 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 
 interface Listing {
     id: string;
@@ -262,10 +262,19 @@ const ListingDetail = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#2C2F33]">
-                <Navbar />
-                <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-                    <div className="text-white text-xl">Loading listing...</div>
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+                <div className="flex items-center justify-center min-h-screen relative">
+                    {/* Background Elements */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+                    </div>
+                    <div className="relative z-10 text-center">
+                        <div className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-4 animate-pulse">
+                            Loading Community...
+                        </div>
+                        <div className="text-gray-300 text-lg">Fetching community details</div>
+                    </div>
                 </div>
             </div>
         );
@@ -273,61 +282,86 @@ const ListingDetail = () => {
 
     if (!listing) {
         return (
-            <div className="min-h-screen bg-[#2C2F33]">
-                <Navbar />
-                <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-                    <div className="text-white text-xl">Listing not found</div>
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+                <div className="flex items-center justify-center min-h-screen relative">
+                    {/* Background Elements */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-full blur-3xl"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"></div>
+                    </div>
+                    <div className="relative z-10 text-center">
+                        <div className="text-4xl font-black bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent mb-4">
+                            Community Not Found
+                        </div>
+                        <div className="text-gray-300 text-lg mb-8">This community may have been removed or doesn't exist</div>
+                        <Button
+                            onClick={() => navigate('/listings')}
+                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-3 rounded-2xl"
+                        >
+                            <ArrowLeft className="h-5 w-5 mr-2" />
+                            Back to Listings
+                        </Button>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#2C2F33]">
-            <Navbar />
-            <div className="py-8">
-                <div className="max-w-4xl mx-auto px-6">
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+            {/* Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"></div>
+                <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-full blur-2xl"></div>
+            </div>
+
+            <div className="relative z-10 py-12">
+                <div className="max-w-5xl mx-auto px-6">
                     <Button
                         onClick={() => navigate('/listings')}
                         variant="outline"
-                        className="mb-6 border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                        className="mb-8 border-2 border-gray-700/50 bg-gray-800/50 backdrop-blur-xl text-gray-300 hover:bg-gray-700/50 hover:text-white hover:border-purple-500/50 rounded-2xl px-6 py-3 font-semibold transition-all duration-300"
                     >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back to Listings
+                        <ArrowLeft className="h-5 w-5 mr-2" />
+                        Back to Communities
                     </Button>
 
-                    <Card className="bg-[#36393F] border-[#40444B]">
+                    <Card className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden shadow-2xl">
                         {listing?.banner_url && (
-                            <div className="h-48 bg-cover bg-center rounded-t-lg"
+                            <div className="h-64 bg-cover bg-center"
                                 style={{ backgroundImage: `url(${listing.banner_url})` }} />
                         )}
 
-                        <CardHeader className="pb-4">
-                            <div className="flex items-start space-x-4">
+                        <CardHeader className="pb-6">
+                            <div className="flex items-start space-x-6">
                                 {listing?.avatar_url ? (
                                     <img
                                         src={listing.avatar_url}
                                         alt={listing.name}
-                                        className="w-16 h-16 rounded-full flex-shrink-0"
+                                        className="w-20 h-20 rounded-2xl flex-shrink-0 shadow-lg"
                                     />
                                 ) : (
-                                    <div className="w-16 h-16 bg-[#5865F2] rounded-full flex items-center justify-center flex-shrink-0">
+                                    <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
                                         {listing?.type === 'server' ? (
-                                            <Server className="h-8 w-8 text-white" />
+                                            <Server className="h-10 w-10 text-white" />
                                         ) : (
-                                            <Bot className="h-8 w-8 text-white" />
+                                            <Bot className="h-10 w-10 text-white" />
                                         )}
                                     </div>
                                 )}
 
                                 <div className="flex-1">
-                                    <CardTitle className="text-white text-2xl mb-2">{listing?.name}</CardTitle>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Badge variant={listing?.type === 'server' ? 'default' : 'secondary'}>
+                                    <CardTitle className="text-white text-3xl font-black mb-4">{listing?.name}</CardTitle>
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <Badge 
+                                            variant={listing?.type === 'server' ? 'default' : 'secondary'}
+                                            className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 text-purple-300 font-semibold px-3 py-1 text-sm"
+                                        >
                                             {listing?.type}
                                         </Badge>
-                                        <Badge variant="outline">
-                                            <Calendar className="h-3 w-3 mr-1" />
+                                        <Badge variant="outline" className="bg-gray-800/50 border-gray-600/50 text-gray-300 font-semibold px-3 py-1">
+                                            <Calendar className="h-4 w-4 mr-2" />
                                             {listing && new Date(listing.created_at).toLocaleDateString()}
                                         </Badge>
                                     </div>
@@ -335,7 +369,7 @@ const ListingDetail = () => {
                                     {listing?.tags && listing.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-2">
                                             {listing.tags.map((tag, index) => (
-                                                <Badge key={index} variant="outline" className="text-xs">
+                                                <Badge key={index} variant="outline" className="text-sm bg-gray-800/50 border-gray-600/50 text-gray-300">
                                                     {tag}
                                                 </Badge>
                                             ))}
@@ -345,38 +379,38 @@ const ListingDetail = () => {
                             </div>
                         </CardHeader>
 
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-8">
                             <div>
-                                <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
-                                <p className="text-gray-300 leading-relaxed">
+                                <h3 className="text-2xl font-bold text-white mb-4">About This Community</h3>
+                                <p className="text-gray-300 text-lg leading-relaxed">
                                     {listing?.long_description || listing?.description}
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="text-center p-4 bg-[#2C2F33] rounded-lg">
-                                    <div className="flex items-center justify-center text-gray-400 mb-2">
-                                        <Eye className="h-5 w-5" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="text-center p-6 bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/30">
+                                    <div className="flex items-center justify-center text-green-400 mb-3">
+                                        <Eye className="h-8 w-8" />
                                     </div>
-                                    <div className="text-white font-semibold text-xl">{listing?.view_count || 0}</div>
-                                    <div className="text-gray-500 text-sm">Views</div>
+                                    <div className="text-white font-bold text-3xl mb-1">{listing?.view_count || 0}</div>
+                                    <div className="text-gray-400 text-lg">Total Views</div>
                                 </div>
-                                <div className="text-center p-4 bg-[#2C2F33] rounded-lg">
-                                    <div className="flex items-center justify-center text-gray-400 mb-2">
-                                        <TrendingUp className="h-5 w-5" />
+                                <div className="text-center p-6 bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/30">
+                                    <div className="flex items-center justify-center text-purple-400 mb-3">
+                                        <TrendingUp className="h-8 w-8" />
                                     </div>
-                                    <div className="text-white font-semibold text-xl">{listing?.bump_count || 0}</div>
-                                    <div className="text-gray-500 text-sm">Bumps</div>
+                                    <div className="text-white font-bold text-3xl mb-1">{listing?.bump_count || 0}</div>
+                                    <div className="text-gray-400 text-lg">Total Bumps</div>
                                 </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex flex-col sm:flex-row gap-4">
                                 {listing?.invite_url && (
                                     <Button
                                         onClick={handleJoin}
-                                        className="flex-1 bg-[#57F287] hover:bg-[#3BA55C] text-black"
+                                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl font-bold py-4 text-lg"
                                     >
-                                        <ExternalLink className="h-4 w-4 mr-2" />
+                                        <ExternalLink className="h-5 w-5 mr-3" />
                                         Join {listing.type === 'server' ? 'Server' : 'Bot'}
                                     </Button>
                                 )}
@@ -385,10 +419,10 @@ const ListingDetail = () => {
                                     <Button
                                         onClick={handleWebsite}
                                         variant="outline"
-                                        className="flex-1 border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+                                        className="flex-1 border-2 border-gray-700/50 bg-gray-800/50 backdrop-blur-xl text-gray-300 hover:bg-gray-700/50 hover:text-white hover:border-cyan-500/50 rounded-2xl font-bold py-4 text-lg transition-all duration-300"
                                     >
-                                        <Globe className="h-4 w-4 mr-2" />
-                                        Website
+                                        <Globe className="h-5 w-5 mr-3" />
+                                        Visit Website
                                     </Button>
                                 )}
 
@@ -396,13 +430,15 @@ const ListingDetail = () => {
                                     onClick={handleBump}
                                     variant="outline"
                                     disabled={!canBump}
-                                    className={`border-[#5865F2] text-[#5865F2] hover:bg-[#5865F2] hover:text-white ${
-                                        !canBump ? 'opacity-50 cursor-not-allowed' : ''
+                                    className={`border-2 bg-gray-800/50 backdrop-blur-xl rounded-2xl font-bold py-4 text-lg transition-all duration-300 ${
+                                        !canBump 
+                                            ? 'border-gray-600/50 text-gray-500 cursor-not-allowed opacity-50' 
+                                            : 'border-purple-500/50 text-purple-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 transform hover:scale-105'
                                     }`}
-                                    title={!canBump ? `Next bump available in ${nextBumpTime}` : 'Bump listing to the top'}
+                                    title={!canBump ? `Next bump available in ${nextBumpTime}` : 'Bump this community to the top'}
                                 >
-                                    <TrendingUp className="h-4 w-4 mr-2" />
-                                    {canBump ? 'Bump Listing' : `Cooldown: ${nextBumpTime}`}
+                                    <TrendingUp className="h-5 w-5 mr-3" />
+                                    {canBump ? 'Bump Community' : `Cooldown: ${nextBumpTime}`}
                                 </Button>
                             </div>
                         </CardContent>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,8 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { Server, Bot, Eye, TrendingUp, Search, ExternalLink, Crown, Star, Clock, Sparkles } from 'lucide-react';
-import Navbar from '@/components/Navbar';
+import { Server, Bot, Eye, TrendingUp, Search, ExternalLink, Crown, Star, Clock } from 'lucide-react';
 
 interface Listing {
     id: string;
@@ -237,19 +237,18 @@ const ListingsPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
-                <Navbar />
-                <div className="flex items-center justify-center min-h-[calc(100vh-64px)] relative">
+            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+                <div className="flex items-center justify-center min-h-screen relative">
                     {/* Background Elements */}
                     <div className="absolute inset-0 overflow-hidden">
-                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
-                        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
+                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
+                        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
                     </div>
                     <div className="relative z-10 text-center">
-                        <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                            Loading Listings...
+                        <div className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-4 animate-pulse">
+                            Loading Communities...
                         </div>
-                        <div className="text-gray-300">Discovering amazing communities...</div>
+                        <div className="text-gray-300 text-lg">Discovering amazing Discord servers and bots</div>
                     </div>
                 </div>
             </div>
@@ -257,52 +256,52 @@ const ListingsPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
-            <Navbar />
-            
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
             {/* Background Elements */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"></div>
+                <div className="absolute top-3/4 left-1/2 w-64 h-64 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-full blur-2xl"></div>
             </div>
 
-            <div className="relative z-10 py-12">
+            <div className="relative z-10 py-16">
                 <div className="max-w-7xl mx-auto px-6">
-                    <div className="mb-12">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full mb-8 backdrop-blur-sm">
-                            <Star className="h-4 w-4 text-purple-300" />
-                            <span className="text-purple-200 font-medium">Discover Communities</span>
+                    {/* Hero Section */}
+                    <div className="text-center mb-16">
+                        <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20 backdrop-blur-xl border border-purple-500/30 rounded-full mb-8">
+                            <Star className="h-5 w-5 text-purple-300" />
+                            <span className="text-purple-200 font-semibold text-lg">Discover Amazing Communities</span>
                         </div>
                         
-                        <h1 className="text-4xl md:text-6xl font-black text-white mb-6">
+                        <h1 className="text-5xl md:text-7xl font-black text-white mb-8 leading-tight">
                             Browse Discord 
-                            <span className="block bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            <span className="block mt-2 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                                 Servers & Bots
                             </span>
                         </h1>
-                        <p className="text-xl md:text-2xl text-gray-300 max-w-4xl leading-relaxed">
-                            Discover amazing Discord communities and useful bots to enhance your experience.
+                        <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+                            Join thousands of active communities and discover powerful bots to enhance your Discord experience.
                         </p>
                     </div>
 
                     {/* Search and Filters */}
-                    <div className="mb-12 space-y-6">
-                        <div className="flex flex-col sm:flex-row gap-6">
+                    <div className="mb-12 space-y-8">
+                        <div className="flex flex-col lg:flex-row gap-6 max-w-4xl mx-auto">
                             <div className="relative flex-1">
-                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                                <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-400 h-6 w-6" />
                                 <Input
-                                    placeholder="Search servers and bots..."
+                                    placeholder="Search for servers, bots, and communities..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-12 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 text-white placeholder-gray-400 rounded-2xl h-14 text-lg focus:border-purple-500/50"
+                                    className="pl-16 bg-gray-800/50 backdrop-blur-xl border-gray-700/50 text-white placeholder-gray-400 rounded-2xl h-16 text-lg focus:border-purple-500/50 focus:ring-purple-500/20"
                                 />
                             </div>
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="min-w-48 bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 text-white rounded-2xl h-14">
+                                <SelectTrigger className="lg:w-64 bg-gray-800/50 backdrop-blur-xl border-gray-700/50 text-white rounded-2xl h-16 text-lg">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-gray-800 border-gray-700">
-                                    <SelectItem value="recent">Recent</SelectItem>
+                                <SelectContent className="bg-gray-800 border-gray-700 backdrop-blur-xl">
+                                    <SelectItem value="recent">Most Recent</SelectItem>
                                     <SelectItem value="bumps">Most Bumped</SelectItem>
                                     <SelectItem value="views">Most Viewed</SelectItem>
                                 </SelectContent>
@@ -311,54 +310,60 @@ const ListingsPage = () => {
                     </div>
 
                     {/* Category Tabs */}
-                    <Tabs value={categoryTab} onValueChange={setCategoryTab} className="mb-10">
-                        <TabsList className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2 grid grid-cols-4 w-full max-w-3xl">
-                            <TabsTrigger 
-                                value="all" 
-                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
-                            >
-                                <Server className="h-4 w-4" />
-                                All Listings
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="premium" 
-                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
-                            >
-                                <Crown className="h-4 w-4" />
-                                Premium
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="featured" 
-                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
-                            >
-                                <Star className="h-4 w-4" />
-                                Featured
-                            </TabsTrigger>
-                            <TabsTrigger 
-                                value="recent" 
-                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3"
-                            >
-                                <Clock className="h-4 w-4" />
-                                Recent
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    <div className="mb-12 flex justify-center">
+                        <Tabs value={categoryTab} onValueChange={setCategoryTab} className="w-full max-w-4xl">
+                            <TabsList className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2 grid grid-cols-2 lg:grid-cols-4 w-full h-16">
+                                <TabsTrigger 
+                                    value="all" 
+                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3 text-lg font-semibold"
+                                >
+                                    <Server className="h-5 w-5" />
+                                    All
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="premium" 
+                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3 text-lg font-semibold"
+                                >
+                                    <Crown className="h-5 w-5" />
+                                    Premium
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="featured" 
+                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3 text-lg font-semibold"
+                                >
+                                    <Star className="h-5 w-5" />
+                                    Featured
+                                </TabsTrigger>
+                                <TabsTrigger 
+                                    value="recent" 
+                                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl flex items-center gap-2 px-4 py-3 text-lg font-semibold"
+                                >
+                                    <Clock className="h-5 w-5" />
+                                    Recent
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
 
-                    <Tabs value={typeFilter} onValueChange={setTypeFilter} className="mb-12">
-                        <TabsList className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2">
-                            <TabsTrigger value="all" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-6 py-3">All</TabsTrigger>
-                            <TabsTrigger value="server" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-6 py-3">Servers</TabsTrigger>
-                            <TabsTrigger value="bot" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-6 py-3">Bots</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    {/* Type Filter */}
+                    <div className="mb-12 flex justify-center">
+                        <Tabs value={typeFilter} onValueChange={setTypeFilter}>
+                            <TabsList className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2">
+                                <TabsTrigger value="all" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-8 py-3 text-lg font-semibold">All Types</TabsTrigger>
+                                <TabsTrigger value="server" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-8 py-3 text-lg font-semibold">Servers</TabsTrigger>
+                                <TabsTrigger value="bot" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-8 py-3 text-lg font-semibold">Bots</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
 
+                    {/* Listings Grid */}
                     {filteredListings.length === 0 ? (
-                        <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl text-center py-20">
-                            <CardContent>
+                        <Card className="bg-gray-800/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl text-center py-20 max-w-2xl mx-auto">
+                            <CardContent className="pt-6">
                                 <div className="text-gray-400">
-                                    <Server className="h-20 w-20 mx-auto mb-6 opacity-50" />
-                                    <h3 className="text-2xl font-bold text-white mb-3">No listings found</h3>
-                                    <p className="text-lg">Try adjusting your search terms or filters</p>
+                                    <Server className="h-24 w-24 mx-auto mb-8 opacity-50" />
+                                    <h3 className="text-3xl font-bold text-white mb-4">No communities found</h3>
+                                    <p className="text-xl">Try adjusting your search terms or filters to discover amazing communities</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -367,28 +372,28 @@ const ListingsPage = () => {
                             {filteredListings.map((listing) => (
                                 <Card
                                     key={listing.id}
-                                    className={`group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-3 cursor-pointer rounded-3xl overflow-hidden ${
-                                        listing.featured ? 'ring-2 ring-yellow-500/50' : ''
+                                    className={`group relative bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 cursor-pointer rounded-3xl overflow-hidden shadow-2xl hover:shadow-purple-500/25 ${
+                                        listing.featured ? 'ring-2 ring-yellow-500/50 shadow-yellow-500/20' : ''
                                     } ${
-                                        listing.bump_count >= 10 ? 'ring-2 ring-purple-500/50' : ''
+                                        listing.bump_count >= 10 ? 'ring-2 ring-purple-500/50 shadow-purple-500/20' : ''
                                     }`}
                                     onClick={() => handleCardClick(listing.id)}
                                 >
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${
-                                        listing.featured ? 'from-yellow-500/10 to-orange-500/10' : 
-                                        listing.bump_count >= 10 ? 'from-purple-500/10 to-pink-500/10' : 
-                                        'from-gray-500/10 to-gray-600/10'
-                                    } opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                                    <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-20 transition-opacity duration-500 ${
+                                        listing.featured ? 'from-yellow-500/30 to-orange-500/30' : 
+                                        listing.bump_count >= 10 ? 'from-purple-500/30 to-pink-500/30' : 
+                                        'from-gray-500/20 to-gray-600/20'
+                                    }`}></div>
                                     
                                     {listing.featured && (
-                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 z-10">
-                                            <Star className="h-3 w-3" />
+                                        <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 z-10 shadow-lg">
+                                            <Star className="h-4 w-4" />
                                             Featured
                                         </div>
                                     )}
                                     {listing.bump_count >= 10 && !listing.featured && (
-                                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 z-10">
-                                            <Crown className="h-3 w-3" />
+                                        <div className="absolute -top-3 -right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 z-10 shadow-lg">
+                                            <Crown className="h-4 w-4" />
                                             Premium
                                         </div>
                                     )}
@@ -399,14 +404,14 @@ const ListingsPage = () => {
                                                 <img
                                                     src={listing.avatar_url}
                                                     alt={listing.name}
-                                                    className="w-14 h-14 rounded-2xl"
+                                                    className="w-16 h-16 rounded-2xl shadow-lg"
                                                 />
                                             ) : (
-                                                <div className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center">
+                                                <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg">
                                                     {listing.type === 'server' ? (
-                                                        <Server className="h-7 w-7 text-white" />
+                                                        <Server className="h-8 w-8 text-white" />
                                                     ) : (
-                                                        <Bot className="h-7 w-7 text-white" />
+                                                        <Bot className="h-8 w-8 text-white" />
                                                     )}
                                                 </div>
                                             )}
@@ -414,7 +419,7 @@ const ListingsPage = () => {
                                                 <CardTitle className="text-white text-xl font-bold group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">{listing.name}</CardTitle>
                                                 <Badge 
                                                     variant={listing.type === 'server' ? 'default' : 'secondary'}
-                                                    className="mt-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 text-purple-300"
+                                                    className="mt-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 text-purple-300 font-semibold"
                                                 >
                                                     {listing.type}
                                                 </Badge>
@@ -429,27 +434,27 @@ const ListingsPage = () => {
                                         {listing.tags && listing.tags.length > 0 && (
                                             <div className="flex flex-wrap gap-2">
                                                 {listing.tags.slice(0, 3).map((tag, index) => (
-                                                    <Badge key={index} variant="outline" className="text-xs bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-gray-600/50 text-gray-300">
+                                                    <Badge key={index} variant="outline" className="text-xs bg-gray-800/50 border-gray-600/50 text-gray-300">
                                                         {tag}
                                                     </Badge>
                                                 ))}
                                             </div>
                                         )}
 
-                                        <div className="grid grid-cols-2 gap-4 text-sm">
-                                            <div className="text-center bg-gradient-to-r from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-2xl p-3 border border-gray-700/30">
-                                                <div className="flex items-center justify-center text-gray-400 mb-2">
-                                                    <Eye className="h-5 w-5 text-green-400" />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="text-center bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30">
+                                                <div className="flex items-center justify-center text-green-400 mb-2">
+                                                    <Eye className="h-5 w-5" />
                                                 </div>
                                                 <div className="text-white font-bold text-lg">{listing.view_count || 0}</div>
-                                                <div className="text-gray-500 text-xs">Views</div>
+                                                <div className="text-gray-400 text-sm">Views</div>
                                             </div>
-                                            <div className="text-center bg-gradient-to-r from-gray-800/30 to-gray-900/30 backdrop-blur-sm rounded-2xl p-3 border border-gray-700/30">
-                                                <div className="flex items-center justify-center text-gray-400 mb-2">
-                                                    <TrendingUp className="h-5 w-5 text-purple-400" />
+                                            <div className="text-center bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-gray-700/30">
+                                                <div className="flex items-center justify-center text-purple-400 mb-2">
+                                                    <TrendingUp className="h-5 w-5" />
                                                 </div>
                                                 <div className="text-white font-bold text-lg">{listing.bump_count || 0}</div>
-                                                <div className="text-gray-500 text-xs">Bumps</div>
+                                                <div className="text-gray-400 text-sm">Bumps</div>
                                             </div>
                                         </div>
 
@@ -457,7 +462,7 @@ const ListingsPage = () => {
                                             {listing.invite_url && (
                                                 <Button
                                                     onClick={(e) => handleJoin(listing, e)}
-                                                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl"
+                                                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl font-semibold"
                                                     size="sm"
                                                 >
                                                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -467,16 +472,13 @@ const ListingsPage = () => {
                                             <Button
                                                 onClick={(e) => handleBump(listing.id, e)}
                                                 size="sm"
-                                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl px-4"
+                                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-2xl px-6 font-semibold"
                                             >
                                                 <TrendingUp className="h-4 w-4 mr-2" />
                                                 Bump
                                             </Button>
                                         </div>
                                     </CardContent>
-
-                                    {/* Sparkle Effect */}
-                                    <Sparkles className="absolute top-4 right-4 h-5 w-5 text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                 </Card>
                             ))}
                         </div>
