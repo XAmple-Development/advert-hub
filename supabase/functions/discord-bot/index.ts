@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
@@ -30,6 +29,8 @@ const INTERACTION_RESPONSE_TYPES = {
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE: 5,
 };
 
+const BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
 // Verify Discord request signature
 function verifyDiscordRequest(req: Request, body: string): boolean {
     const signature = req.headers.get("x-signature-ed25519");
@@ -52,6 +53,8 @@ function hexToUint8Array(hex: string): Uint8Array {
 
 // Check if user can bump (2 hour cooldown)
 async function canBump(userId: string, listingId: string): Promise<boolean> {
+    console.log(`Checking bump cooldown for user ${userId} and listing ${listingId}`);
+    
     const { data, error } = await supabase
         .from('bump_cooldowns')
         .select('last_bump_at')
@@ -64,14 +67,21 @@ async function canBump(userId: string, listingId: string): Promise<boolean> {
         return false;
     }
 
-    if (!data) return true;
+    if (!data) {
+        console.log('No previous bump found, user can bump');
+        return true;
+    }
 
     const lastBump = new Date(data.last_bump_at);
     const now = new Date();
-    const diff = now.getTime() - lastBump.getTime();
-    const twoHoursInMs = 2 * 60 * 60 * 1000;
+    const timeDiff = now.getTime() - lastBump.getTime();
     
-    return diff >= twoHoursInMs;
+    console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeDiff}ms, Required: ${BUMP_COOLDOWN_MS}ms`);
+    
+    const canBumpNow = timeDiff >= BUMP_COOLDOWN_MS;
+    console.log(`Can bump: ${canBumpNow}`);
+    
+    return canBumpNow;
 }
 
 // Get time until next bump
@@ -87,9 +97,8 @@ async function getTimeUntilNextBump(userId: string, listingId: string): Promise<
 
     const lastBump = new Date(data.last_bump_at);
     const now = new Date();
-    const twoHoursInMs = 2 * 60 * 60 * 1000;
-    const timeSinceLastBump = now.getTime() - lastBump.getTime();
-    const timeLeft = twoHoursInMs - timeSinceLastBump;
+    const timeDiff = now.getTime() - lastBump.getTime();
+    const timeLeft = BUMP_COOLDOWN_MS - timeDiff;
 
     if (timeLeft <= 0) return '0h 0m';
 
@@ -116,6 +125,8 @@ async function handleBumpCommand(interaction: any) {
         };
     }
 
+    console.log(`Bump command from user ${userId} in guild ${guildId}`);
+
     try {
         // Find listing for this server
         const { data: listing, error: listingError } = await supabase
@@ -126,6 +137,7 @@ async function handleBumpCommand(interaction: any) {
             .single();
 
         if (listingError || !listing) {
+            console.log('No active listing found for guild:', guildId);
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
@@ -135,14 +147,17 @@ async function handleBumpCommand(interaction: any) {
             };
         }
 
+        console.log(`Found listing: ${listing.name} (${listing.id})`);
+
         // Check cooldown
         const canUserBump = await canBump(userId, listing.id);
         if (!canUserBump) {
             const timeLeft = await getTimeUntilNextBump(userId, listing.id);
+            console.log(`User cannot bump, ${timeLeft} remaining`);
             return {
                 type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
                 data: {
-                    content: `⏳ You can bump again in ${timeLeft}.`,
+                    content: `⏳ You must wait ${timeLeft} before bumping again.`,
                     flags: 64,
                 },
             };
@@ -151,13 +166,24 @@ async function handleBumpCommand(interaction: any) {
         const now = new Date();
 
         // Update cooldown
-        await supabase
+        const { error: cooldownError } = await supabase
             .from('bump_cooldowns')
             .upsert({
                 user_discord_id: userId,
                 listing_id: listing.id,
                 last_bump_at: now.toISOString(),
             });
+
+        if (cooldownError) {
+            console.error('Error updating cooldown:', cooldownError);
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '❌ Error updating cooldown.',
+                    flags: 64,
+                },
+            };
+        }
 
         // Update listing
         await supabase
@@ -178,6 +204,8 @@ async function handleBumpCommand(interaction: any) {
                 bump_type: 'discord',
                 bumped_at: now.toISOString(),
             });
+
+        console.log(`Bump successful for listing ${listing.id}`);
 
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -251,7 +279,7 @@ async function handleBumpStatusCommand(interaction: any) {
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
-                content: `⏳ You can bump again in ${timeLeft}.`,
+                content: `⏳ You must wait ${timeLeft} before bumping again.`,
                 flags: 64,
             },
         };

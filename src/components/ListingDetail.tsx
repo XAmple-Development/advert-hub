@@ -37,6 +37,8 @@ interface Listing {
     banner_url?: string;
 }
 
+const BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
 const ListingDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -60,6 +62,8 @@ const ListingDetail = () => {
     const checkBumpCooldown = async () => {
         if (!user || !id) return;
 
+        console.log(`Checking bump cooldown for user ${user.id} and listing ${id}`);
+
         try {
             const { data: cooldown, error } = await supabase
                 .from('bump_cooldowns')
@@ -76,16 +80,18 @@ const ListingDetail = () => {
             if (cooldown) {
                 const lastBump = new Date(cooldown.last_bump_at);
                 const now = new Date();
-                const twoHoursInMs = 2 * 60 * 60 * 1000;
                 const timeSinceLastBump = now.getTime() - lastBump.getTime();
 
-                if (timeSinceLastBump < twoHoursInMs) {
+                console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeSinceLastBump}ms, Required: ${BUMP_COOLDOWN_MS}ms`);
+
+                if (timeSinceLastBump < BUMP_COOLDOWN_MS) {
                     setCanBump(false);
-                    const nextBump = new Date(lastBump.getTime() + twoHoursInMs);
-                    const timeLeft = nextBump.getTime() - now.getTime();
+                    const timeLeft = BUMP_COOLDOWN_MS - timeSinceLastBump;
                     const hours = Math.floor(timeLeft / (60 * 60 * 1000));
                     const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
                     setNextBumpTime(`${hours}h ${minutes}m`);
+
+                    console.log(`User cannot bump, ${hours}h ${minutes}m remaining`);
 
                     // Update the cooldown status every minute
                     const interval = setInterval(() => {
@@ -96,7 +102,12 @@ const ListingDetail = () => {
                 } else {
                     setCanBump(true);
                     setNextBumpTime('');
+                    console.log('User can bump now');
                 }
+            } else {
+                setCanBump(true);
+                setNextBumpTime('');
+                console.log('No previous bump found, user can bump');
             }
         } catch (error) {
             console.error('Error checking bump cooldown:', error);
@@ -162,12 +173,14 @@ const ListingDetail = () => {
             toast({
                 variant: "destructive",
                 title: "Cooldown Active",
-                description: `You can bump again in ${nextBumpTime}`,
+                description: `You must wait ${nextBumpTime} before bumping again`,
             });
             return;
         }
 
         if (!listing) return;
+
+        console.log(`Attempting to bump listing ${listing.id} by user ${user.id}`);
 
         try {
             const now = new Date();
@@ -181,7 +194,24 @@ const ListingDetail = () => {
                     last_bump_at: now.toISOString(),
                 });
 
-            if (cooldownError) throw cooldownError;
+            if (cooldownError) {
+                console.error('Error updating cooldown:', cooldownError);
+                throw cooldownError;
+            }
+
+            // Update listing bump count and timestamp
+            const { error: listingUpdateError } = await supabase
+                .from('listings')
+                .update({
+                    last_bumped_at: now.toISOString(),
+                    bump_count: (listing.bump_count || 0) + 1,
+                    updated_at: now.toISOString()
+                })
+                .eq('id', listing.id);
+
+            if (listingUpdateError) {
+                console.error('Error updating listing:', listingUpdateError);
+            }
 
             // Create bump record
             const { error: bumpError } = await supabase
@@ -189,10 +219,16 @@ const ListingDetail = () => {
                 .insert({
                     listing_id: listing.id,
                     user_id: user.id,
-                    bump_type: 'manual'
+                    bump_type: 'manual',
+                    bumped_at: now.toISOString()
                 });
 
-            if (bumpError) throw bumpError;
+            if (bumpError) {
+                console.error('Error creating bump record:', bumpError);
+                throw bumpError;
+            }
+
+            console.log(`Bump successful for listing ${listing.id}`);
 
             toast({
                 title: "Success!",
@@ -203,10 +239,11 @@ const ListingDetail = () => {
             fetchListing();
             checkBumpCooldown();
         } catch (error: any) {
+            console.error('Error in bump process:', error);
             toast({
                 variant: "destructive",
                 title: "Error",
-                description: error.message,
+                description: error.message || "An error occurred while bumping the listing",
             });
         }
     };
