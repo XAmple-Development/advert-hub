@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
@@ -165,13 +166,16 @@ async function handleBumpCommand(interaction: any) {
 
         const now = new Date();
 
-        // Update cooldown
+        // Update cooldown with proper conflict resolution
         const { error: cooldownError } = await supabase
             .from('bump_cooldowns')
             .upsert({
                 user_discord_id: userId,
                 listing_id: listing.id,
                 last_bump_at: now.toISOString(),
+            }, {
+                onConflict: 'user_discord_id,listing_id',
+                ignoreDuplicates: false
             });
 
         if (cooldownError) {

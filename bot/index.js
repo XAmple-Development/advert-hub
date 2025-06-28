@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 
 const {
@@ -137,7 +138,7 @@ client.on('interactionCreate', async interaction => {
         // Find user's listing for this server
         const { data: listing, error: listingError } = await supabase
             .from('listings')
-            .select('id, name')
+            .select('id, name, bump_count')
             .eq('discord_id', guildId)
             .eq('status', 'active')
             .single();
@@ -169,14 +170,17 @@ client.on('interactionCreate', async interaction => {
         const now = new Date();
 
         try {
-            // Update cooldown with listing ID
+            // Update cooldown with proper conflict resolution
             const { error: cooldownError } = await supabase
                 .from('bump_cooldowns')
                 .upsert({ 
                     user_discord_id: userId, 
                     listing_id: listing.id,
                     last_bump_at: now.toISOString() 
-                }, { onConflict: 'user_discord_id,listing_id' });
+                }, { 
+                    onConflict: 'user_discord_id,listing_id',
+                    ignoreDuplicates: false 
+                });
 
             if (cooldownError) {
                 console.error('Error updating bump cooldown:', cooldownError);
@@ -188,7 +192,7 @@ client.on('interactionCreate', async interaction => {
                 .from('listings')
                 .update({
                     last_bumped_at: now.toISOString(),
-                    bump_count: listing.bump_count + 1,
+                    bump_count: (listing.bump_count || 0) + 1,
                     updated_at: now.toISOString()
                 })
                 .eq('id', listing.id);
