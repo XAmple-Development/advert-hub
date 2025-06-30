@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -69,7 +68,7 @@ const Navbar = () => {
               <Bot className="h-6 w-6 text-white" />
             </div>
             <span className="text-white text-2xl font-black group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-              DiscordBoost
+              AdvertHub
             </span>
           </Link>
 

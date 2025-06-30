@@ -38,7 +38,7 @@ async function postToDiscord(listing: any, botConfig: any) {
     thumbnail: listing.avatar_url ? { url: listing.avatar_url } : undefined,
     timestamp: new Date().toISOString(),
     footer: {
-      text: 'Discord Boost',
+      text: 'AdvertHub',
     },
   };
 
