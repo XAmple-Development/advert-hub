@@ -80,8 +80,20 @@
     animation: scaleIn 0.3s ease-out;
   }
 
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-bounce-gentle {
+    animation: bounceGentle 2s ease-in-out infinite;
+  }
+
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl;
   }
 
   .line-clamp-2 {
@@ -104,6 +116,14 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  .glass-effect {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent;
+  }
 }
 
 @keyframes fadeIn {
@@ -125,6 +145,26 @@
   to { 
     opacity: 1; 
     transform: scale(1); 
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceGentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
   }
 }
 
@@ -152,6 +192,17 @@
   scroll-behavior: smooth;
 }
 
+/* Touch friendly */
+@media (hover: none) {
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+  
+  .hover-scale:hover {
+    transform: none;
+  }
+}
+
 /* Focus styles */
 button:focus-visible,
 input:focus-visible,
@@ -159,4 +210,51 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid rgb(168, 85, 247);
   outline-offset: 2px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Reduce animations on mobile for better performance */
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-up {
+    animation: none;
+  }
+  
+  /* Better touch targets */
+  button, 
+  [role="button"],
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .bg-gray-800\/40 {
+    background-color: rgb(31 41 55 / 0.8);
+  }
+  
+  .border-gray-700\/50 {
+    border-color: rgb(55 65 81 / 0.8);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +21,9 @@ import {
   Globe,
   Star
 } from 'lucide-react';
+import FavoriteButton from './FavoriteButton';
+import ShareButton from './ShareButton';
+import CopyButton from './CopyButton';
 
 interface Listing {
   id: string;
@@ -233,7 +235,7 @@ const EnhancedListingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black py-8 pb-20 md:pb-8">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
@@ -306,10 +308,20 @@ const EnhancedListingsPage = () => {
                       )}
                       
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-white text-lg font-bold truncate flex items-center gap-2">
-                          {listing.name}
-                          {listing.featured && <Star className="h-4 w-4 text-yellow-400 flex-shrink-0" />}
-                        </CardTitle>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-white text-lg font-bold truncate flex items-center gap-2">
+                            {listing.name}
+                            {listing.featured && <Star className="h-4 w-4 text-yellow-400 flex-shrink-0" />}
+                          </CardTitle>
+                          <div className="flex gap-1">
+                            <FavoriteButton listingId={listing.id} />
+                            <ShareButton 
+                              url={`${window.location.origin}/listings/${listing.id}`}
+                              title={listing.name}
+                              description={listing.description}
+                            />
+                          </div>
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge 
                             variant={listing.type === 'server' ? 'default' : 'secondary'}
@@ -382,13 +394,21 @@ const EnhancedListingsPage = () => {
                       </Button>
                       
                       {listing.invite_url && (
-                        <Button
-                          onClick={() => handleJoinListing(listing)}
-                          size="sm"
-                          className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl text-xs"
-                        >
-                          Join
-                        </Button>
+                        <>
+                          <Button
+                            onClick={() => handleJoinListing(listing)}
+                            size="sm"
+                            className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl text-xs"
+                          >
+                            Join
+                          </Button>
+                          <CopyButton 
+                            text={listing.invite_url}
+                            label=""
+                            variant="outline"
+                            size="sm"
+                          />
+                        </>
                       )}
                       
                       {listing.website_url && (

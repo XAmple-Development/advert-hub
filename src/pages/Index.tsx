@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
+import Breadcrumbs from '@/components/Breadcrumbs';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
 import HowItWorks from '@/components/HowItWorks';
@@ -29,7 +30,7 @@ const Index = () => {
 
   if (user) {
     return (
-      <div className="min-h-screen bg-[#2C2F33]">
+      <div className="min-h-screen bg-[#2C2F33] pb-20 md:pb-0">
         <Navbar />
         <Dashboard />
       </div>
