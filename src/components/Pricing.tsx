@@ -23,7 +23,7 @@ const Pricing = () => {
         "Discord OAuth integration",
         "Standard listing visibility"
       ],
-      buttonText: user ? (subscription_tier === 'free' ? "Current Plan" : "Downgrade") : "Start Free",
+      buttonText: user ? (subscription_tier === 'free' ? "Current Plan" : "Manage Plan") : "Start Free",
       buttonVariant: "outline" as const,
       popular: false,
       gradient: "from-gray-600 to-gray-700",
@@ -48,7 +48,7 @@ const Pricing = () => {
         "Growth optimization tools",
         "Early access to new features"
       ],
-      buttonText: user ? (isPremium ? "Current Plan" : "Upgrade to Premium") : "Go Premium",
+      buttonText: user ? (isPremium ? "Manage Subscription" : "Upgrade to Premium") : "Go Premium",
       buttonVariant: "default" as const,
       popular: true,
       gradient: "from-purple-600 to-pink-600",
@@ -59,14 +59,23 @@ const Pricing = () => {
   ];
 
   const handlePlanAction = async (plan: typeof plans[0]) => {
+    console.log('Plan action clicked:', plan.name, { hasUser: !!user, isPremium });
+    
     if (!user) {
-      // Redirect to auth
+      console.log('User not authenticated, ignoring click');
       return;
     }
 
-    if (plan.name === "Premium Pro" && !isPremium) {
-      await createCheckout();
-    } else if (plan.current && isPremium) {
+    if (plan.name === "Premium Pro") {
+      if (!isPremium) {
+        console.log('Upgrading to premium');
+        await createCheckout();
+      } else {
+        console.log('Opening customer portal');
+        await openCustomerPortal();
+      }
+    } else if (plan.name === "Starter" && isPremium) {
+      console.log('Opening customer portal for downgrade');
       await openCustomerPortal();
     }
   };
@@ -186,7 +195,7 @@ const Pricing = () => {
                     variant={plan.current && plan.name === "Starter" ? "secondary" : plan.buttonVariant}
                   >
                     <span className="flex items-center justify-center">
-                      {plan.current && plan.name === "Premium Pro" ? "Manage Subscription" : plan.buttonText}
+                      {plan.buttonText}
                       <Sparkles className="ml-2 h-5 w-5" />
                     </span>
                   </Button>

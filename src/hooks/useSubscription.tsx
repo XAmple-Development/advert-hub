@@ -23,6 +23,7 @@ export const useSubscription = () => {
 
   const checkSubscription = async () => {
     if (!user || !session) {
+      console.log('No user or session, setting to free tier');
       setSubscription({
         subscribed: false,
         subscription_tier: 'free',
@@ -33,6 +34,7 @@ export const useSubscription = () => {
     }
 
     try {
+      console.log('Checking subscription for user:', user.email);
       setSubscription(prev => ({ ...prev, loading: true }));
       
       const { data, error } = await supabase.functions.invoke('check-subscription', {
@@ -41,8 +43,13 @@ export const useSubscription = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking subscription:', error);
+        throw error;
+      }
 
+      console.log('Subscription data received:', data);
+      
       setSubscription({
         subscribed: data.subscribed || false,
         subscription_tier: data.subscription_tier || 'free',
@@ -71,6 +78,7 @@ export const useSubscription = () => {
     }
 
     try {
+      console.log('Creating checkout session...');
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId: 'premium' },
         headers: {
@@ -80,14 +88,19 @@ export const useSubscription = () => {
 
       if (error) throw error;
 
+      console.log('Checkout session created:', data);
       // Open Stripe checkout in a new tab
-      window.open(data.url, '_blank');
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error) {
       console.error('Error creating checkout:', error);
       toast({
         variant: "destructive",
         title: "Checkout Error",
-        description: "Failed to create checkout session",
+        description: "Failed to create checkout session. Please try again.",
       });
     }
   };
@@ -103,6 +116,7 @@ export const useSubscription = () => {
     }
 
     try {
+      console.log('Opening customer portal...');
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -111,28 +125,37 @@ export const useSubscription = () => {
 
       if (error) throw error;
 
-      window.open(data.url, '_blank');
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No portal URL received');
+      }
     } catch (error) {
       console.error('Error opening customer portal:', error);
       toast({
         variant: "destructive",
         title: "Portal Error",
-        description: "Failed to open customer portal",
+        description: "Failed to open customer portal. Please try again.",
       });
     }
   };
 
   useEffect(() => {
+    console.log('useSubscription: User/session changed', { hasUser: !!user, hasSession: !!session });
     checkSubscription();
   }, [user, session]);
 
-  // Auto-refresh subscription status periodically
+  // Auto-refresh subscription status periodically only if user exists
   useEffect(() => {
-    if (!user) return;
+    if (!user || !session) return;
 
-    const interval = setInterval(checkSubscription, 30000); // Check every 30 seconds
+    const interval = setInterval(() => {
+      console.log('Auto-refreshing subscription status');
+      checkSubscription();
+    }, 30000); // Check every 30 seconds
+    
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, session]);
 
   return {
     ...subscription,
