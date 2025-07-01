@@ -12,6 +12,7 @@ import Pricing from '@/components/Pricing';
 import Footer from '@/components/Footer';
 import Dashboard from '@/components/Dashboard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AdminUpgrade from '@/components/AdminUpgrade';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -34,6 +35,7 @@ const Index = () => {
       <div className="min-h-screen bg-[#2C2F33] pb-20 md:pb-0">
         <Navbar />
         <Dashboard />
+        <AdminUpgrade />
       </div>
     );
   }
