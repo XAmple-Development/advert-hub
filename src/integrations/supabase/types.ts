@@ -199,6 +199,7 @@ export type Database = {
           boost_level: number | null
           bump_count: number | null
           created_at: string
+          custom_styling: Json | null
           description: string
           discord_id: string
           discord_webhook_url: string | null
@@ -212,6 +213,7 @@ export type Database = {
           name: string
           nsfw: boolean | null
           online_count: number | null
+          priority_bump: boolean | null
           status: Database["public"]["Enums"]["listing_status"]
           support_server_url: string | null
           tags: string[] | null
@@ -219,6 +221,7 @@ export type Database = {
           updated_at: string
           user_id: string
           verification_level: string | null
+          verified_badge: boolean | null
           view_count: number | null
           website_url: string | null
         }
@@ -228,6 +231,7 @@ export type Database = {
           boost_level?: number | null
           bump_count?: number | null
           created_at?: string
+          custom_styling?: Json | null
           description: string
           discord_id: string
           discord_webhook_url?: string | null
@@ -241,6 +245,7 @@ export type Database = {
           name: string
           nsfw?: boolean | null
           online_count?: number | null
+          priority_bump?: boolean | null
           status?: Database["public"]["Enums"]["listing_status"]
           support_server_url?: string | null
           tags?: string[] | null
@@ -248,6 +253,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           verification_level?: string | null
+          verified_badge?: boolean | null
           view_count?: number | null
           website_url?: string | null
         }
@@ -257,6 +263,7 @@ export type Database = {
           boost_level?: number | null
           bump_count?: number | null
           created_at?: string
+          custom_styling?: Json | null
           description?: string
           discord_id?: string
           discord_webhook_url?: string | null
@@ -270,6 +277,7 @@ export type Database = {
           name?: string
           nsfw?: boolean | null
           online_count?: number | null
+          priority_bump?: boolean | null
           status?: Database["public"]["Enums"]["listing_status"]
           support_server_url?: string | null
           tags?: string[] | null
@@ -277,6 +285,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           verification_level?: string | null
+          verified_badge?: boolean | null
           view_count?: number | null
           website_url?: string | null
         }
@@ -322,7 +331,9 @@ export type Database = {
           discord_username: string | null
           id: string
           is_admin: boolean | null
+          stripe_customer_id: string | null
           subscription_expires_at: string | null
+          subscription_status: string | null
           subscription_tier: Database["public"]["Enums"]["subscription_tier"]
           updated_at: string
           username: string | null
@@ -336,7 +347,9 @@ export type Database = {
           discord_username?: string | null
           id: string
           is_admin?: boolean | null
+          stripe_customer_id?: string | null
           subscription_expires_at?: string | null
+          subscription_status?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
           username?: string | null
@@ -350,7 +363,9 @@ export type Database = {
           discord_username?: string | null
           id?: string
           is_admin?: boolean | null
+          stripe_customer_id?: string | null
           subscription_expires_at?: string | null
+          subscription_status?: string | null
           subscription_tier?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
           username?: string | null
@@ -391,6 +406,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {

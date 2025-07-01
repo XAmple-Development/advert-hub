@@ -83,8 +83,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     discord_access_token: token,
                     discord_token_updated_at: new Date().toISOString(),
                   });
+                  
+                  // Check subscription status after successful login
+                  console.log('Auth: Checking subscription status after login');
+                  await supabase.functions.invoke('check-subscription', {
+                    headers: {
+                      Authorization: `Bearer ${session.access_token}`,
+                    },
+                  });
                 } catch (error) {
-                  console.error('Auth: Error storing Discord token:', error);
+                  console.error('Auth: Error storing Discord token or checking subscription:', error);
                 }
               }, 0);
             }

@@ -1,10 +1,15 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, Star, Crown, Zap, Sparkles } from 'lucide-react';
+import { Check, Star, Crown, Zap, Sparkles, RefreshCw } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Link } from 'react-router-dom';
 
 const Pricing = () => {
+  const { user } = useAuth();
+  const { subscription_tier, createCheckout, openCustomerPortal, checkSubscription, loading, isPremium } = useSubscription();
+
   const plans = [
     {
       name: "Starter",
@@ -18,12 +23,13 @@ const Pricing = () => {
         "Discord OAuth integration",
         "Standard listing visibility"
       ],
-      buttonText: "Start Free",
+      buttonText: user ? (subscription_tier === 'free' ? "Current Plan" : "Downgrade") : "Start Free",
       buttonVariant: "outline" as const,
       popular: false,
       gradient: "from-gray-600 to-gray-700",
       bgGradient: "from-gray-600/10 to-gray-700/10",
-      icon: Zap
+      icon: Zap,
+      current: subscription_tier === 'free'
     },
     {
       name: "Premium Pro",
@@ -42,14 +48,28 @@ const Pricing = () => {
         "Growth optimization tools",
         "Early access to new features"
       ],
-      buttonText: "Go Premium",
+      buttonText: user ? (isPremium ? "Current Plan" : "Upgrade to Premium") : "Go Premium",
       buttonVariant: "default" as const,
       popular: true,
       gradient: "from-purple-600 to-pink-600",
       bgGradient: "from-purple-600/10 to-pink-600/10",
-      icon: Crown
+      icon: Crown,
+      current: isPremium
     }
   ];
+
+  const handlePlanAction = async (plan: typeof plans[0]) => {
+    if (!user) {
+      // Redirect to auth
+      return;
+    }
+
+    if (plan.name === "Premium Pro" && !isPremium) {
+      await createCheckout();
+    } else if (plan.current && isPremium) {
+      await openCustomerPortal();
+    }
+  };
 
   return (
     <section className="relative py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
@@ -76,6 +96,24 @@ const Pricing = () => {
             Choose the perfect plan for your Discord empire. Scale your community with confidence 
             and unlock premium growth features that deliver real results.
           </p>
+          
+          {user && (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <div className="text-gray-300">
+                Current Plan: <span className="font-bold text-white">{subscription_tier === 'premium' ? 'Premium Pro' : 'Starter'}</span>
+              </div>
+              <Button
+                onClick={checkSubscription}
+                variant="ghost"
+                size="sm"
+                disabled={loading}
+                className="text-purple-300 hover:text-purple-200"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh Status
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
@@ -86,7 +124,7 @@ const Pricing = () => {
                 plan.popular 
                   ? 'border-purple-500/50 ring-2 ring-purple-500/30 hover:ring-purple-400/50' 
                   : 'border-gray-700/50 hover:border-purple-500/30'
-              }`}
+              } ${plan.current ? 'ring-2 ring-green-500/50 border-green-500/50' : ''}`}
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${plan.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
               
@@ -95,6 +133,15 @@ const Pricing = () => {
                   <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-2xl text-sm font-bold flex items-center shadow-2xl">
                     <Star className="h-4 w-4 mr-2" />
                     Most Popular Choice
+                  </div>
+                </div>
+              )}
+
+              {plan.current && (
+                <div className="absolute -top-6 right-4 z-20">
+                  <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-2xl text-sm font-bold flex items-center shadow-2xl">
+                    <Check className="h-4 w-4 mr-2" />
+                    Active
                   </div>
                 </div>
               )}
@@ -125,21 +172,41 @@ const Pricing = () => {
                   ))}
                 </ul>
                 
-                <Link to="/auth" className="block">
+                {user ? (
                   <Button 
+                    onClick={() => handlePlanAction(plan)}
+                    disabled={loading || (plan.current && plan.name === "Starter")}
                     className={`w-full py-6 text-xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl ${
-                      plan.buttonVariant === 'default' 
-                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:shadow-purple-500/25' 
-                        : 'border-2 border-purple-500/50 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 hover:text-white hover:border-transparent backdrop-blur-sm'
+                      plan.current && plan.name === "Starter"
+                        ? 'bg-gray-600 hover:bg-gray-600 text-gray-300 cursor-not-allowed'
+                        : plan.buttonVariant === 'default' 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:shadow-purple-500/25' 
+                          : 'border-2 border-purple-500/50 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 hover:text-white hover:border-transparent backdrop-blur-sm'
                     }`}
-                    variant={plan.buttonVariant}
+                    variant={plan.current && plan.name === "Starter" ? "secondary" : plan.buttonVariant}
                   >
                     <span className="flex items-center justify-center">
-                      {plan.buttonText}
+                      {plan.current && plan.name === "Premium Pro" ? "Manage Subscription" : plan.buttonText}
                       <Sparkles className="ml-2 h-5 w-5" />
                     </span>
                   </Button>
-                </Link>
+                ) : (
+                  <Link to="/auth" className="block">
+                    <Button 
+                      className={`w-full py-6 text-xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl ${
+                        plan.buttonVariant === 'default' 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:shadow-purple-500/25' 
+                          : 'border-2 border-purple-500/50 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 hover:text-white hover:border-transparent backdrop-blur-sm'
+                      }`}
+                      variant={plan.buttonVariant}
+                    >
+                      <span className="flex items-center justify-center">
+                        {plan.buttonText}
+                        <Sparkles className="ml-2 h-5 w-5" />
+                      </span>
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           ))}
