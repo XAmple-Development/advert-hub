@@ -6,53 +6,53 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 9% 17%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -68,6 +68,50 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
+    line-height: 1.6;
+  }
+  
+  /* Improved text contrast and readability */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-white font-semibold;
+    line-height: 1.2;
+  }
+  
+  p {
+    @apply text-gray-200;
+    line-height: 1.7;
+  }
+  
+  /* Ensure all text has sufficient contrast */
+  .text-gray-300 {
+    color: rgb(209 213 219) !important; /* Lighter gray for better readability */
+  }
+  
+  .text-gray-400 {
+    color: rgb(156 163 175) !important; /* Adjusted for better contrast */
+  }
+  
+  .text-gray-500 {
+    color: rgb(107 114 128) !important; /* Minimum contrast maintained */
+  }
+  
+  /* Improved button text contrast */
+  button {
+    @apply font-medium;
+  }
+  
+  /* Better link visibility */
+  a {
+    @apply text-blue-400 hover:text-blue-300 transition-colors;
+  }
+  
+  /* Form input improvements */
+  input, textarea, select {
+    @apply text-white bg-gray-800 border-gray-600 placeholder-gray-400;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    @apply border-blue-500 ring-2 ring-blue-500/20;
   }
 }
 
@@ -124,6 +168,32 @@
   .gradient-text {
     @apply bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent;
   }
+  
+  /* Improved card styling with better text contrast */
+  .card-improved {
+    @apply bg-gray-800/90 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6;
+  }
+  
+  .card-improved h3 {
+    @apply text-white text-xl font-bold mb-3;
+  }
+  
+  .card-improved p {
+    @apply text-gray-200 leading-relaxed;
+  }
+  
+  /* Better button variants */
+  .btn-primary {
+    @apply bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-gray-100 font-medium px-6 py-3 rounded-xl transition-all duration-300 border border-gray-600;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-gray-500 text-gray-200 hover:bg-gray-700 hover:text-white hover:border-gray-400 font-medium px-6 py-3 rounded-xl transition-all duration-300;
+  }
 }
 
 @keyframes fadeIn {
@@ -168,23 +238,23 @@
   }
 }
 
-/* Custom scrollbar */
+/* Improved scrollbar with better contrast */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.5);
+  background: rgba(31, 41, 55, 0.8);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(107, 114, 128, 0.5);
+  background: rgba(156, 163, 175, 0.8);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.7);
+  background: rgba(209, 213, 219, 0.9);
 }
 
 /* Smooth animations */
@@ -192,7 +262,7 @@
   scroll-behavior: smooth;
 }
 
-/* Touch friendly */
+/* Touch friendly improvements */
 @media (hover: none) {
   .hover\:scale-105:hover {
     transform: none;
@@ -203,13 +273,15 @@
   }
 }
 
-/* Focus styles */
+/* Enhanced focus styles for better accessibility */
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid rgb(168, 85, 247);
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgb(147, 197, 253);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.2);
 }
 
 /* Mobile optimizations */
@@ -217,6 +289,23 @@ textarea:focus-visible {
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  
+  /* Improved text sizing on mobile */
+  h1 {
+    @apply text-3xl;
+  }
+  
+  h2 {
+    @apply text-2xl;
+  }
+  
+  h3 {
+    @apply text-xl;
+  }
+  
+  p {
+    @apply text-base;
   }
   
   /* Reduce animations on mobile for better performance */
@@ -233,17 +322,26 @@ textarea:focus-visible {
   select,
   textarea {
     min-height: 44px;
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .bg-gray-800\/40 {
-    background-color: rgb(31 41 55 / 0.8);
+    background-color: rgb(31 41 55 / 0.95);
   }
   
   .border-gray-700\/50 {
-    border-color: rgb(55 65 81 / 0.8);
+    border-color: rgb(55 65 81 / 0.9);
+  }
+  
+  .text-gray-300 {
+    color: rgb(229 231 235) !important;
+  }
+  
+  .text-gray-400 {
+    color: rgb(209 213 219) !important;
   }
 }
 
@@ -257,4 +355,55 @@ textarea:focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Error and success message styling */
+.error-text {
+  @apply text-red-400 font-medium;
+}
+
+.success-text {
+  @apply text-green-400 font-medium;
+}
+
+.warning-text {
+  @apply text-yellow-400 font-medium;
+}
+
+/* Loading states */
+.loading-text {
+  @apply text-blue-400 font-medium;
+}
+
+/* Improved dropdown and popover backgrounds */
+.dropdown-content,
+.popover-content {
+  @apply bg-gray-800 border border-gray-600 shadow-2xl;
+}
+
+.dropdown-content *,
+.popover-content * {
+  @apply text-gray-100;
+}
+
+/* Better code/monospace text */
+code, pre {
+  @apply bg-gray-800 text-green-400 px-2 py-1 rounded font-mono text-sm;
+}
+
+/* Improved table styling */
+table {
+  @apply w-full border-collapse;
+}
+
+th {
+  @apply bg-gray-800 text-gray-100 font-semibold p-3 text-left border-b border-gray-600;
+}
+
+td {
+  @apply text-gray-200 p-3 border-b border-gray-700;
+}
+
+tr:hover {
+  @apply bg-gray-800/50;
 }
