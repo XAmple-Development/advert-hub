@@ -123,9 +123,15 @@ export const useSubscription = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Customer portal error:', error);
+        throw error;
+      }
+
+      console.log('Customer portal response:', data);
 
       if (data?.url) {
+        console.log('Opening customer portal URL:', data.url);
         window.open(data.url, '_blank');
       } else {
         throw new Error('No portal URL received');

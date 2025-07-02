@@ -1,7 +1,9 @@
 
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Hero from '@/components/Hero';
@@ -18,8 +20,50 @@ import { Home, Globe } from 'lucide-react';
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const { checkSubscription } = useSubscription();
+  const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const view = searchParams.get('view') || (user ? 'dashboard' : 'home');
+  
+  // Handle Stripe success/cancel URLs
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    
+    if (success === 'true' && user) {
+      toast({
+        title: "Payment successful!",
+        description: "Your subscription has been activated. Checking status...",
+      });
+      
+      // Check subscription status after successful payment
+      setTimeout(() => {
+        checkSubscription();
+      }, 2000); // Wait 2 seconds for Stripe to process
+      
+      // Remove the success parameter from URL
+      setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete('success');
+        return newParams;
+      });
+    }
+    
+    if (canceled === 'true') {
+      toast({
+        variant: "destructive",
+        title: "Payment canceled",
+        description: "You can try again anytime.",
+      });
+      
+      // Remove the canceled parameter from URL
+      setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete('canceled');
+        return newParams;
+      });
+    }
+  }, [searchParams, user, checkSubscription, toast, setSearchParams]);
 
   console.log('Index: Rendering with loading:', loading, 'user:', !!user);
 
