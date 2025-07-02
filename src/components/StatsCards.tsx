@@ -32,7 +32,7 @@ const StatsCards = ({
 }: StatsCardsProps) => {
   const stats = [
     {
-      title: 'Total Communities',
+      title: 'Your Communities',
       value: totalListings,
       icon: Users,
       color: 'bg-gradient-to-r from-purple-500/20 to-pink-500/20',
@@ -40,7 +40,7 @@ const StatsCards = ({
       textColor: 'text-purple-300'
     },
     {
-      title: 'Discord Servers',
+      title: 'Your Servers',
       value: totalServers,
       icon: Server,
       color: 'bg-gradient-to-r from-blue-500/20 to-cyan-500/20',
@@ -48,7 +48,7 @@ const StatsCards = ({
       textColor: 'text-blue-300'
     },
     {
-      title: 'Discord Bots',
+      title: 'Your Bots',
       value: totalBots,
       icon: Bot,
       color: 'bg-gradient-to-r from-green-500/20 to-emerald-500/20',
@@ -56,7 +56,7 @@ const StatsCards = ({
       textColor: 'text-green-300'
     },
     {
-      title: 'Total Views',
+      title: 'Your Total Views',
       value: totalViews,
       icon: Eye,
       color: 'bg-gradient-to-r from-orange-500/20 to-red-500/20',
@@ -64,7 +64,7 @@ const StatsCards = ({
       textColor: 'text-orange-300'
     },
     {
-      title: 'Bumps Today',
+      title: 'Your Bumps Today',
       value: totalBumpsToday,
       icon: TrendingUp,
       color: 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20',

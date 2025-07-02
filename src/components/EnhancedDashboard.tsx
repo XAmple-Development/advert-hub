@@ -50,25 +50,23 @@ const EnhancedDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch global stats
-      const { data: allListings } = await supabase
-        .from('listings')
-        .select('type, view_count, created_at')
-        .eq('status', 'active');
-
-      const { data: todayBumps } = await supabase
-        .from('bumps')
-        .select('id')
-        .gte('bumped_at', new Date().toISOString().split('T')[0]);
-
-      // Fetch user's listings
+      // Fetch user's listings only
       const { data: userListings } = await supabase
         .from('listings')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      // Fetch recent activity
+      // Fetch bumps for user's listings only
+      const userListingIds = userListings?.map(l => l.id) || [];
+      
+      const { data: todayBumps } = await supabase
+        .from('bumps')
+        .select('id')
+        .in('listing_id', userListingIds)
+        .gte('bumped_at', new Date().toISOString().split('T')[0]);
+
+      // Fetch recent activity for user's listings only
       const { data: recentBumps } = await supabase
         .from('bumps')
         .select(`
@@ -79,13 +77,14 @@ const EnhancedDashboard = () => {
             type
           )
         `)
+        .in('listing_id', userListingIds)
         .order('bumped_at', { ascending: false })
         .limit(10);
 
-      const totalListings = allListings?.length || 0;
-      const totalServers = allListings?.filter(l => l.type === 'server').length || 0;
-      const totalBots = allListings?.filter(l => l.type === 'bot').length || 0;
-      const totalViews = allListings?.reduce((sum, l) => sum + (l.view_count || 0), 0) || 0;
+      const totalListings = userListings?.length || 0;
+      const totalServers = userListings?.filter(l => l.type === 'server').length || 0;
+      const totalBots = userListings?.filter(l => l.type === 'bot').length || 0;
+      const totalViews = userListings?.reduce((sum, l) => sum + (l.view_count || 0), 0) || 0;
       const totalBumpsToday = todayBumps?.length || 0;
 
       const recentActivity = recentBumps?.map(bump => ({
