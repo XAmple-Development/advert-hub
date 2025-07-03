@@ -119,17 +119,7 @@ export const useSubscription = () => {
     }
 
     try {
-      console.log('Testing Stripe connection first...');
-      
-      // Test Stripe connection first
-      const testResponse = await supabase.functions.invoke('test-stripe');
-      console.log('Stripe test response:', testResponse);
-      
-      if (testResponse.error) {
-        throw new Error(`Stripe test failed: ${testResponse.error.message}`);
-      }
-      
-      console.log('Stripe test successful, making customer portal request...');
+      console.log('Making customer portal request...');
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
