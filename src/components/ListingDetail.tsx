@@ -37,7 +37,9 @@ interface Listing {
     banner_url?: string;
 }
 
-const BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+// Cooldown times in milliseconds
+const FREE_BUMP_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours for free users
+const PREMIUM_BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours for premium users
 
 const ListingDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -65,6 +67,17 @@ const ListingDetail = () => {
         console.log(`Checking bump cooldown for user ${user.id} and listing ${id}`);
 
         try {
+            // Get user's subscription tier
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('subscription_tier')
+                .eq('id', user.id)
+                .single();
+
+            const isPremium = profile?.subscription_tier === 'premium';
+            const cooldownMs = isPremium ? PREMIUM_BUMP_COOLDOWN_MS : FREE_BUMP_COOLDOWN_MS;
+            const cooldownHours = isPremium ? 2 : 6;
+
             const { data: cooldown, error } = await supabase
                 .from('bump_cooldowns')
                 .select('last_bump_at')
@@ -82,11 +95,11 @@ const ListingDetail = () => {
                 const now = new Date();
                 const timeSinceLastBump = now.getTime() - lastBump.getTime();
 
-                console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeSinceLastBump}ms, Required: ${BUMP_COOLDOWN_MS}ms`);
+                console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeSinceLastBump}ms, Required: ${cooldownMs}ms (${cooldownHours}h for ${isPremium ? 'premium' : 'free'} user)`);
 
-                if (timeSinceLastBump < BUMP_COOLDOWN_MS) {
+                if (timeSinceLastBump < cooldownMs) {
                     setCanBump(false);
-                    const timeLeft = BUMP_COOLDOWN_MS - timeSinceLastBump;
+                    const timeLeft = cooldownMs - timeSinceLastBump;
                     const hours = Math.floor(timeLeft / (60 * 60 * 1000));
                     const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
                     setNextBumpTime(`${hours}h ${minutes}m`);
@@ -230,9 +243,19 @@ const ListingDetail = () => {
 
             console.log(`Bump successful for listing ${listing.id}`);
 
+            // Get user's subscription tier for success message
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('subscription_tier')
+                .eq('id', user.id)
+                .single();
+
+            const isPremium = profile?.subscription_tier === 'premium';
+            const cooldownHours = isPremium ? 2 : 6;
+
             toast({
                 title: "Success!",
-                description: "Listing bumped to the top! Next bump available in 2 hours.",
+                description: `Listing bumped to the top! Next bump available in ${cooldownHours} hours.`,
             });
 
             // Refresh the listing and cooldown status

@@ -80,6 +80,9 @@ const EnhancedListingsPage = () => {
         .from('listings')
         .select('*')
         .eq('status', 'active')
+        .order('priority_ranking', { ascending: false })
+        .order('premium_featured', { ascending: false })
+        .order('last_bumped_at', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (error) throw error;

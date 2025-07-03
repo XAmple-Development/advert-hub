@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface CreateListingModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
   });
   const { toast } = useToast();
   const authData = useAuth();
+  const { isPremium } = useSubscription();
 
   useEffect(() => {
     if (open) {
@@ -87,7 +89,26 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
     setLoading(true);
 
     try {
-      // Create the listing
+      // Check listing limit for free users
+      if (!isPremium) {
+        const { data: existingListings, error: countError } = await supabase
+          .from('listings')
+          .select('id')
+          .eq('user_id', authData.user.id);
+
+        if (countError) throw countError;
+
+        if (existingListings && existingListings.length >= 3) {
+          toast({
+            variant: "destructive",
+            title: "Listing Limit Reached",
+            description: "Free users can create up to 3 listings. Upgrade to Premium for unlimited listings.",
+          });
+          return;
+        }
+      }
+
+      // Create the listing with premium features if applicable
       const { data: listing, error: listingError } = await supabase
         .from('listings')
         .insert({
@@ -101,7 +122,11 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
           website_url: formData.website_url.trim() || null,
           support_server_url: formData.support_server_url.trim() || null,
           member_count: parseInt(formData.member_count) || 0,
-          status: 'pending'
+          status: 'pending',
+          premium_featured: isPremium,
+          priority_ranking: isPremium ? 100 : 0,
+          analytics_enabled: isPremium,
+          verified_badge: isPremium
         })
         .select()
         .single();

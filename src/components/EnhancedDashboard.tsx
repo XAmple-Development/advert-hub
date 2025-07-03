@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import StatsCards from './StatsCards';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import {
   ExternalLink,
   Clock
 } from 'lucide-react';
+import CrossPromotionNetwork from './CrossPromotionNetwork';
 
 interface DashboardStats {
   totalListings: number;
@@ -30,6 +32,7 @@ interface DashboardStats {
 
 const EnhancedDashboard = () => {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalListings: 0,
@@ -118,7 +121,8 @@ const EnhancedDashboard = () => {
     const lastBumpTime = new Date(lastBumped);
     const now = new Date();
     const timeDiff = now.getTime() - lastBumpTime.getTime();
-    return timeDiff >= 2 * 60 * 60 * 1000; // 2 hours
+    const cooldownMs = isPremium ? 2 * 60 * 60 * 1000 : 6 * 60 * 60 * 1000; // 2 hours for premium, 6 for free
+    return timeDiff >= cooldownMs;
   };
 
   const getTimeUntilNextBump = (lastBumped: string | null) => {
@@ -126,7 +130,7 @@ const EnhancedDashboard = () => {
     const lastBumpTime = new Date(lastBumped);
     const now = new Date();
     const timeDiff = now.getTime() - lastBumpTime.getTime();
-    const cooldownMs = 2 * 60 * 60 * 1000; // 2 hours
+    const cooldownMs = isPremium ? 2 * 60 * 60 * 1000 : 6 * 60 * 60 * 1000; // 2 hours for premium, 6 for free
     
     if (timeDiff >= cooldownMs) return null;
     
@@ -298,6 +302,11 @@ const EnhancedDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Cross-Promotion Network for Premium Users */}
+        <div className="mt-8">
+          <CrossPromotionNetwork />
         </div>
       </div>
     </div>
