@@ -678,6 +678,33 @@ export type Database = {
           },
         ]
       }
+      site_status_messages: {
+        Row: {
+          created_at: string
+          discord_channel_id: string
+          discord_message_id: string
+          id: string
+          last_updated_at: string
+          status_data: Json | null
+        }
+        Insert: {
+          created_at?: string
+          discord_channel_id: string
+          discord_message_id: string
+          id?: string
+          last_updated_at?: string
+          status_data?: Json | null
+        }
+        Update: {
+          created_at?: string
+          discord_channel_id?: string
+          discord_message_id?: string
+          id?: string
+          last_updated_at?: string
+          status_data?: Json | null
+        }
+        Relationships: []
+      }
       subscribers: {
         Row: {
           created_at: string
