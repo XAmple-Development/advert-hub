@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          target_id: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_actions: {
         Row: {
           action: string
@@ -244,6 +271,97 @@ export type Database = {
         }
         Relationships: []
       }
+      featured_queue: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          end_date: string
+          feature_type: string
+          id: string
+          listing_id: string
+          start_date: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          end_date: string
+          feature_type: string
+          id?: string
+          listing_id: string
+          start_date?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          end_date?: string
+          feature_type?: string
+          id?: string
+          listing_id?: string
+          start_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_queue_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_analytics: {
+        Row: {
+          bumps: number | null
+          created_at: string
+          date: string
+          geographic_data: Json | null
+          id: string
+          joins: number | null
+          listing_id: string
+          referrer_data: Json | null
+          unique_visitors: number | null
+          updated_at: string
+          views: number | null
+        }
+        Insert: {
+          bumps?: number | null
+          created_at?: string
+          date?: string
+          geographic_data?: Json | null
+          id?: string
+          joins?: number | null
+          listing_id: string
+          referrer_data?: Json | null
+          unique_visitors?: number | null
+          updated_at?: string
+          views?: number | null
+        }
+        Update: {
+          bumps?: number | null
+          created_at?: string
+          date?: string
+          geographic_data?: Json | null
+          id?: string
+          joins?: number | null
+          listing_id?: string
+          referrer_data?: Json | null
+          unique_visitors?: number | null
+          updated_at?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_analytics_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_categories: {
         Row: {
           category_id: string
@@ -273,6 +391,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      listing_tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          usage_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          usage_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          usage_count?: number | null
+        }
+        Relationships: []
       }
       listings: {
         Row: {
@@ -463,30 +602,71 @@ export type Database = {
         }
         Relationships: []
       }
+      review_helpfulness: {
+        Row: {
+          created_at: string
+          helpful: boolean
+          id: string
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          helpful: boolean
+          id?: string
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          helpful?: boolean
+          id?: string
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_helpfulness_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           comment: string | null
           created_at: string
+          helpful_count: number | null
           id: string
           listing_id: string
+          photos: string[] | null
           rating: number
           user_id: string
+          verified_purchase: boolean | null
         }
         Insert: {
           comment?: string | null
           created_at?: string
+          helpful_count?: number | null
           id?: string
           listing_id: string
+          photos?: string[] | null
           rating: number
           user_id: string
+          verified_purchase?: boolean | null
         }
         Update: {
           comment?: string | null
           created_at?: string
+          helpful_count?: number | null
           id?: string
           listing_id?: string
+          photos?: string[] | null
           rating?: number
           user_id?: string
+          verified_purchase?: boolean | null
         }
         Relationships: [
           {
@@ -602,12 +782,69 @@ export type Database = {
           },
         ]
       }
+      user_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      user_reputation: {
+        Row: {
+          badges: Json | null
+          created_at: string
+          helpful_reviews: number | null
+          id: string
+          reputation_score: number | null
+          total_reviews: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badges?: Json | null
+          created_at?: string
+          helpful_reviews?: number | null
+          id?: string
+          reputation_score?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badges?: Json | null
+          created_at?: string
+          helpful_reviews?: number | null
+          id?: string
+          reputation_score?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_listing_analytics: {
+        Args: { p_listing_id: string; p_event_type: string; p_metadata?: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       listing_status: "active" | "pending" | "suspended"
