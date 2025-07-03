@@ -320,15 +320,17 @@ serve(async (req: Request) => {
           if (totalAfterImport > 3) {
             const remainingSlots = Math.max(0, 3 - currentListingCount);
             return new Response(JSON.stringify({
-              error: 'Listing limit exceeded',
-              code: 'LISTING_LIMIT',
+              error: 'SUBSCRIPTION_LIMIT_EXCEEDED',
+              code: 'PREMIUM_UPGRADE_REQUIRED', 
+              message: 'Listing limit exceeded for free plan',
               details: `Free users can have up to 3 listings. You currently have ${currentListingCount} listings and can import ${remainingSlots} more. Upgrade to Premium for unlimited listings.`,
               remainingSlots,
               selectedCount: selectedServerCount,
-              currentCount: currentListingCount
+              currentCount: currentListingCount,
+              upgradeRequired: true
             }), {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 403
+              status: 402 // Payment Required
             });
           }
         }

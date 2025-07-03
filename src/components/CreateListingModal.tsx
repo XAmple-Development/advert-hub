@@ -101,8 +101,8 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         if (existingListings && existingListings.length >= 3) {
           toast({
             variant: "destructive",
-            title: "Listing Limit Reached",
-            description: "Free users can create up to 3 listings. Upgrade to Premium for unlimited listings.",
+            title: "Premium Upgrade Required",
+            description: "Free users can create up to 3 listings. Upgrade to Premium for unlimited listings and enhanced features.",
           });
           return;
         }

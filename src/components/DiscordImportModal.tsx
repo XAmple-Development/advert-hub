@@ -182,14 +182,14 @@ const DiscordImportModal = ({
     } catch (error: any) {
       console.error('[DiscordImportModal] Error importing Discord data:', error);
       
-      // Check if it's a subscription limit error
-      if (error.message.includes('LISTING_LIMIT') || error.message.includes('Listing limit exceeded')) {
+      // Check if it's a subscription limit error with new error codes
+      if (error.message.includes('PREMIUM_UPGRADE_REQUIRED') || 
+          error.message.includes('SUBSCRIPTION_LIMIT_EXCEEDED') ||
+          error.message.includes('Listing limit exceeded')) {
         toast({
           variant: 'destructive',
-          title: 'Import Limit Reached',
-          description: error.message.includes('Free users can have up to 3 listings') 
-            ? error.message 
-            : 'Free users can create up to 3 listings. Upgrade to Premium for unlimited listings.',
+          title: 'Premium Upgrade Required',
+          description: 'Free users can create up to 3 listings. Upgrade to Premium for unlimited listings and enhanced features.',
         });
       } else {
         toast({

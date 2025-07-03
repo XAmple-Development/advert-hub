@@ -30,7 +30,8 @@ const INTERACTION_RESPONSE_TYPES = {
     DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE: 5,
 };
 
-const BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+const FREE_BUMP_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours for free users
+const PREMIUM_BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours for premium users
 
 // Verify Discord request signature
 function verifyDiscordRequest(req: Request, body: string): boolean {
@@ -52,9 +53,31 @@ function hexToUint8Array(hex: string): Uint8Array {
     return new Uint8Array(hex.match(/.{1,2}/g)!.map(b => parseInt(b, 16)));
 }
 
-// Check if user can bump (2 hour cooldown)
+// Check if user can bump with subscription-aware cooldown
 async function canBump(userId: string, listingId: string): Promise<boolean> {
     console.log(`Checking bump cooldown for user ${userId} and listing ${listingId}`);
+    
+    // Get listing to find the user
+    const { data: listing } = await supabase
+        .from('listings')
+        .select('user_id')
+        .eq('id', listingId)
+        .single();
+
+    if (!listing) {
+        console.log('Listing not found');
+        return false;
+    }
+
+    // Get user's subscription tier
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', listing.user_id)
+        .single();
+
+    const isPremium = profile?.subscription_tier === 'premium';
+    const cooldownMs = isPremium ? PREMIUM_BUMP_COOLDOWN_MS : FREE_BUMP_COOLDOWN_MS;
     
     const { data, error } = await supabase
         .from('bump_cooldowns')
@@ -77,16 +100,35 @@ async function canBump(userId: string, listingId: string): Promise<boolean> {
     const now = new Date();
     const timeDiff = now.getTime() - lastBump.getTime();
     
-    console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeDiff}ms, Required: ${BUMP_COOLDOWN_MS}ms`);
+    console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeDiff}ms, Required: ${cooldownMs}ms (${isPremium ? 'premium' : 'free'} user)`);
     
-    const canBumpNow = timeDiff >= BUMP_COOLDOWN_MS;
+    const canBumpNow = timeDiff >= cooldownMs;
     console.log(`Can bump: ${canBumpNow}`);
     
     return canBumpNow;
 }
 
-// Get time until next bump
+// Get time until next bump with subscription-aware cooldown
 async function getTimeUntilNextBump(userId: string, listingId: string): Promise<string> {
+    // Get listing to find the user
+    const { data: listing } = await supabase
+        .from('listings')
+        .select('user_id')
+        .eq('id', listingId)
+        .single();
+
+    if (!listing) return '0h 0m';
+
+    // Get user's subscription tier
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', listing.user_id)
+        .single();
+
+    const isPremium = profile?.subscription_tier === 'premium';
+    const cooldownMs = isPremium ? PREMIUM_BUMP_COOLDOWN_MS : FREE_BUMP_COOLDOWN_MS;
+
     const { data } = await supabase
         .from('bump_cooldowns')
         .select('last_bump_at')
@@ -99,7 +141,7 @@ async function getTimeUntilNextBump(userId: string, listingId: string): Promise<
     const lastBump = new Date(data.last_bump_at);
     const now = new Date();
     const timeDiff = now.getTime() - lastBump.getTime();
-    const timeLeft = BUMP_COOLDOWN_MS - timeDiff;
+    const timeLeft = cooldownMs - timeDiff;
 
     if (timeLeft <= 0) return '0h 0m';
 
@@ -211,12 +253,22 @@ async function handleBumpCommand(interaction: any) {
 
         console.log(`Bump successful for listing ${listing.id}`);
 
+        // Get user's subscription tier for success message
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('subscription_tier')
+            .eq('id', listing.user_id)
+            .single();
+
+        const isPremium = profile?.subscription_tier === 'premium';
+        const nextBumpHours = isPremium ? 2 : 6;
+
         return {
             type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
             data: {
                 embeds: [{
                     title: '🚀 Server Bumped!',
-                    description: `**${listing.name}** has been bumped to the top of the list!\n\nNext bump available in 2 hours.`,
+                    description: `**${listing.name}** has been bumped to the top of the list!\n\nNext bump available in ${nextBumpHours} hours.`,
                     color: 0x00FF00,
                     timestamp: now.toISOString(),
                 }],
@@ -544,7 +596,7 @@ async function handleHelpCommand(interaction: any) {
                 description: 'Here are all the available commands:',
                 color: 0x0099ff,
                 fields: [
-                    { name: '🚀 /bump', value: 'Bump your server listing to the top (2hr cooldown)', inline: false },
+                    { name: '🚀 /bump', value: 'Bump your server listing to the top (6hr free, 2hr premium)', inline: false },
                     { name: '⏰ /bumpstatus', value: 'Check your bump cooldown status', inline: false },
                     { name: '🔍 /search <query>', value: 'Search for server listings by name', inline: false },
                     { name: '⚙️ /setup <channel>', value: 'Configure where new listings are posted (Admin only)', inline: false },
