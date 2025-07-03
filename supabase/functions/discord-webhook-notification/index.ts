@@ -19,7 +19,7 @@ async function checkWebsiteStatus() {
     // Check main website
     const websiteStart = Date.now();
     const websiteResponse = await fetch('https://discord.x-ampledevelopment.co.uk/', {
-      method: 'HEAD',
+      method: 'GET',
       signal: AbortSignal.timeout(10000)
     });
     const websiteTime = Date.now() - websiteStart;
