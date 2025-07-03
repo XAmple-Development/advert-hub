@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://cdn.skypack.dev/stripe@13.0.0";
-import { createClient } from "https://cdn.skypack.dev/@supabase/supabase-js@2.38.0";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,24 +19,50 @@ serve(async (req) => {
   );
 
   try {
+    console.log("Create checkout function started");
+    
     const { plan } = await req.json();
+    console.log("Received plan:", plan);
+    
     if (!plan || !['small', 'medium', 'premium'].includes(plan)) {
-      throw new Error("Invalid plan selected");
+      throw new Error(`Invalid plan selected: ${plan}. Must be one of: small, medium, premium`);
     }
     
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header provided");
+    }
+    
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError) {
+      throw new Error(`Authentication error: ${authError.message}`);
+    }
+    
     const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) {
+      throw new Error("User not authenticated or email not available");
+    }
+    
+    console.log("User authenticated:", user.email);
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { apiVersion: "2023-10-16" });
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not configured");
+    }
+    
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    console.log("Stripe initialized");
     
     // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log("Existing customer found:", customerId);
+    } else {
+      console.log("No existing customer found, will create new one");
     }
 
     // UK pricing in pence (GBP)
@@ -47,7 +73,10 @@ serve(async (req) => {
     };
 
     const selectedPlan = planPricing[plan as keyof typeof planPricing];
-    const origin = req.headers.get("origin") || "https://localhost:3000";
+    console.log("Selected plan:", selectedPlan);
+    
+    const origin = req.headers.get("origin") || "https://discord.x-ampledevelopment.co.uk";
+    console.log("Origin:", origin);
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -75,13 +104,19 @@ serve(async (req) => {
       }
     });
 
+    console.log("Stripe checkout session created:", session.id);
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
     console.error('Checkout error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: "Failed to create checkout session. Please try again."
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
