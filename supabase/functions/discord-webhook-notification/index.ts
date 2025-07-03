@@ -11,18 +11,111 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function checkWebsiteStatus() {
+  const checks = [];
+  const supabaseUrl = SUPABASE_URL;
+  
+  try {
+    // Check main website (replace with your actual domain)
+    const websiteStart = Date.now();
+    const websiteResponse = await fetch('https://aurrzqdypbshynbowpbs.supabase.co/', {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+    const websiteTime = Date.now() - websiteStart;
+    
+    checks.push({
+      service: 'Website',
+      status: websiteResponse.ok ? 'healthy' : 'unhealthy',
+      responseTime: websiteTime,
+      statusCode: websiteResponse.status
+    });
+  } catch (error) {
+    checks.push({
+      service: 'Website',
+      status: 'unhealthy',
+      error: error.message
+    });
+  }
+
+  try {
+    // Check Supabase API
+    const supabaseStart = Date.now();
+    const supabaseResponse = await fetch(`${supabaseUrl}/rest/v1/`, {
+      headers: { 'apikey': Deno.env.get('SUPABASE_ANON_KEY')! },
+      signal: AbortSignal.timeout(10000)
+    });
+    const supabaseTime = Date.now() - supabaseStart;
+    
+    checks.push({
+      service: 'Database API',
+      status: supabaseResponse.ok ? 'healthy' : 'unhealthy',
+      responseTime: supabaseTime,
+      statusCode: supabaseResponse.status
+    });
+  } catch (error) {
+    checks.push({
+      service: 'Database API',
+      status: 'unhealthy',
+      error: error.message
+    });
+  }
+
+  try {
+    // Check Edge Functions
+    const functionsStart = Date.now();
+    const functionsResponse = await fetch(`${supabaseUrl}/functions/v1/`, {
+      headers: { 'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}` },
+      signal: AbortSignal.timeout(10000)
+    });
+    const functionsTime = Date.now() - functionsStart;
+    
+    checks.push({
+      service: 'Edge Functions',
+      status: functionsResponse.status < 500 ? 'healthy' : 'unhealthy',
+      responseTime: functionsTime,
+      statusCode: functionsResponse.status
+    });
+  } catch (error) {
+    checks.push({
+      service: 'Edge Functions',
+      status: 'unhealthy',
+      error: error.message
+    });
+  }
+
+  const healthyCount = checks.filter(check => check.status === 'healthy').length;
+  const overallStatus = healthyCount === checks.length ? 'healthy' : 
+                       healthyCount > 0 ? 'degraded' : 'unhealthy';
+
+  return {
+    overall: overallStatus,
+    checks,
+    timestamp: new Date().toISOString(),
+    healthyServices: healthyCount,
+    totalServices: checks.length
+  };
+}
+
 async function sendWebhookNotification(listing: any, eventType: string = 'new_listing') {
   if (!listing.discord_webhook_url) {
     console.log('No webhook URL configured for listing:', listing.id);
     return { success: false, reason: 'No webhook URL' };
   }
 
-  const embed = createListingEmbed(listing, eventType);
+  // Get live website status
+  const statusData = await checkWebsiteStatus();
+  const embeds = [createListingEmbed(listing, eventType)];
+  
+  // Add status embed if this is a status update or if there are issues
+  if (eventType === 'status_update' || statusData.overall !== 'healthy') {
+    embeds.push(createStatusEmbed(statusData));
+  }
   
   const payload = {
-    embeds: [embed],
+    embeds: embeds,
     username: "AdvertHub",
-    avatar_url: "https://your-domain.com/logo.png" // Replace with your actual logo
+    avatar_url: "https://aurrzqdypbshynbowpbs.supabase.co/favicon.ico"
   };
 
   try {
@@ -41,7 +134,7 @@ async function sendWebhookNotification(listing: any, eventType: string = 'new_li
     }
 
     console.log(`Successfully sent ${eventType} webhook for listing:`, listing.id);
-    return { success: true };
+    return { success: true, statusData };
   } catch (error) {
     console.error('Error sending webhook:', error);
     throw error;
@@ -93,9 +186,43 @@ function createListingEmbed(listing: any, eventType: string) {
     timestamp: new Date().toISOString(),
     footer: {
       text: `AdvertHub • ID: ${listing.id}`,
-      icon_url: "https://your-domain.com/favicon.ico" // Replace with your actual favicon
+      icon_url: "https://aurrzqdypbshynbowpbs.supabase.co/favicon.ico"
     },
-    url: `https://your-domain.com/listings/${listing.id}` // Replace with your actual domain
+    url: `https://aurrzqdypbshynbowpbs.supabase.co/listings/${listing.id}`
+  };
+}
+
+function createStatusEmbed(statusData: any) {
+  const statusEmoji = {
+    healthy: '🟢',
+    degraded: '🟡',
+    unhealthy: '🔴'
+  };
+
+  const statusColor = {
+    healthy: 0x00FF00,  // Green
+    degraded: 0xFFFF00, // Yellow
+    unhealthy: 0xFF0000 // Red
+  };
+
+  const statusFields = statusData.checks.map((check: any) => ({
+    name: `${statusEmoji[check.status]} ${check.service}`,
+    value: check.responseTime 
+      ? `Response: ${check.responseTime}ms\nStatus: ${check.statusCode || 'N/A'}`
+      : `Error: ${check.error || 'Unknown'}`,
+    inline: true
+  }));
+
+  return {
+    title: `${statusEmoji[statusData.overall]} Live Website Status - ${statusData.overall.toUpperCase()}`,
+    description: `System health check: ${statusData.healthyServices}/${statusData.totalServices} services operational`,
+    color: statusColor[statusData.overall],
+    fields: statusFields,
+    footer: {
+      text: `Last checked: ${new Date(statusData.timestamp).toLocaleString()} | AdvertHub Monitoring`,
+      icon_url: "https://aurrzqdypbshynbowpbs.supabase.co/favicon.ico"
+    },
+    timestamp: statusData.timestamp
   };
 }
 

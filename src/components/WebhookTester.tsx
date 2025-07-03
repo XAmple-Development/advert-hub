@@ -101,6 +101,7 @@ const WebhookTester = () => {
                 <SelectItem value="listing_updated">📝 Listing Updated</SelectItem>
                 <SelectItem value="listing_bumped">🚀 Listing Bumped</SelectItem>
                 <SelectItem value="listing_featured">⭐ Listing Featured</SelectItem>
+                <SelectItem value="status_update">🔍 Status Update</SelectItem>
               </SelectContent>
             </Select>
           </div>
