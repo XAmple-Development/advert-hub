@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2.38.0';
 
 // Environment variables
 const DISCORD_BOT_TOKEN = Deno.env.get('DISCORD_BOT_TOKEN');
