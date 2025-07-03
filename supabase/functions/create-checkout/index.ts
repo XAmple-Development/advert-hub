@@ -24,8 +24,8 @@ serve(async (req) => {
     const { plan } = await req.json();
     console.log("Received plan:", plan);
     
-    if (!plan || !['small', 'medium', 'premium'].includes(plan)) {
-      throw new Error(`Invalid plan selected: ${plan}. Must be one of: small, medium, premium`);
+    if (!plan || plan !== 'premium') {
+      throw new Error(`Invalid plan selected: ${plan}. Must be 'premium'`);
     }
     
     const authHeader = req.headers.get("Authorization");
@@ -65,11 +65,9 @@ serve(async (req) => {
       console.log("No existing customer found, will create new one");
     }
 
-    // UK pricing in pence (GBP)
+    // Standard USD pricing in cents
     const planPricing = {
-      small: { amount: 499, name: "Small Plan", description: "Enhanced features for small communities" },
-      medium: { amount: 699, name: "Medium Plan", description: "Advanced features for growing communities" }, 
-      premium: { amount: 999, name: "Premium Plan", description: "All features for large communities" }
+      premium: { amount: 1299, name: "Premium Plan", description: "All features for large communities" }
     };
 
     const selectedPlan = planPricing[plan as keyof typeof planPricing];
@@ -84,7 +82,7 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: "gbp",
+            currency: "usd",
             product_data: { 
               name: selectedPlan.name,
               description: selectedPlan.description

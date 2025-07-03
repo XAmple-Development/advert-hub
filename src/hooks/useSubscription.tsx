@@ -80,7 +80,7 @@ export const useSubscription = () => {
     try {
       console.log('Creating checkout session...');
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: 'premium' },
+        body: { plan: 'premium' },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
