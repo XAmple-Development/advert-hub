@@ -66,12 +66,13 @@ const EnhancedDashboard = () => {
         .in('listing_id', userListingIds)
         .gte('bumped_at', new Date().toISOString().split('T')[0]);
 
-      // Fetch recent activity for user's listings only
+      // Fetch recent activity for user's listings only - include all bump types
       const { data: recentBumps } = await supabase
         .from('bumps')
         .select(`
           id,
           bumped_at,
+          bump_type,
           listings (
             name,
             type
@@ -92,7 +93,8 @@ const EnhancedDashboard = () => {
         type: 'bump' as const,
         listingName: (bump.listings as any)?.name || 'Unknown',
         listingType: (bump.listings as any)?.type || 'server',
-        timestamp: bump.bumped_at
+        timestamp: bump.bumped_at,
+        bumpType: bump.bump_type || 'manual'
       })) || [];
 
       setStats({

@@ -106,34 +106,38 @@ export const useSubscription = () => {
   };
 
   const openCustomerPortal = async () => {
+    console.log('openCustomerPortal called', { hasSession: !!session });
+    
     if (!session) {
+      console.log('No session available');
       toast({
         variant: "destructive",
-        title: "Authentication required",
+        title: "Authentication required", 
         description: "Please sign in to manage subscription",
       });
       return;
     }
 
     try {
-      console.log('Opening customer portal...');
+      console.log('Making customer portal request...');
       const { data, error } = await supabase.functions.invoke('customer-portal', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
+      console.log('Customer portal response:', { data, error });
+
       if (error) {
         console.error('Customer portal error:', error);
         throw error;
       }
 
-      console.log('Customer portal response:', data);
-
       if (data?.url) {
         console.log('Opening customer portal URL:', data.url);
         window.open(data.url, '_blank');
       } else {
+        console.error('No portal URL received in response');
         throw new Error('No portal URL received');
       }
     } catch (error) {

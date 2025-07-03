@@ -19,6 +19,7 @@ interface Activity {
   listingName: string;
   timestamp: string;
   listingType: 'server' | 'bot';
+  bumpType?: string;
 }
 
 const StatsCards = ({ 
@@ -82,8 +83,9 @@ const StatsCards = ({
   };
 
   const getActivityText = (activity: Activity) => {
+    const source = activity.bumpType === 'discord' ? ' (via Discord Bot)' : '';
     switch (activity.type) {
-      case 'bump': return `${activity.listingName} was bumped`;
+      case 'bump': return `${activity.listingName} was bumped${source}`;
       case 'join': return `Someone joined ${activity.listingName}`;
       case 'new_listing': return `${activity.listingName} was listed`;
     }
