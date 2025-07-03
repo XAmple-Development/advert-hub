@@ -1,29 +1,62 @@
-// No imports needed - use built-in Deno serve
+// Minimal test - no external dependencies
 Deno.serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   };
 
+  console.log("Function called, method:", req.method);
+
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log("Starting function execution");
+    
+    // Step 1: Test basic function execution
+    const testResponse = {
+      step: "basic_test",
+      timestamp: new Date().toISOString(),
+      success: true
+    };
+    
+    console.log("Basic test successful");
+    
+    // Step 2: Test environment variable access
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    console.log("Environment check:", { hasStripeKey: !!stripeKey });
+    testResponse.hasStripeKey = !!stripeKey;
+    testResponse.stripeKeyLength = stripeKey ? stripeKey.length : 0;
+    
+    console.log("Environment check:", { hasStripeKey: !!stripeKey, length: stripeKey ? stripeKey.length : 0 });
     
     if (!stripeKey) {
-      return new Response(JSON.stringify({ error: "STRIPE_SECRET_KEY not found" }), {
+      console.log("No Stripe key found");
+      return new Response(JSON.stringify({ 
+        error: "STRIPE_SECRET_KEY not found",
+        testResponse 
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
       });
     }
 
-    console.log("Making Stripe API call...");
+    // Step 3: Test basic fetch (to a simple endpoint first)
+    console.log("Testing basic fetch...");
+    const testFetch = await fetch('https://httpbin.org/get');
+    const testFetchResult = await testFetch.text();
+    console.log("Test fetch result:", { status: testFetch.status, hasResult: !!testFetchResult });
     
-    // Use raw fetch to call Stripe API
-    const response = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
+    testResponse.testFetch = {
+      status: testFetch.status,
+      success: testFetch.ok
+    };
+
+    // Step 4: If all above works, try Stripe API
+    console.log("Attempting Stripe API call...");
+    
+    const stripeResponse = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${stripeKey}`,
@@ -35,14 +68,16 @@ Deno.serve(async (req) => {
       })
     });
 
-    const responseText = await response.text();
-    console.log("Stripe API response:", { status: response.status, text: responseText });
+    const responseText = await stripeResponse.text();
+    console.log("Stripe response:", { status: stripeResponse.status, hasText: !!responseText });
     
-    if (!response.ok) {
+    if (!stripeResponse.ok) {
+      console.log("Stripe API error:", responseText);
       return new Response(JSON.stringify({ 
         error: "Stripe API error",
-        status: response.status,
-        details: responseText
+        status: stripeResponse.status,
+        details: responseText,
+        testResponse
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
@@ -50,11 +85,12 @@ Deno.serve(async (req) => {
     }
 
     const sessionData = JSON.parse(responseText);
-    console.log("Session created successfully");
+    console.log("SUCCESS: Stripe session created");
     
     return new Response(JSON.stringify({ 
       success: true,
-      portalUrl: sessionData.url 
+      portalUrl: sessionData.url,
+      testResponse
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
@@ -65,7 +101,8 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ 
       error: "Function error",
       details: error.message,
-      stack: error.stack
+      stack: error.stack,
+      name: error.name
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
