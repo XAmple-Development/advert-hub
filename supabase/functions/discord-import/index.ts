@@ -364,7 +364,7 @@ serve(async (req: Request) => {
                   description = `Discord server. ${ownerStatus} Member count needs to be updated manually.`;
                 }
 
-                const { error: serverError } = await supabaseClient
+                const { data: newListing, error: serverError } = await supabaseClient
                   .from('listings')
                   .insert({
                     user_id: user.id,
@@ -383,13 +383,25 @@ serve(async (req: Request) => {
                     priority_ranking: isPremium ? 100 : 0,
                     analytics_enabled: isPremium,
                     verified_badge: isPremium
-                  });
+                  })
+                  .select()
+                  .single();
 
                 if (serverError) {
                   console.error('[discord-import][ERROR] Failed to import server:', server.name, serverError);
                 } else {
                   importedServers++;
                   console.log('[discord-import] Successfully imported server:', server.name);
+                  
+                  // Send Discord notification for new listing (background task)
+                  try {
+                    await supabaseClient.functions.invoke('discord-listing-notification', {
+                      body: { listingId: newListing.id }
+                    });
+                  } catch (notificationError) {
+                    console.error('[discord-import] Discord notification error:', notificationError);
+                    // Don't fail the import if Discord notification fails
+                  }
                 }
               } catch (error) {
                 console.error('[discord-import][ERROR] Error processing server:', server.name, error);

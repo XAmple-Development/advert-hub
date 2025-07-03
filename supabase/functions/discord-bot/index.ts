@@ -151,6 +151,91 @@ async function getTimeUntilNextBump(userId: string, listingId: string): Promise<
     return `${hours}h ${minutes}m`;
 }
 
+// Post bump notification to Discord channels
+async function postBumpToDiscordChannels(listing: any, bumpType: string) {
+    try {
+        console.log(`Posting bump notification for listing ${listing.id} (${listing.name})`);
+        
+        // Get all configured Discord servers that should receive bump notifications
+        const { data: configs, error } = await supabase
+            .from('discord_bot_configs')
+            .select('discord_server_id, bump_channel_id')
+            .eq('active', true)
+            .not('bump_channel_id', 'is', null);
+
+        if (error) {
+            console.error('Error fetching Discord configs:', error);
+            return;
+        }
+
+        if (!configs || configs.length === 0) {
+            console.log('No bump channels configured');
+            return;
+        }
+
+        // Create embed for bump notification
+        const embed = {
+            title: `🚀 ${listing.type === 'server' ? 'Server' : 'Bot'} Bumped!`,
+            description: `**${listing.name}** has been bumped to the top!\n\n${listing.description}`,
+            color: listing.premium_featured ? 0xFFD700 : 0x00FF00,
+            fields: [
+                {
+                    name: '👥 Members',
+                    value: (listing.member_count || 0).toString(),
+                    inline: true
+                },
+                {
+                    name: '🚀 Total Bumps',
+                    value: (listing.bump_count || 0).toString(),
+                    inline: true
+                },
+                {
+                    name: '📊 Bump Source',
+                    value: bumpType === 'discord' ? 'Discord Bot' : 'Website',
+                    inline: true
+                }
+            ],
+            timestamp: new Date().toISOString(),
+            footer: {
+                text: 'Discord Server Listings'
+            }
+        };
+
+        if (listing.avatar_url) {
+            embed.thumbnail = { url: listing.avatar_url };
+        }
+
+        // Post to each configured channel
+        for (const config of configs) {
+            try {
+                console.log(`Posting to channel ${config.bump_channel_id} in server ${config.discord_server_id}`);
+                
+                const response = await fetch(`https://discord.com/api/v10/channels/${config.bump_channel_id}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        embeds: [embed]
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Failed to post to channel ${config.bump_channel_id}:`, response.status, errorText);
+                } else {
+                    console.log(`Successfully posted bump notification to channel ${config.bump_channel_id}`);
+                }
+            } catch (channelError) {
+                console.error(`Error posting to channel ${config.bump_channel_id}:`, channelError);
+            }
+        }
+    } catch (error) {
+        console.error('Error in postBumpToDiscordChannels:', error);
+    }
+}
+
 // Handle bump command
 async function handleBumpCommand(interaction: any) {
     console.log('Processing bump command:', interaction);
@@ -252,6 +337,9 @@ async function handleBumpCommand(interaction: any) {
             });
 
         console.log(`Bump successful for listing ${listing.id}`);
+
+        // Post bump notification to configured channels
+        await postBumpToDiscordChannels(listing, 'discord');
 
         // Get user's subscription tier for success message
         const { data: profile } = await supabase
@@ -667,6 +755,80 @@ async function handleSetupCommand(interaction: any) {
     }
 }
 
+// Handle setbumpchannel command
+async function handleSetBumpChannelCommand(interaction: any) {
+    console.log('Processing setbumpchannel command:', interaction);
+    
+    const userId = interaction.member?.user?.id || interaction.user?.id;
+    const guildId = interaction.guild_id;
+    const channelId = interaction.data?.options?.[0]?.value;
+    
+    if (!userId || !guildId || !channelId) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Error: Missing required information.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        // Check if user has permission (admin or manage channels)
+        // For now, we'll trust Discord's permission system
+        
+        // Update or create bot configuration for bump channel
+        const { data: existingConfig } = await supabase
+            .from('discord_bot_configs')
+            .select('*')
+            .eq('discord_server_id', guildId)
+            .single();
+
+        if (existingConfig) {
+            // Update existing configuration
+            await supabase
+                .from('discord_bot_configs')
+                .update({
+                    bump_channel_id: channelId,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('discord_server_id', guildId);
+        } else {
+            // Create new configuration
+            await supabase
+                .from('discord_bot_configs')
+                .insert({
+                    discord_server_id: guildId,
+                    bump_channel_id: channelId,
+                    admin_user_id: userId,
+                    active: true,
+                    updated_at: new Date().toISOString(),
+                });
+        }
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: '📢 Bump Channel Set',
+                    description: `Bump notifications will now be posted to <#${channelId}>\n\nWhenever a server/bot is bumped on our website or via the bot, it will be announced in this channel.`,
+                    color: 0x00FF00,
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in setbumpchannel command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while setting up the bump channel.',
+                flags: 64,
+            },
+        };
+    }
+}
+
 // Main handler
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
@@ -720,6 +882,9 @@ serve(async (req) => {
                     break;
                 case 'setup':
                     response = await handleSetupCommand(body);
+                    break;
+                case 'setbumpchannel':
+                    response = await handleSetBumpChannelCommand(body);
                     break;
                 default:
                     response = {

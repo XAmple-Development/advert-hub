@@ -43,6 +43,20 @@ const commands = [
     ],
   },
   {
+    name: 'setbumpchannel',
+    description: 'Set the channel for bump notifications',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'channel',
+        description: 'Channel where bump notifications will be posted',
+        type: 7, // CHANNEL
+        required: true,
+        channel_types: [0], // GUILD_TEXT
+      },
+    ],
+  },
+  {
     name: 'leaderboard',
     description: 'Show top servers by bump count',
     type: 1, // CHAT_INPUT

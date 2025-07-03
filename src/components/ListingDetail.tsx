@@ -243,6 +243,19 @@ const ListingDetail = () => {
 
             console.log(`Bump successful for listing ${listing.id}`);
 
+            // Send Discord notification for bump (background task)
+            try {
+                await supabase.functions.invoke('discord-bump-notification', {
+                    body: { 
+                        listingId: listing.id,
+                        bumpType: 'website'
+                    }
+                });
+            } catch (notificationError) {
+                console.error('Discord bump notification error:', notificationError);
+                // Don't fail the bump if Discord notification fails
+            }
+
             // Get user's subscription tier for success message
             const { data: profile } = await supabase
                 .from('profiles')

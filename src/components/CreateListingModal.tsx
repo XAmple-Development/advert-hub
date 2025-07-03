@@ -148,6 +148,16 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         }
       }
 
+      // Send Discord notification for new listing (background task)
+      try {
+        await supabase.functions.invoke('discord-listing-notification', {
+          body: { listingId: listing.id }
+        });
+      } catch (notificationError) {
+        console.error('Discord notification error:', notificationError);
+        // Don't fail the listing creation if Discord notification fails
+      }
+
       toast({
         title: "Listing created!",
         description: "Your listing has been submitted for review.",

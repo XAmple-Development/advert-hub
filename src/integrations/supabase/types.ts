@@ -215,6 +215,7 @@ export type Database = {
         Row: {
           active: boolean | null
           admin_user_id: string
+          bump_channel_id: string | null
           created_at: string
           discord_server_id: string
           id: string
@@ -224,6 +225,7 @@ export type Database = {
         Insert: {
           active?: boolean | null
           admin_user_id: string
+          bump_channel_id?: string | null
           created_at?: string
           discord_server_id: string
           id?: string
@@ -233,6 +235,7 @@ export type Database = {
         Update: {
           active?: boolean | null
           admin_user_id?: string
+          bump_channel_id?: string | null
           created_at?: string
           discord_server_id?: string
           id?: string
