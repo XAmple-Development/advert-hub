@@ -1,5 +1,4 @@
 
-import Navbar from '@/components/Navbar';
 import AdminDashboard from '@/components/AdminDashboard';
 
 const AdminDashboardPage = () => {
