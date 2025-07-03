@@ -42,6 +42,12 @@ const commands = [
             option.setName('channel').setDescription('Channel where new listings will be posted').setRequired(true)
         ),
     new SlashCommandBuilder()
+        .setName('setbumpchannel')
+        .setDescription('Set the channel for bump notifications')
+        .addChannelOption(option =>
+            option.setName('channel').setDescription('Channel where bump notifications will be posted').setRequired(true)
+        ),
+    new SlashCommandBuilder()
         .setName('leaderboard')
         .setDescription('Show top servers by bump count')
         .addIntegerOption(option =>
@@ -123,6 +129,64 @@ async function timeUntilNextBump(userId, listingId) {
     const timeLeft = BUMP_COOLDOWN_MS - timeDiff;
     
     return Math.max(0, timeLeft);
+}
+
+// --- Discord Posting Functions ---
+async function postBumpToDiscordChannels(listing, bumpType = 'discord') {
+    try {
+        console.log(`Posting bump notification for listing ${listing.id} (${listing.name})`);
+        
+        // Get all configured Discord servers that should receive bump notifications
+        const { data: configs, error } = await supabase
+            .from('discord_bot_configs')
+            .select('discord_server_id, bump_channel_id')
+            .eq('active', true)
+            .not('bump_channel_id', 'is', null);
+
+        if (error) {
+            console.error('Error fetching Discord configs:', error);
+            return;
+        }
+
+        if (!configs || configs.length === 0) {
+            console.log('No bump channels configured');
+            return;
+        }
+
+        // Create embed for bump notification
+        const embed = new EmbedBuilder()
+            .setTitle(`🚀 ${listing.type === 'server' ? 'Server' : 'Bot'} Bumped!`)
+            .setDescription(`**${listing.name}** has been bumped to the top!\n\n${listing.description || 'No description available.'}`)
+            .setColor(listing.premium_featured ? '#FFD700' : '#00FF00')
+            .addFields(
+                { name: '👥 Members', value: (listing.member_count || 0).toString(), inline: true },
+                { name: '🚀 Total Bumps', value: (listing.bump_count || 0).toString(), inline: true },
+                { name: '📊 Bump Source', value: bumpType === 'discord' ? 'Discord Bot' : 'Website', inline: true }
+            )
+            .setTimestamp()
+            .setFooter({ text: 'Discord Server Listings' });
+
+        if (listing.avatar_url) {
+            embed.setThumbnail(listing.avatar_url);
+        }
+
+        // Post to each configured channel
+        for (const config of configs) {
+            try {
+                console.log(`Posting to channel ${config.bump_channel_id} in server ${config.discord_server_id}`);
+                
+                const channel = await client.channels.fetch(config.bump_channel_id);
+                if (channel && channel.isTextBased()) {
+                    await channel.send({ embeds: [embed] });
+                    console.log(`Successfully posted bump notification to channel ${config.bump_channel_id}`);
+                }
+            } catch (channelError) {
+                console.error(`Error posting to channel ${config.bump_channel_id}:`, channelError);
+            }
+        }
+    } catch (error) {
+        console.error('Error in postBumpToDiscordChannels:', error);
+    }
 }
 
 // --- Interaction Handling ---
@@ -217,6 +281,18 @@ client.on('interactionCreate', async interaction => {
             }
 
             console.log(`Bump successful for listing ${listing.id}`);
+
+            // Get full listing data for Discord posting
+            const { data: fullListing } = await supabase
+                .from('listings')
+                .select('*')
+                .eq('id', listing.id)
+                .single();
+
+            // Post bump notification to Discord channels
+            if (fullListing) {
+                await postBumpToDiscordChannels(fullListing, 'discord');
+            }
 
             const embed = new EmbedBuilder()
                 .setTitle('🚀 Server Bumped!')
@@ -313,6 +389,59 @@ client.on('interactionCreate', async interaction => {
         const embed = new EmbedBuilder()
             .setTitle('⚙️ Bot Configuration Updated')
             .setDescription(`New listings will now be posted to ${channel}`)
+            .setColor('#00FF00')
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+
+    } else if (interaction.commandName === 'setbumpchannel') {
+        const channel = interaction.options.getChannel('channel');
+        
+        if (!interaction.member.permissions.has('MANAGE_GUILD')) {
+            return interaction.reply({ content: '❌ You need Manage Server permission to use this command.', ephemeral: true });
+        }
+
+        // Check if a config exists, update or create
+        const { data: existingConfig } = await supabase
+            .from('discord_bot_configs')
+            .select('*')
+            .eq('discord_server_id', guildId)
+            .single();
+
+        if (existingConfig) {
+            // Update existing configuration
+            const { error } = await supabase
+                .from('discord_bot_configs')
+                .update({
+                    bump_channel_id: channel.id,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('discord_server_id', guildId);
+
+            if (error) {
+                console.error('Error updating bump channel config:', error);
+                return interaction.reply({ content: '❌ Error configuring bump channel.', ephemeral: true });
+            }
+        } else {
+            // Create new configuration
+            const { error } = await supabase
+                .from('discord_bot_configs')
+                .insert({
+                    discord_server_id: guildId,
+                    bump_channel_id: channel.id,
+                    admin_user_id: userId,
+                    active: true
+                });
+
+            if (error) {
+                console.error('Error creating bump channel config:', error);
+                return interaction.reply({ content: '❌ Error configuring bump channel.', ephemeral: true });
+            }
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('📢 Bump Channel Set')
+            .setDescription(`Bump notifications will now be posted to ${channel}\n\nWhenever a server/bot is bumped on our website or via the bot, it will be announced in this channel.`)
             .setColor('#00FF00')
             .setTimestamp();
 
@@ -422,6 +551,7 @@ client.on('interactionCreate', async interaction => {
                 { name: '⏰ /bumpstatus', value: 'Check your bump cooldown status', inline: false },
                 { name: '🔍 /search <query>', value: 'Search for server listings by name', inline: false },
                 { name: '⚙️ /setup <channel>', value: 'Configure where new listings are posted (Admin only)', inline: false },
+                { name: '📢 /setbumpchannel <channel>', value: 'Set channel for bump notifications (Admin only)', inline: false },
                 { name: '🏆 /leaderboard [limit]', value: 'Show top servers by bump count', inline: false },
                 { name: '📊 /stats', value: 'Show your server listing statistics', inline: false },
                 { name: '✨ /featured', value: 'Show featured server listings', inline: false },
