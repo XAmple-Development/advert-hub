@@ -44,6 +44,47 @@ export type Database = {
           },
         ]
       }
+      analytics: {
+        Row: {
+          created_at: string
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          listing_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          listing_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          listing_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bump_cooldowns: {
         Row: {
           id: string
@@ -132,6 +173,44 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_themes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          listing_id: string | null
+          theme_data: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          listing_id?: string | null
+          theme_data: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          listing_id?: string | null
+          theme_data?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_themes_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discord_bot_configs: {
         Row: {
           active: boolean | null
@@ -194,6 +273,7 @@ export type Database = {
       }
       listings: {
         Row: {
+          analytics_enabled: boolean | null
           avatar_url: string | null
           banner_url: string | null
           boost_level: number | null
@@ -213,7 +293,9 @@ export type Database = {
           name: string
           nsfw: boolean | null
           online_count: number | null
+          premium_featured: boolean | null
           priority_bump: boolean | null
+          priority_ranking: number | null
           status: Database["public"]["Enums"]["listing_status"]
           support_server_url: string | null
           tags: string[] | null
@@ -226,6 +308,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          analytics_enabled?: boolean | null
           avatar_url?: string | null
           banner_url?: string | null
           boost_level?: number | null
@@ -245,7 +328,9 @@ export type Database = {
           name: string
           nsfw?: boolean | null
           online_count?: number | null
+          premium_featured?: boolean | null
           priority_bump?: boolean | null
+          priority_ranking?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           support_server_url?: string | null
           tags?: string[] | null
@@ -258,6 +343,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          analytics_enabled?: boolean | null
           avatar_url?: string | null
           banner_url?: string | null
           boost_level?: number | null
@@ -277,7 +363,9 @@ export type Database = {
           name?: string
           nsfw?: boolean | null
           online_count?: number | null
+          premium_featured?: boolean | null
           priority_bump?: boolean | null
+          priority_ranking?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           support_server_url?: string | null
           tags?: string[] | null

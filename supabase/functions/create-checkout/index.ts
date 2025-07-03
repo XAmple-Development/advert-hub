@@ -19,7 +19,10 @@ serve(async (req) => {
   );
 
   try {
-    const { priceId } = await req.json();
+    const { plan } = await req.json();
+    if (!plan || !['small', 'medium', 'premium'].includes(plan)) {
+      throw new Error("Invalid plan selected");
+    }
     
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
@@ -36,6 +39,14 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // UK pricing in pence (GBP)
+    const planPricing = {
+      small: { amount: 499, name: "Small Plan", description: "Enhanced features for small communities" },
+      medium: { amount: 699, name: "Medium Plan", description: "Advanced features for growing communities" }, 
+      premium: { amount: 999, name: "Premium Plan", description: "All features for large communities" }
+    };
+
+    const selectedPlan = planPricing[plan as keyof typeof planPricing];
     const origin = req.headers.get("origin") || "https://localhost:3000";
     
     const session = await stripe.checkout.sessions.create({
@@ -44,23 +55,24 @@ serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "gbp",
             product_data: { 
-              name: "AdvertHub Premium Pro",
-              description: "Unlimited listings, priority bumps, advanced analytics & more"
+              name: selectedPlan.name,
+              description: selectedPlan.description
             },
-            unit_amount: 1299, // $12.99
+            unit_amount: selectedPlan.amount,
             recurring: { interval: "month" },
           },
           quantity: 1,
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/?success=true`,
-      cancel_url: `${origin}/?canceled=true`,
+      success_url: `${origin}/subscription-success?plan=${plan}`,
+      cancel_url: `${origin}/pricing`,
       metadata: {
-        user_id: user.id,
-      },
+        plan: plan,
+        user_id: user.id
+      }
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

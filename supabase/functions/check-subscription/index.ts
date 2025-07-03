@@ -85,11 +85,15 @@ serve(async (req) => {
       const price = await stripe.prices.retrieve(priceId);
       const amount = price.unit_amount || 0;
       
-      // Determine tier based on amount ($12.99 = 1299 cents)
-      if (amount >= 1299) {
+      // Determine tier based on GBP amounts (in pence)
+      if (amount === 499) {
+        subscriptionTier = "small";
+      } else if (amount === 699) {
+        subscriptionTier = "medium";
+      } else if (amount === 999) {
         subscriptionTier = "premium";
       } else {
-        subscriptionTier = "free";
+        subscriptionTier = "free"; // Unknown amount defaults to free
       }
       logStep("Determined subscription tier", { priceId, amount, subscriptionTier });
     } else {
