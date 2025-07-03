@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import EditListingModal from '@/components/EditListingModal';
 import {
     Server,
     Bot,
@@ -15,7 +16,8 @@ import {
     ExternalLink,
     ArrowLeft,
     Calendar,
-    Globe
+    Globe,
+    Edit
 } from 'lucide-react';
 
 interface Listing {
@@ -32,9 +34,11 @@ interface Listing {
     avatar_url?: string;
     invite_url?: string;
     website_url?: string;
+    support_server_url?: string;
     discord_id: string;
     tags: string[];
     banner_url?: string;
+    user_id: string;
 }
 
 // Cooldown times in milliseconds
@@ -48,6 +52,7 @@ const ListingDetail = () => {
     const [loading, setLoading] = useState(true);
     const [canBump, setCanBump] = useState(true);
     const [nextBumpTime, setNextBumpTime] = useState<string>('');
+    const [showEditModal, setShowEditModal] = useState(false);
     const { user } = useAuth();
     const { toast } = useToast();
 
@@ -387,20 +392,33 @@ const ListingDetail = () => {
                                     </div>
                                 )}
 
-                                <div className="flex-1">
-                                    <CardTitle className="text-white text-3xl font-black mb-4">{listing?.name}</CardTitle>
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <Badge 
-                                            variant={listing?.type === 'server' ? 'default' : 'secondary'}
-                                            className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 text-purple-300 font-semibold px-3 py-1 text-sm"
-                                        >
-                                            {listing?.type}
-                                        </Badge>
-                                        <Badge variant="outline" className="bg-gray-800/50 border-gray-600/50 text-gray-300 font-semibold px-3 py-1">
-                                            <Calendar className="h-4 w-4 mr-2" />
-                                            {listing && new Date(listing.created_at).toLocaleDateString()}
-                                        </Badge>
-                                    </div>
+                                 <div className="flex-1">
+                                     <div className="flex items-center justify-between mb-4">
+                                         <CardTitle className="text-white text-3xl font-black">{listing?.name}</CardTitle>
+                                         {user && user.id === listing?.user_id && (
+                                             <Button
+                                                 onClick={() => setShowEditModal(true)}
+                                                 variant="outline"
+                                                 size="sm"
+                                                 className="border-cyan-500/50 text-cyan-300 hover:bg-cyan-600/20 rounded-xl"
+                                             >
+                                                 <Edit className="h-4 w-4 mr-2" />
+                                                 Edit Listing
+                                             </Button>
+                                         )}
+                                     </div>
+                                     <div className="flex items-center gap-3 mb-4">
+                                         <Badge 
+                                             variant={listing?.type === 'server' ? 'default' : 'secondary'}
+                                             className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 text-purple-300 font-semibold px-3 py-1 text-sm"
+                                         >
+                                             {listing?.type}
+                                         </Badge>
+                                         <Badge variant="outline" className="bg-gray-800/50 border-gray-600/50 text-gray-300 font-semibold px-3 py-1">
+                                             <Calendar className="h-4 w-4 mr-2" />
+                                             {listing && new Date(listing.created_at).toLocaleDateString()}
+                                         </Badge>
+                                     </div>
 
                                     {listing?.tags && listing.tags.length > 0 && (
                                         <div className="flex flex-wrap gap-2">
@@ -477,12 +495,25 @@ const ListingDetail = () => {
                                     {canBump ? 'Bump Community' : `Cooldown: ${nextBumpTime}`}
                                 </Button>
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </div>
-    );
-};
+                         </CardContent>
+                     </Card>
+                 </div>
+             </div>
 
-export default ListingDetail;
+             <EditListingModal
+                 open={showEditModal}
+                 onOpenChange={setShowEditModal}
+                 listing={listing}
+                 onSuccess={() => {
+                     fetchListing();
+                     toast({
+                         title: "Success!",
+                         description: "Your listing has been updated successfully.",
+                     });
+                 }}
+             />
+         </div>
+     );
+ };
+ 
+ export default ListingDetail;
