@@ -14,9 +14,9 @@ async function checkWebsiteStatus() {
   const supabaseUrl = SUPABASE_URL;
   
   try {
-    // Check main website - UPDATE THIS URL TO YOUR ACTUAL WEBSITE
+    // Check main website
     const websiteStart = Date.now();
-    const websiteResponse = await fetch('https://aurrzqdypbshynbowpbs.lovable.app/', {
+    const websiteResponse = await fetch('https://discord.x-ampledevelopment.co.uk/', {
       method: 'HEAD',
       signal: AbortSignal.timeout(10000)
     });
