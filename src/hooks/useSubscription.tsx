@@ -119,18 +119,22 @@ export const useSubscription = () => {
     }
 
     try {
-      console.log('Making simple portal request...');
-      const { data, error } = await supabase.functions.invoke('simple-portal');
-      console.log('Simple portal response:', { data, error });
+      console.log('Making customer portal request...');
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+      console.log('Customer portal response:', { data, error });
 
       if (error) {
         console.error('Customer portal error:', error);
         throw error;
       }
 
-      if (data?.portalUrl) {
-        console.log('Opening portal URL:', data.portalUrl);
-        window.open(data.portalUrl, '_blank');
+      if (data?.url) {
+        console.log('Opening portal URL:', data.url);
+        window.open(data.url, '_blank');
       } else {
         console.error('No portal URL received in response');
         throw new Error('No portal URL received');
