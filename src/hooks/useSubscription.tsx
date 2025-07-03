@@ -119,9 +119,9 @@ export const useSubscription = () => {
     }
 
     try {
-      console.log('Making debug portal request...');
-      const { data, error } = await supabase.functions.invoke('debug-portal');
-      console.log('Debug portal response:', { data, error });
+      console.log('Making simple portal request...');
+      const { data, error } = await supabase.functions.invoke('simple-portal');
+      console.log('Simple portal response:', { data, error });
 
       if (error) {
         console.error('Customer portal error:', error);
