@@ -14,9 +14,9 @@ async function checkWebsiteStatus() {
   const supabaseUrl = SUPABASE_URL;
   
   try {
-    // Check main website
+    // Check main website - UPDATE THIS URL TO YOUR ACTUAL WEBSITE
     const websiteStart = Date.now();
-    const websiteResponse = await fetch('https://aurrzqdypbshynbowpbs.supabase.co/', {
+    const websiteResponse = await fetch('https://aurrzqdypbshynbowpbs.lovable.app/', {
       method: 'HEAD',
       signal: AbortSignal.timeout(10000)
     });
