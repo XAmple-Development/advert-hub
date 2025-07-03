@@ -47,6 +47,9 @@ verify_jwt = false
 [functions.simple-portal]
 verify_jwt = false
 
+[functions.customer-portal]
+verify_jwt = false
+
 [edge-runtime]
 enabled = true
 port = 54327
