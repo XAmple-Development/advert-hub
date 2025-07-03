@@ -44,6 +44,9 @@ verify_jwt = false
 [functions.discord-register-commands]
 verify_jwt = false
 
+[functions.simple-portal]
+verify_jwt = false
+
 [edge-runtime]
 enabled = true
 port = 54327
