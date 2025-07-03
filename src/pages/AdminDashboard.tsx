@@ -1,5 +1,6 @@
 
 import AdminDashboard from '@/components/AdminDashboard';
+import Navbar from '@/components/Navbar';
 
 const AdminDashboardPage = () => {
   return (
