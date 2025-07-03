@@ -600,6 +600,7 @@ async function handleHelpCommand(interaction: any) {
                     { name: '⏰ /bumpstatus', value: 'Check your bump cooldown status', inline: false },
                     { name: '🔍 /search <query>', value: 'Search for server listings by name', inline: false },
                     { name: '⚙️ /setup <channel>', value: 'Configure where new listings are posted (Admin only)', inline: false },
+                    { name: '📢 /setbumpchannel <channel>', value: 'Set channel for bump notifications (Admin only)', inline: false },
                     { name: '🏆 /leaderboard [limit]', value: 'Show top servers by bump count', inline: false },
                     { name: '📊 /stats', value: 'Show your server listing statistics', inline: false },
                     { name: '✨ /featured', value: 'Show featured server listings', inline: false },
