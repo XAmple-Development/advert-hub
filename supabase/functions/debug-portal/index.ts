@@ -36,7 +36,7 @@ serve(async (req) => {
     // Test 2: Try to import and initialize Stripe
     let stripe;
     try {
-      const StripeModule = await import("https://cdn.skypack.dev/stripe@13.0.0");
+      const StripeModule = await import("https://esm.sh/stripe@14.21.0");
       stripe = new StripeModule.default(stripeKey, { apiVersion: "2023-10-16" });
     } catch (stripeImportError) {
       return new Response(JSON.stringify({ 
