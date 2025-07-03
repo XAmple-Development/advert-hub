@@ -214,12 +214,24 @@ const LiveDiscordImport = ({
       onImportComplete();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('[LiveDiscordImport] Error importing Discord data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Import failed',
-        description: error.message,
-      });
+        console.error('[LiveDiscordImport] Error importing Discord data:', error);
+        
+        // Check if it's a subscription limit error
+        if (error.message.includes('LISTING_LIMIT') || error.message.includes('Listing limit exceeded')) {
+          toast({
+            variant: 'destructive',
+            title: 'Import Limit Reached',
+            description: error.message.includes('Free users can have up to 3 listings') 
+              ? error.message 
+              : 'Free users can create up to 3 listings. Upgrade to Premium for unlimited listings.',
+          });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Import failed',
+            description: error.message,
+          });
+        }
     } finally {
       setImporting(false);
       setImportProgress(0);

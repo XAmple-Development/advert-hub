@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Users, Server, AlertCircle, RefreshCw, LogOut, LogIn } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 
 interface DiscordServer {
   id: string;
@@ -53,6 +54,7 @@ const DiscordImportModal = ({
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
 
   // Check if user signed in with Discord
   const isDiscordUser = user?.app_metadata?.providers?.includes('discord');
@@ -179,11 +181,23 @@ const DiscordImportModal = ({
       onOpenChange(false);
     } catch (error: any) {
       console.error('[DiscordImportModal] Error importing Discord data:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Import failed',
-        description: error.message,
-      });
+      
+      // Check if it's a subscription limit error
+      if (error.message.includes('LISTING_LIMIT') || error.message.includes('Listing limit exceeded')) {
+        toast({
+          variant: 'destructive',
+          title: 'Import Limit Reached',
+          description: error.message.includes('Free users can have up to 3 listings') 
+            ? error.message 
+            : 'Free users can create up to 3 listings. Upgrade to Premium for unlimited listings.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Import failed',
+          description: error.message,
+        });
+      }
     } finally {
       setImporting(false);
     }
@@ -438,11 +452,22 @@ const DiscordImportModal = ({
               </ScrollArea>
             </div>
 
-            <div className="mb-4 p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
-              <p className="text-yellow-400 text-sm">
-                <strong>Note:</strong> Member counts cannot be retrieved automatically due to Discord API limitations. 
-                You can update them manually after importing.
-              </p>
+            <div className="space-y-3">
+              <div className="p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+                <p className="text-yellow-400 text-sm">
+                  <strong>Note:</strong> Member counts cannot be retrieved automatically due to Discord API limitations. 
+                  You can update them manually after importing.
+                </p>
+              </div>
+              
+              {!isPremium && (
+                <div className="p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
+                  <p className="text-purple-400 text-sm">
+                    <strong>Free Plan:</strong> You can import up to 3 servers total. 
+                    Upgrade to Premium for unlimited imports and enhanced features.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between items-center pt-4 border-t border-[#333]">

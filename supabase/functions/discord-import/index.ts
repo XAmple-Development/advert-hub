@@ -281,6 +281,58 @@ serve(async (req: Request) => {
       }
 
       try {
+        // Check user's subscription tier and listing limits BEFORE importing
+        const { data: profile, error: profileError } = await supabaseClient
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('[discord-import][ERROR] Failed to fetch user profile:', profileError);
+        }
+
+        const isPremium = profile?.subscription_tier === 'premium';
+        
+        // Check current listing count for free users
+        if (!isPremium) {
+          const { data: existingListings, error: countError } = await supabaseClient
+            .from('listings')
+            .select('id')
+            .eq('user_id', user.id);
+
+          if (countError) {
+            console.error('[discord-import][ERROR] Failed to count existing listings:', countError);
+            return new Response(JSON.stringify({
+              error: 'Failed to check existing listings',
+              code: 'COUNT_ERROR',
+              details: 'Please try again.'
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 500
+            });
+          }
+
+          const currentListingCount = existingListings?.length || 0;
+          const selectedServerCount = selectedServerIds.length;
+          const totalAfterImport = currentListingCount + selectedServerCount;
+
+          if (totalAfterImport > 3) {
+            const remainingSlots = Math.max(0, 3 - currentListingCount);
+            return new Response(JSON.stringify({
+              error: 'Listing limit exceeded',
+              code: 'LISTING_LIMIT',
+              details: `Free users can have up to 3 listings. You currently have ${currentListingCount} listings and can import ${remainingSlots} more. Upgrade to Premium for unlimited listings.`,
+              remainingSlots,
+              selectedCount: selectedServerCount,
+              currentCount: currentListingCount
+            }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 403
+            });
+          }
+        }
+
         let importedServers = 0;
 
         // Import selected servers
@@ -324,7 +376,11 @@ serve(async (req: Request) => {
                     status: 'active',
                     avatar_url: server.icon ? `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png` : null,
                     discord_id: server.id,
-                    invite_url: null
+                    invite_url: null,
+                    premium_featured: isPremium,
+                    priority_ranking: isPremium ? 100 : 0,
+                    analytics_enabled: isPremium,
+                    verified_badge: isPremium
                   });
 
                 if (serverError) {
