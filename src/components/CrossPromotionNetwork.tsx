@@ -21,7 +21,7 @@ interface CrossPromotionListing {
 
 const CrossPromotionNetwork = () => {
   const { user } = useAuth();
-  const { isPremium } = useSubscription();
+  const { isPremium, createCheckout } = useSubscription();
   const [listings, setListings] = useState<CrossPromotionListing[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -74,7 +74,10 @@ const CrossPromotionNetwork = () => {
             <p className="text-gray-300 mb-4">
               Access our exclusive cross-promotion network to discover and collaborate with other premium communities.
             </p>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+            <Button 
+              onClick={createCheckout}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+            >
               Upgrade to Premium
             </Button>
           </div>
