@@ -1,17 +1,18 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+// No imports needed - use built-in Deno serve
+Deno.serve(async (req) => {
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    console.log("Environment check:", { hasStripeKey: !!stripeKey });
+    
     if (!stripeKey) {
       return new Response(JSON.stringify({ error: "STRIPE_SECRET_KEY not found" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -19,7 +20,9 @@ serve(async (req) => {
       });
     }
 
-    // Use raw fetch to call Stripe API instead of SDK
+    console.log("Making Stripe API call...");
+    
+    // Use raw fetch to call Stripe API
     const response = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
       method: 'POST',
       headers: {
@@ -33,6 +36,7 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
+    console.log("Stripe API response:", { status: response.status, text: responseText });
     
     if (!response.ok) {
       return new Response(JSON.stringify({ 
@@ -46,6 +50,7 @@ serve(async (req) => {
     }
 
     const sessionData = JSON.parse(responseText);
+    console.log("Session created successfully");
     
     return new Response(JSON.stringify({ 
       success: true,
@@ -56,6 +61,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    console.error("Function error:", error);
     return new Response(JSON.stringify({ 
       error: "Function error",
       details: error.message,
