@@ -175,6 +175,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#2C2F33] border-[#40444B]">
+                  <SelectItem value="server">Discord Server</SelectItem>
                   <SelectItem value="bot">Discord Bot</SelectItem>
                 </SelectContent>
               </Select>

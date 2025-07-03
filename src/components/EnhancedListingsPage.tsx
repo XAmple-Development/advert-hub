@@ -19,11 +19,14 @@ import {
   Users,
   Calendar,
   Globe,
-  Star
+  Star,
+  Plus
 } from 'lucide-react';
 import FavoriteButton from './FavoriteButton';
 import ShareButton from './ShareButton';
 import CopyButton from './CopyButton';
+import CreateListingModal from './CreateListingModal';
+import DiscordImportModal from './DiscordImportModal';
 
 interface Listing {
   id: string;
@@ -64,6 +67,8 @@ const EnhancedListingsPage = () => {
     tags: []
   });
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   useEffect(() => {
     fetchListings();
@@ -245,12 +250,35 @@ const EnhancedListingsPage = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-            Discord Communities
-          </h1>
-          <p className="text-gray-300 text-lg">
-            Discover amazing Discord servers and bots. Join the best communities today!
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                Discord Communities
+              </h1>
+              <p className="text-gray-300 text-lg">
+                Discover amazing Discord servers and bots. Join the best communities today!
+              </p>
+            </div>
+            {user && (
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowImportModal(true)}
+                  variant="outline"
+                  className="border-cyan-500/50 text-cyan-300 hover:bg-cyan-600/20 rounded-xl"
+                >
+                  <Server className="h-4 w-4 mr-2" />
+                  Import Discord Server
+                </Button>
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Bot/Server
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -459,6 +487,31 @@ const EnhancedListingsPage = () => {
           />
         )}
       </div>
+
+      {/* Modals */}
+      <CreateListingModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onSuccess={() => {
+          fetchListings();
+          toast({
+            title: "Success!",
+            description: "Your listing has been created and is pending review.",
+          });
+        }}
+      />
+
+      <DiscordImportModal
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
+        onImportComplete={() => {
+          fetchListings();
+          toast({
+            title: "Import successful!",
+            description: "Your Discord server has been imported successfully.",
+          });
+        }}
+      />
     </div>
   );
 };
