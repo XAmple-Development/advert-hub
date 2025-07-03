@@ -44,6 +44,15 @@ verify_jwt = false
 [functions.discord-register-commands]
 verify_jwt = false
 
+[functions.website-status-broadcast]
+verify_jwt = false
+
+[functions.discord-webhook-notification]
+verify_jwt = false
+
+[functions.site-status-update]
+verify_jwt = false
+
 [functions.simple-portal]
 verify_jwt = false
 
