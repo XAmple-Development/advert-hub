@@ -4,8 +4,6 @@ import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2.38
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -41,6 +39,7 @@ async function checkWebsiteStatus() {
   try {
     // Check Database
     const dbStart = Date.now();
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data, error } = await supabase.from('listings').select('count').limit(1);
     const dbTime = Date.now() - dbStart;
     
@@ -103,6 +102,7 @@ function calculateUptime() {
 
 async function sendStatusToAllWebhooks(statusData: any) {
   // Get all listings with webhook URLs
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   const { data: listings, error } = await supabase
     .from('listings')
     .select('id, name, discord_webhook_url')
