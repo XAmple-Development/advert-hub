@@ -24,10 +24,10 @@ interface Review {
   listing_id: string;
   helpful_count?: number;
   profiles?: {
-    username: string;
+    username?: string;
     discord_avatar?: string;
     discord_username?: string;
-  };
+  } | null;
 }
 
 interface ReviewSystemProps {
@@ -348,10 +348,7 @@ export const ReviewSystem = ({ listingId }: ReviewSystemProps) => {
 
       const { data, error } = await supabase
         .from('reviews')
-        .select(`
-          *,
-          profiles!reviews_user_id_fkey(username, discord_username, discord_avatar)
-        `)
+        .select('*')
         .eq('listing_id', listingId)
         .order('created_at', { ascending: false });
 
