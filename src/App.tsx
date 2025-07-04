@@ -15,6 +15,7 @@ import Listings from "./pages/Listings";
 import ListingDetail from "./pages/ListingDetail";
 import Analytics from "./pages/Analytics";
 import AdminDashboard from "./pages/AdminDashboard";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/listings" element={<Listings />} />
               <Route path="/listings/:id" element={<ListingDetail />} />
+              <Route path="/profile/:userId" element={<Profile />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="*" element={<NotFound />} />

@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import EditListingModal from '@/components/EditListingModal';
+import { ReviewSystem } from '@/components/reviews/ReviewSystem';
+import { UserProfile } from '@/components/social/UserProfile';
 import {
     Server,
     Bot,
@@ -506,10 +508,20 @@ const ListingDetail = () => {
                             </div>
                          </CardContent>
                      </Card>
-                 </div>
-             </div>
+                  </div>
+              </div>
 
-             <EditListingModal
+              {/* Listing Owner Profile */}
+              <div className="max-w-5xl mx-auto px-6 mt-8">
+                  <UserProfile userId={listing.user_id} showFollowButton={user?.id !== listing.user_id} />
+              </div>
+
+              {/* Reviews Section */}
+              <div className="max-w-5xl mx-auto px-6 mt-12">
+                  <ReviewSystem listingId={listing.id} />
+              </div>
+
+              <EditListingModal
                  open={showEditModal}
                  onOpenChange={setShowEditModal}
                  listing={listing}

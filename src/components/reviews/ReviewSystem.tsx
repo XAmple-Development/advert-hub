@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Star, MessageSquare, ThumbsUp, ThumbsDown, Flag, Edit, Trash2, Users } from 'lucide-react';
 import { EnhancedLoadingSpinner, LoadingStateManager } from '@/components/enhanced/EnhancedLoadingStates';
+import { Link } from 'react-router-dom';
 
 interface Review {
   id: string;
@@ -235,7 +236,12 @@ const ReviewCard = ({
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium">
-                  {review.profiles?.discord_username || review.profiles?.username || 'Anonymous'}
+                  <Link 
+                    to={`/profile/${review.user_id}`}
+                    className="hover:text-primary transition-colors cursor-pointer"
+                  >
+                    {review.profiles?.discord_username || review.profiles?.username || 'Anonymous'}
+                  </Link>
                 </div>
                 <div className="flex items-center gap-2">
                   <StarRating rating={review.rating} readonly size="sm" />
