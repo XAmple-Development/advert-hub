@@ -135,7 +135,7 @@ const Analytics = () => {
       existingDate.bumps += item.bumps || 0;
     } else {
       acc.push({
-        date: item.date,
+        date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         views: item.views || 0,
         joins: item.joins || 0,
         bumps: item.bumps || 0
@@ -190,10 +190,6 @@ const Analytics = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-white text-3xl font-bold">{totalViews.toLocaleString()}</div>
-                    <Badge variant="outline" className="mt-2 text-green-400 border-green-400/50">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      +12.5%
-                    </Badge>
                   </CardContent>
                 </Card>
 
@@ -206,10 +202,6 @@ const Analytics = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-white text-3xl font-bold">{totalJoins.toLocaleString()}</div>
-                    <Badge variant="outline" className="mt-2 text-blue-400 border-blue-400/50">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      +8.2%
-                    </Badge>
                   </CardContent>
                 </Card>
 
@@ -222,10 +214,6 @@ const Analytics = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-white text-3xl font-bold">{totalBumps}</div>
-                    <Badge variant="outline" className="mt-2 text-purple-400 border-purple-400/50">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      +15.7%
-                    </Badge>
                   </CardContent>
                 </Card>
 
@@ -238,10 +226,6 @@ const Analytics = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-white text-3xl font-bold">{avgConversion.toFixed(1)}%</div>
-                    <Badge variant="outline" className="mt-2 text-orange-400 border-orange-400/50">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      +2.1%
-                    </Badge>
                   </CardContent>
                 </Card>
               </div>
@@ -339,13 +323,14 @@ const Analytics = () => {
                           </p>
                         </div>
                         <div className="flex items-center gap-4">
-                          <Badge 
-                            variant="outline" 
-                            className="text-green-400 border-green-400/50"
-                          >
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                            Growing
-                          </Badge>
+                          {listing.total_views > 0 && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-green-400 border-green-400/50"
+                            >
+                              Active
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     ))}

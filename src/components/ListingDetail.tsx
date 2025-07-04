@@ -30,6 +30,7 @@ interface Listing {
     long_description?: string;
     member_count: number;
     view_count: number;
+    join_count: number;
     bump_count: number;
     status: string;
     created_at: string;
@@ -172,6 +173,24 @@ const ListingDetail = () => {
                     .from('listings')
                     .update({ view_count: (currentListing.view_count || 0) + 1 })
                     .eq('id', id);
+
+                // Track analytics event
+                await supabase
+                    .from('analytics')
+                    .insert({
+                        listing_id: id,
+                        event_type: 'view',
+                        user_id: user?.id || null,
+                        ip_address: null,
+                        user_agent: navigator.userAgent,
+                        event_data: { timestamp: new Date().toISOString() }
+                    });
+
+                // Call the analytics function to update aggregated data
+                await supabase.rpc('update_listing_analytics', {
+                    p_listing_id: id,
+                    p_event_type: 'view'
+                });
             }
         } catch (error) {
             // Silent fail for view counting
@@ -259,6 +278,28 @@ const ListingDetail = () => {
 
             console.log(`Bump successful for listing ${listing.id}`);
 
+            // Track bump analytics
+            try {
+                await supabase
+                    .from('analytics')
+                    .insert({
+                        listing_id: listing.id,
+                        event_type: 'bump',
+                        user_id: user.id,
+                        ip_address: null,
+                        user_agent: navigator.userAgent,
+                        event_data: { timestamp: new Date().toISOString(), bump_type: 'manual' }
+                    });
+
+                // Update aggregated analytics
+                await supabase.rpc('update_listing_analytics', {
+                    p_listing_id: listing.id,
+                    p_event_type: 'bump'
+                });
+            } catch (error) {
+                console.log('Failed to track bump analytics:', error);
+            }
+
             // Send Discord notification for bump (background task)
             try {
                 await supabase.functions.invoke('discord-bump-notification', {
@@ -300,8 +341,36 @@ const ListingDetail = () => {
         }
     };
 
-    const handleJoin = () => {
+    const handleJoin = async () => {
         if (listing?.invite_url) {
+            // Track join analytics
+            try {
+                await supabase
+                    .from('analytics')
+                    .insert({
+                        listing_id: listing.id,
+                        event_type: 'join',
+                        user_id: user?.id || null,
+                        ip_address: null,
+                        user_agent: navigator.userAgent,
+                        event_data: { timestamp: new Date().toISOString() }
+                    });
+
+                // Update aggregated analytics
+                await supabase.rpc('update_listing_analytics', {
+                    p_listing_id: listing.id,
+                    p_event_type: 'join'
+                });
+
+                // Update join count in listings table
+                await supabase
+                    .from('listings')
+                    .update({ join_count: (listing.join_count || 0) + 1 })
+                    .eq('id', listing.id);
+            } catch (error) {
+                console.log('Failed to track join analytics:', error);
+            }
+
             window.open(listing.invite_url, '_blank');
         }
     };
