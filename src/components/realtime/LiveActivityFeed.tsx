@@ -28,7 +28,7 @@ interface LiveActivity {
     username: string;
     discord_avatar: string;
     discord_username: string;
-  };
+  } | null;
   listing?: {
     name: string;
   } | null;
@@ -80,7 +80,25 @@ const LiveActivityFeed = () => {
         .limit(50);
 
       if (error) throw error;
-      setActivities(data || []);
+      
+      // Transform data to handle potential errors in relations
+      const transformedData = (data || []).map(activity => ({
+        ...activity,
+        profile: activity.profile && 
+                 typeof activity.profile === 'object' && 
+                 activity.profile !== null &&
+                 !('error' in activity.profile) 
+          ? activity.profile 
+          : null,
+        listing: activity.listing && 
+                 typeof activity.listing === 'object' && 
+                 activity.listing !== null &&
+                 !('error' in (activity.listing as any))
+          ? activity.listing
+          : null
+      }));
+      
+      setActivities(transformedData);
     } catch (error) {
       console.error('Error fetching activities:', error);
     } finally {
@@ -102,7 +120,24 @@ const LiveActivityFeed = () => {
 
       if (error) throw error;
       
-      setActivities(prev => [data, ...prev.slice(0, 49)]);
+      // Transform data to handle potential errors in relations
+      const transformedActivity = {
+        ...data,
+        profile: data.profile && 
+                 typeof data.profile === 'object' && 
+                 data.profile !== null &&
+                 !('error' in data.profile) 
+          ? data.profile 
+          : null,
+        listing: data.listing && 
+                 typeof data.listing === 'object' && 
+                 data.listing !== null &&
+                 !('error' in (data.listing as any))
+          ? data.listing
+          : null
+      };
+      
+      setActivities(prev => [transformedActivity, ...prev.slice(0, 49)]);
     } catch (error) {
       console.error('Error fetching single activity:', error);
     }
