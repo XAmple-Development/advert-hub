@@ -868,6 +868,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      get_user_subscription_tier: {
+        Args: { user_id: string }
+        Returns: string
+      }
       update_listing_analytics: {
         Args: { p_listing_id: string; p_event_type: string; p_metadata?: Json }
         Returns: undefined
