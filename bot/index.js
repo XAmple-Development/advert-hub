@@ -248,7 +248,11 @@ client.on('interactionCreate', async interaction => {
 
             if (cooldownError) {
                 console.error('Error updating bump cooldown:', cooldownError);
-                return interaction.reply({ content: '❌ Error registering your bump.', ephemeral: true });
+                // Show user-friendly error instead of technical database error
+                return interaction.reply({ 
+                    content: '⚠️ Unable to process your bump right now. Please try again in a moment.', 
+                    ephemeral: true 
+                });
             }
 
             // Update listing bump count and timestamp

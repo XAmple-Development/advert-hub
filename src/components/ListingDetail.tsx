@@ -210,11 +210,20 @@ const ListingDetail = () => {
                     user_discord_id: user.id,
                     listing_id: listing.id,
                     last_bump_at: now.toISOString(),
+                }, {
+                    onConflict: 'user_discord_id,listing_id',
+                    ignoreDuplicates: false
                 });
 
             if (cooldownError) {
                 console.error('Error updating cooldown:', cooldownError);
-                throw cooldownError;
+                // Show user-friendly error message instead of database error
+                toast({
+                    variant: "destructive",
+                    title: "Bump Failed",
+                    description: "Unable to process your bump right now. Please try again in a moment.",
+                });
+                return;
             }
 
             // Update listing bump count and timestamp
