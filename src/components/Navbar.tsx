@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User } from 'lucide-react';
+import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag } from 'lucide-react';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -96,6 +96,20 @@ const Navbar = () => {
                   </Button>
                 </Link>
 
+                <Link to="/gamification">
+                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                    <Trophy className="h-5 w-5 mr-2" />
+                    Rewards
+                  </Button>
+                </Link>
+
+                <Link to="/activity">
+                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                    <Activity className="h-5 w-5 mr-2" />
+                    Activity
+                  </Button>
+                </Link>
+
                 <Link to={`/profile/${user.id}`}>
                   <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
                     <User className="h-5 w-5 mr-2" />
@@ -104,12 +118,20 @@ const Navbar = () => {
                 </Link>
 
                 {isAdmin && (
-                  <Link to="/admin">
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                      <Shield className="h-5 w-5 mr-2" />
-                      Admin Panel
-                    </Button>
-                  </Link>
+                  <>
+                    <Link to="/admin">
+                      <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        <Shield className="h-5 w-5 mr-2" />
+                        Admin Panel
+                      </Button>
+                    </Link>
+                    <Link to="/moderation">
+                      <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                        <Flag className="h-5 w-5 mr-2" />
+                        Moderation
+                      </Button>
+                    </Link>
+                  </>
                 )}
                 
                 <Button
@@ -163,6 +185,27 @@ const Navbar = () => {
                     </Button>
                   </Link>
 
+                  <Link to="/analytics" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                      <BarChart3 className="h-5 w-5 mr-3" />
+                      Analytics
+                    </Button>
+                  </Link>
+
+                  <Link to="/gamification" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                      <Trophy className="h-5 w-5 mr-3" />
+                      Rewards
+                    </Button>
+                  </Link>
+
+                  <Link to="/activity" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                      <Activity className="h-5 w-5 mr-3" />
+                      Activity
+                    </Button>
+                  </Link>
+
                   <Link to={`/profile/${user.id}`} onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                       <User className="h-5 w-5 mr-3" />
@@ -171,12 +214,20 @@ const Navbar = () => {
                   </Link>
 
                   {isAdmin && (
-                    <Link to="/admin" onClick={closeMobileMenu}>
-                      <Button className="w-full justify-start bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 rounded-xl">
-                        <Shield className="h-5 w-5 mr-3" />
-                        Admin Panel
-                      </Button>
-                    </Link>
+                    <>
+                      <Link to="/admin" onClick={closeMobileMenu}>
+                        <Button className="w-full justify-start bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 rounded-xl">
+                          <Shield className="h-5 w-5 mr-3" />
+                          Admin Panel
+                        </Button>
+                      </Link>
+                      <Link to="/moderation" onClick={closeMobileMenu}>
+                        <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                          <Flag className="h-5 w-5 mr-3" />
+                          Moderation
+                        </Button>
+                      </Link>
+                    </>
                   )}
                   
                   <Button

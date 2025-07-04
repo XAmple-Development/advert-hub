@@ -17,6 +17,9 @@ import Analytics from "./pages/Analytics";
 import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
+import Gamification from "./pages/Gamification";
+import LiveActivity from "./pages/LiveActivity";
+import Moderation from "./pages/Moderation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -46,6 +49,9 @@ const App = () => (
               <Route path="/profile/edit" element={<ProfileEdit />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/gamification" element={<Gamification />} />
+              <Route path="/activity" element={<LiveActivity />} />
+              <Route path="/moderation" element={<Moderation />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNavigation />
