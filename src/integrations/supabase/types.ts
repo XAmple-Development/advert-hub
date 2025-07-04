@@ -868,6 +868,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_orphaned_records: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: boolean
