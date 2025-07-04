@@ -138,14 +138,80 @@ const ReviewCard = ({
   canEdit, 
   onEdit, 
   onDelete, 
-  onHelpful 
+  onHelpful,
+  currentUserId 
 }: { 
   review: Review;
   canEdit: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
-  onHelpful?: () => void;
+  onHelpful?: (helpful: boolean) => void;
+  currentUserId?: string;
 }) => {
+  const [hasVoted, setHasVoted] = useState(false);
+  const [voteType, setVoteType] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (currentUserId && review.id) {
+      checkExistingVote();
+    }
+  }, [currentUserId, review.id]);
+
+  const checkExistingVote = async () => {
+    if (!currentUserId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('review_helpfulness')
+        .select('helpful')
+        .eq('review_id', review.id)
+        .eq('user_id', currentUserId)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data) {
+        setHasVoted(true);
+        setVoteType(data.helpful);
+      }
+    } catch (error) {
+      console.error('Error checking vote:', error);
+    }
+  };
+
+  const handleHelpfulVote = async (helpful: boolean) => {
+    if (!currentUserId || !onHelpful) return;
+    
+    try {
+      if (hasVoted) {
+        // Update existing vote
+        const { error } = await supabase
+          .from('review_helpfulness')
+          .update({ helpful })
+          .eq('review_id', review.id)
+          .eq('user_id', currentUserId);
+        
+        if (error) throw error;
+      } else {
+        // Create new vote
+        const { error } = await supabase
+          .from('review_helpfulness')
+          .insert({
+            review_id: review.id,
+            user_id: currentUserId,
+            helpful
+          });
+        
+        if (error) throw error;
+      }
+      
+      setHasVoted(true);
+      setVoteType(helpful);
+      onHelpful(helpful);
+    } catch (error) {
+      console.error('Error voting:', error);
+    }
+  };
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'long',
@@ -194,10 +260,33 @@ const ReviewCard = ({
             <p className="text-sm">{review.comment}</p>
             
             <div className="flex items-center gap-2 pt-2">
-              <Button variant="ghost" size="sm" onClick={onHelpful}>
-                <ThumbsUp className="h-3 w-3 mr-1" />
-                Helpful ({review.helpful_count || 0})
-              </Button>
+              {currentUserId ? (
+                <div className="flex gap-1">
+                  <Button 
+                    variant={voteType === true ? "default" : "ghost"} 
+                    size="sm" 
+                    onClick={() => handleHelpfulVote(true)}
+                    disabled={hasVoted && voteType === true}
+                  >
+                    <ThumbsUp className="h-3 w-3 mr-1" />
+                    Helpful ({review.helpful_count || 0})
+                  </Button>
+                  <Button 
+                    variant={voteType === false ? "destructive" : "ghost"} 
+                    size="sm" 
+                    onClick={() => handleHelpfulVote(false)}
+                    disabled={hasVoted && voteType === false}
+                  >
+                    <ThumbsDown className="h-3 w-3 mr-1" />
+                    Not Helpful
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="ghost" size="sm" disabled>
+                  <ThumbsUp className="h-3 w-3 mr-1" />
+                  Helpful ({review.helpful_count || 0})
+                </Button>
+              )}
               <Button variant="ghost" size="sm">
                 <Flag className="h-3 w-3 mr-1" />
                 Report
@@ -396,6 +485,33 @@ export const ReviewSystem = ({ listingId }: ReviewSystemProps) => {
     }
   };
 
+  const handleHelpfulVote = async (reviewId: string, helpful: boolean) => {
+    try {
+      // Recalculate helpful count
+      const { data: helpfulData, error: helpfulError } = await supabase
+        .from('review_helpfulness')
+        .select('helpful')
+        .eq('review_id', reviewId);
+
+      if (helpfulError) throw helpfulError;
+
+      const helpfulCount = helpfulData?.filter(vote => vote.helpful).length || 0;
+
+      // Update review helpful_count
+      const { error: updateError } = await supabase
+        .from('reviews')
+        .update({ helpful_count: helpfulCount })
+        .eq('id', reviewId);
+
+      if (updateError) throw updateError;
+
+      // Refresh reviews to show updated counts
+      fetchReviews();
+    } catch (error) {
+      console.error('Error updating helpful count:', error);
+    }
+  };
+
   const handleFormSubmit = () => {
     setShowForm(false);
     setEditingReview(null);
@@ -542,11 +658,13 @@ export const ReviewSystem = ({ listingId }: ReviewSystemProps) => {
               {reviews
                 .filter(review => review.user_id !== user?.id) // Hide user's own review from list
                 .map((review) => (
-                  <ReviewCard
-                    key={review.id}
-                    review={review}
-                    canEdit={false}
-                  />
+                   <ReviewCard
+                     key={review.id}
+                     review={review}
+                     canEdit={false}
+                     currentUserId={user?.id}
+                     onHelpful={(helpful) => handleHelpfulVote(review.id, helpful)}
+                   />
                 ))}
             </div>
           </ScrollArea>
