@@ -1843,6 +1843,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_achievement: {
+        Args: { p_user_id: string; p_achievement_name: string }
+        Returns: boolean
+      }
       cleanup_orphaned_records: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1854,6 +1858,10 @@ export type Database = {
       get_user_subscription_tier: {
         Args: { user_id: string }
         Returns: string
+      }
+      update_leaderboards: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_listing_analytics: {
         Args: { p_listing_id: string; p_event_type: string; p_metadata?: Json }
