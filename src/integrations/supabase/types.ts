@@ -151,6 +151,44 @@ export type Database = {
           },
         ]
       }
+      auto_bump_settings: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          interval_hours: number | null
+          last_auto_bump_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          interval_hours?: number | null
+          last_auto_bump_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          interval_hours?: number | null
+          last_auto_bump_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_bump_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auto_moderation_rules: {
         Row: {
           actions: Json
@@ -1053,6 +1091,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          auto_bump_enabled: boolean | null
+          auto_bump_interval_hours: number | null
           created_at: string
           discord_access_token: string | null
           discord_avatar: string | null
@@ -1069,6 +1109,8 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          auto_bump_enabled?: boolean | null
+          auto_bump_interval_hours?: number | null
           created_at?: string
           discord_access_token?: string | null
           discord_avatar?: string | null
@@ -1085,6 +1127,8 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          auto_bump_enabled?: boolean | null
+          auto_bump_interval_hours?: number | null
           created_at?: string
           discord_access_token?: string | null
           discord_avatar?: string | null
