@@ -22,17 +22,17 @@ serve(async (req) => {
     // Check site health
     const statusData = await checkSiteHealth(supabaseUrl);
     
-    // Get all Discord bot configs with bump channels (where we'll post status)
+    // Get all Discord bot configs with status channels (where we'll post status)
     const { data: configs } = await supabase
       .from('discord_bot_configs')
-      .select('discord_server_id, bump_channel_id')
+      .select('discord_server_id, status_channel_id')
       .eq('active', true)
-      .not('bump_channel_id', 'is', null);
+      .not('status_channel_id', 'is', null);
 
     if (!configs || configs.length === 0) {
-      console.log('No Discord channels configured for status updates');
+      console.log('No status channels configured for status updates');
       return new Response(
-        JSON.stringify({ message: 'No channels configured' }),
+        JSON.stringify({ message: 'No status channels configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -43,15 +43,15 @@ serve(async (req) => {
       try {
         const result = await updateStatusMessage(
           discordBotToken,
-          config.bump_channel_id,
+          config.status_channel_id,
           statusData,
           supabase
         );
-        results.push({ channelId: config.bump_channel_id, ...result });
+        results.push({ channelId: config.status_channel_id, ...result });
       } catch (error) {
-        console.error(`Error updating status for channel ${config.bump_channel_id}:`, error);
+        console.error(`Error updating status for channel ${config.status_channel_id}:`, error);
         results.push({ 
-          channelId: config.bump_channel_id, 
+          channelId: config.status_channel_id, 
           success: false, 
           error: error.message 
         });

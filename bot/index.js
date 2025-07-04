@@ -48,6 +48,12 @@ const commands = [
             option.setName('channel').setDescription('Channel where bump notifications will be posted').setRequired(true)
         ),
     new SlashCommandBuilder()
+        .setName('setstatuschannel')
+        .setDescription('Set the channel for system status updates')
+        .addChannelOption(option =>
+            option.setName('channel').setDescription('Channel where system status updates will be posted').setRequired(true)
+        ),
+    new SlashCommandBuilder()
         .setName('leaderboard')
         .setDescription('Show top servers by bump count')
         .addIntegerOption(option =>
@@ -451,6 +457,59 @@ client.on('interactionCreate', async interaction => {
 
         await interaction.reply({ embeds: [embed] });
 
+    } else if (interaction.commandName === 'setstatuschannel') {
+        const channel = interaction.options.getChannel('channel');
+        
+        if (!interaction.member.permissions.has('MANAGE_GUILD')) {
+            return interaction.reply({ content: '❌ You need Manage Server permission to use this command.', ephemeral: true });
+        }
+
+        // Check if a config exists, update or create
+        const { data: existingConfig } = await supabase
+            .from('discord_bot_configs')
+            .select('*')
+            .eq('discord_server_id', guildId)
+            .single();
+
+        if (existingConfig) {
+            // Update existing configuration
+            const { error } = await supabase
+                .from('discord_bot_configs')
+                .update({
+                    status_channel_id: channel.id,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('discord_server_id', guildId);
+
+            if (error) {
+                console.error('Error updating status channel config:', error);
+                return interaction.reply({ content: '❌ Error configuring status channel.', ephemeral: true });
+            }
+        } else {
+            // Create new configuration
+            const { error } = await supabase
+                .from('discord_bot_configs')
+                .insert({
+                    discord_server_id: guildId,
+                    status_channel_id: channel.id,
+                    admin_user_id: userId,
+                    active: true
+                });
+
+            if (error) {
+                console.error('Error creating status channel config:', error);
+                return interaction.reply({ content: '❌ Error configuring status channel.', ephemeral: true });
+            }
+        }
+
+        const embed = new EmbedBuilder()
+            .setTitle('🔧 Status Channel Set')
+            .setDescription(`System status updates will now be posted to ${channel}\n\nAutomated status messages with platform health and performance metrics will be posted here every 30 minutes.`)
+            .setColor('#00FF00')
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+
     } else if (interaction.commandName === 'leaderboard') {
         const limit = interaction.options.getInteger('limit') || 5;
 
@@ -556,6 +615,7 @@ client.on('interactionCreate', async interaction => {
                 { name: '🔍 /search <query>', value: 'Search for server listings by name', inline: false },
                 { name: '⚙️ /setup <channel>', value: 'Configure where new listings are posted (Admin only)', inline: false },
                 { name: '📢 /setbumpchannel <channel>', value: 'Set channel for bump notifications (Admin only)', inline: false },
+                { name: '🔧 /setstatuschannel <channel>', value: 'Set channel for system status updates (Admin only)', inline: false },
                 { name: '🏆 /leaderboard [limit]', value: 'Show top servers by bump count', inline: false },
                 { name: '📊 /stats', value: 'Show your server listing statistics', inline: false },
                 { name: '✨ /featured', value: 'Show featured server listings', inline: false },

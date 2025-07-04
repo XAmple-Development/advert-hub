@@ -481,6 +481,7 @@ export type Database = {
           discord_server_id: string
           id: string
           listing_channel_id: string | null
+          status_channel_id: string | null
           updated_at: string
         }
         Insert: {
@@ -491,6 +492,7 @@ export type Database = {
           discord_server_id: string
           id?: string
           listing_channel_id?: string | null
+          status_channel_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -501,6 +503,7 @@ export type Database = {
           discord_server_id?: string
           id?: string
           listing_channel_id?: string | null
+          status_channel_id?: string | null
           updated_at?: string
         }
         Relationships: []
