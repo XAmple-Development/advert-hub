@@ -99,11 +99,17 @@ serve(async (req) => {
       for (const listing of listings) {
         try {
           // Update listing bump count and timestamp
+          const { data: currentListing } = await supabaseClient
+            .from('listings')
+            .select('bump_count')
+            .eq('id', listing.id)
+            .single();
+
           const { error: listingUpdateError } = await supabaseClient
             .from('listings')
             .update({
               last_bumped_at: now.toISOString(),
-              bump_count: (await supabaseClient.from('listings').select('bump_count').eq('id', listing.id).single()).data?.bump_count || 0 + 1,
+              bump_count: (currentListing?.bump_count || 0) + 1,
               updated_at: now.toISOString()
             })
             .eq('id', listing.id);
