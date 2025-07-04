@@ -77,6 +77,7 @@ serve(async (req) => {
 
 async function checkSiteHealth(supabaseUrl: string) {
   const checks = [];
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   
   try {
     // Check Supabase API
@@ -90,13 +91,42 @@ async function checkSiteHealth(supabaseUrl: string) {
       service: 'Supabase API',
       status: supabaseResponse.ok ? 'healthy' : 'unhealthy',
       responseTime: supabaseTime,
-      statusCode: supabaseResponse.status
+      statusCode: supabaseResponse.status,
+      details: supabaseResponse.ok ? 'All REST endpoints responding' : 'API endpoints not responding'
     });
   } catch (error) {
     checks.push({
       service: 'Supabase API',
       status: 'unhealthy',
-      error: error.message
+      error: error.message,
+      details: 'Unable to connect to API'
+    });
+  }
+
+  try {
+    // Check Database Connection
+    const dbStart = Date.now();
+    const dbResponse = await fetch(`${supabaseUrl}/rest/v1/profiles?select=count`, {
+      headers: { 
+        'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
+        'Authorization': `Bearer ${supabaseServiceKey}`
+      }
+    });
+    const dbTime = Date.now() - dbStart;
+    
+    checks.push({
+      service: 'Database',
+      status: dbResponse.ok ? 'healthy' : 'unhealthy',
+      responseTime: dbTime,
+      statusCode: dbResponse.status,
+      details: dbResponse.ok ? 'Database queries executing normally' : 'Database connection issues'
+    });
+  } catch (error) {
+    checks.push({
+      service: 'Database',
+      status: 'unhealthy',
+      error: error.message,
+      details: 'Unable to execute database queries'
     });
   }
 
@@ -112,15 +142,47 @@ async function checkSiteHealth(supabaseUrl: string) {
       service: 'Edge Functions',
       status: functionsResponse.status < 500 ? 'healthy' : 'unhealthy',
       responseTime: functionsTime,
-      statusCode: functionsResponse.status
+      statusCode: functionsResponse.status,
+      details: functionsResponse.status < 500 ? 'All serverless functions operational' : 'Functions experiencing issues'
     });
   } catch (error) {
     checks.push({
       service: 'Edge Functions',
       status: 'unhealthy',
-      error: error.message
+      error: error.message,
+      details: 'Serverless functions not responding'
     });
   }
+
+  try {
+    // Check Storage
+    const storageStart = Date.now();
+    const storageResponse = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+      headers: { 
+        'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
+        'Authorization': `Bearer ${supabaseServiceKey}`
+      }
+    });
+    const storageTime = Date.now() - storageStart;
+    
+    checks.push({
+      service: 'Storage',
+      status: storageResponse.ok ? 'healthy' : 'unhealthy',
+      responseTime: storageTime,
+      statusCode: storageResponse.status,
+      details: storageResponse.ok ? 'File storage accessible' : 'Storage service unavailable'
+    });
+  } catch (error) {
+    checks.push({
+      service: 'Storage',
+      status: 'unhealthy',
+      error: error.message,
+      details: 'Unable to access file storage'
+    });
+  }
+
+  // Get system statistics
+  const stats = await getSystemStats(supabaseUrl, supabaseServiceKey);
 
   const healthyCount = checks.filter(check => check.status === 'healthy').length;
   const overallStatus = healthyCount === checks.length ? 'healthy' : 
@@ -129,9 +191,66 @@ async function checkSiteHealth(supabaseUrl: string) {
   return {
     overall: overallStatus,
     checks,
+    stats,
     timestamp: new Date().toISOString(),
     uptime: '99.9%' // You could calculate real uptime from historical data
   };
+}
+
+async function getSystemStats(supabaseUrl: string, serviceKey: string) {
+  const stats = {
+    totalListings: 0,
+    activeListings: 0,
+    totalUsers: 0,
+    recentActivity: 0
+  };
+
+  try {
+    // Get listing statistics
+    const listingsResponse = await fetch(`${supabaseUrl}/rest/v1/listings?select=status`, {
+      headers: { 
+        'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
+        'Authorization': `Bearer ${serviceKey}`
+      }
+    });
+    
+    if (listingsResponse.ok) {
+      const listings = await listingsResponse.json();
+      stats.totalListings = listings.length;
+      stats.activeListings = listings.filter((l: any) => l.status === 'active').length;
+    }
+
+    // Get user count
+    const usersResponse = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id`, {
+      headers: { 
+        'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
+        'Authorization': `Bearer ${serviceKey}`
+      }
+    });
+    
+    if (usersResponse.ok) {
+      const users = await usersResponse.json();
+      stats.totalUsers = users.length;
+    }
+
+    // Get recent activity (last 24 hours)
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const activityResponse = await fetch(`${supabaseUrl}/rest/v1/live_activity?select=id&created_at=gte.${yesterday}`, {
+      headers: { 
+        'apikey': Deno.env.get('SUPABASE_ANON_KEY')!,
+        'Authorization': `Bearer ${serviceKey}`
+      }
+    });
+    
+    if (activityResponse.ok) {
+      const activity = await activityResponse.json();
+      stats.recentActivity = activity.length;
+    }
+  } catch (error) {
+    console.log('Error fetching system stats:', error);
+  }
+
+  return stats;
 }
 
 async function updateStatusMessage(
@@ -257,21 +376,93 @@ function createStatusEmbed(statusData: any) {
     unhealthy: 0xFF0000 // Red
   };
 
-  const embed = {
-    title: `${statusEmoji[statusData.overall]} Site Status - ${statusData.overall.toUpperCase()}`,
-    description: 'Real-time status of our Discord Server Listings platform',
-    color: statusColor[statusData.overall],
-    fields: statusData.checks.map((check: any) => ({
+  // Create detailed service status fields
+  const serviceFields = statusData.checks.map((check: any) => {
+    let value = '';
+    
+    if (check.responseTime) {
+      const responseStatus = check.responseTime < 100 ? '⚡ Excellent' : 
+                           check.responseTime < 300 ? '✅ Good' : 
+                           check.responseTime < 1000 ? '⚠️ Slow' : '🐌 Very Slow';
+      
+      value = `${responseStatus} (${check.responseTime}ms)\n`;
+      value += `Status Code: ${check.statusCode || 'N/A'}\n`;
+      value += `${check.details || 'Service operational'}`;
+    } else {
+      value = `❌ **Error:** ${check.error || 'Unknown'}\n`;
+      value += `${check.details || 'Service unavailable'}`;
+    }
+    
+    return {
       name: `${statusEmoji[check.status]} ${check.service}`,
-      value: check.responseTime 
-        ? `Response: ${check.responseTime}ms\nStatus: ${check.statusCode || 'N/A'}`
-        : `Error: ${check.error || 'Unknown'}`,
+      value: value,
       inline: true
-    })),
+    };
+  });
+
+  // Add system statistics if available
+  const statsFields = [];
+  if (statusData.stats) {
+    statsFields.push({
+      name: '📊 Platform Statistics',
+      value: `**Total Listings:** ${statusData.stats.totalListings.toLocaleString()}\n` +
+             `**Active Listings:** ${statusData.stats.activeListings.toLocaleString()}\n` +
+             `**Registered Users:** ${statusData.stats.totalUsers.toLocaleString()}\n` +
+             `**Activity (24h):** ${statusData.stats.recentActivity.toLocaleString()} actions`,
+      inline: false
+    });
+  }
+
+  // Performance overview
+  const avgResponseTime = statusData.checks
+    .filter((check: any) => check.responseTime)
+    .reduce((sum: number, check: any) => sum + check.responseTime, 0) / 
+    statusData.checks.filter((check: any) => check.responseTime).length;
+
+  const performanceField = {
+    name: '⚡ Performance Metrics',
+    value: `**Average Response Time:** ${Math.round(avgResponseTime)}ms\n` +
+           `**Services Online:** ${statusData.checks.filter((c: any) => c.status === 'healthy').length}/${statusData.checks.length}\n` +
+           `**Uptime:** ${statusData.uptime}\n` +
+           `**Last Check:** ${new Date(statusData.timestamp).toLocaleString()}`,
+    inline: false
+  };
+
+  // Status summary for description
+  const healthyServices = statusData.checks.filter((c: any) => c.status === 'healthy').length;
+  const totalServices = statusData.checks.length;
+  
+  let description = `**Discord Server Listings Platform Status**\n\n`;
+  
+  if (statusData.overall === 'healthy') {
+    description += `✅ All systems operational! ${healthyServices}/${totalServices} services running smoothly.`;
+  } else if (statusData.overall === 'degraded') {
+    description += `⚠️ Some services experiencing issues. ${healthyServices}/${totalServices} services operational.`;
+  } else {
+    description += `🚨 Major service disruption detected. ${healthyServices}/${totalServices} services operational.`;
+  }
+
+  const embed = {
+    title: `${statusEmoji[statusData.overall]} System Status - ${statusData.overall.toUpperCase()}`,
+    description: description,
+    color: statusColor[statusData.overall],
+    fields: [
+      ...serviceFields,
+      performanceField,
+      ...statsFields
+    ],
     footer: {
-      text: `Last updated: ${new Date(statusData.timestamp).toLocaleString()} | Uptime: ${statusData.uptime}`
+      text: `Automated Status Monitor • Updated every hour • Discord Server Listings`,
+      icon_url: 'https://cdn.discordapp.com/attachments/placeholder/bot-icon.png'
     },
-    timestamp: statusData.timestamp
+    timestamp: statusData.timestamp,
+    thumbnail: {
+      url: statusData.overall === 'healthy' ? 
+        'https://cdn.discordapp.com/attachments/placeholder/status-healthy.png' :
+        statusData.overall === 'degraded' ?
+        'https://cdn.discordapp.com/attachments/placeholder/status-warning.png' :
+        'https://cdn.discordapp.com/attachments/placeholder/status-error.png'
+    }
   };
 
   return embed;
