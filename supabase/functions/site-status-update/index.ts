@@ -142,17 +142,25 @@ async function updateStatusMessage(
 ) {
   const embed = createStatusEmbed(statusData);
   
+  console.log(`Checking for existing status message for channel: ${channelId}`);
+  
   // Check if we have an existing status message for this channel
-  const { data: existingMessage } = await supabase
+  const { data: existingMessage, error: queryError } = await supabase
     .from('site_status_messages')
     .select('discord_message_id')
     .eq('discord_channel_id', channelId)
-    .single();
+    .maybeSingle(); // Use maybeSingle instead of single to handle no results gracefully
+
+  if (queryError) {
+    console.error('Error querying existing messages:', queryError);
+  }
 
   let messageId: string;
   let isNewMessage = false;
 
   if (existingMessage?.discord_message_id) {
+    console.log(`Found existing message ID: ${existingMessage.discord_message_id}, attempting to update`);
+    
     // Try to update existing message
     try {
       const updateResponse = await fetch(
@@ -168,10 +176,12 @@ async function updateStatusMessage(
       );
 
       if (updateResponse.ok) {
+        console.log(`Successfully updated existing message: ${existingMessage.discord_message_id}`);
         messageId = existingMessage.discord_message_id;
       } else {
-        // Message might be deleted, create new one
-        throw new Error('Failed to update existing message');
+        const errorText = await updateResponse.text();
+        console.log(`Failed to update message (${updateResponse.status}): ${errorText}`);
+        throw new Error(`Discord API error: ${updateResponse.status} - ${errorText}`);
       }
     } catch (error) {
       console.log('Failed to update existing message, creating new one:', error);
@@ -181,14 +191,17 @@ async function updateStatusMessage(
       isNewMessage = true;
     }
   } else {
+    console.log('No existing message found, creating new one');
     // Create new message
     const response = await createNewStatusMessage(botToken, channelId, embed);
     messageId = response.id;
     isNewMessage = true;
   }
 
+  console.log(`Storing message info - ID: ${messageId}, isNew: ${isNewMessage}`);
+  
   // Store/update message info in database
-  await supabase
+  const { error: upsertError } = await supabase
     .from('site_status_messages')
     .upsert({
       discord_channel_id: channelId,
@@ -199,6 +212,10 @@ async function updateStatusMessage(
       onConflict: 'discord_channel_id',
       ignoreDuplicates: false 
     });
+
+  if (upsertError) {
+    console.error('Error upserting message info:', upsertError);
+  }
 
   return { 
     success: true, 
