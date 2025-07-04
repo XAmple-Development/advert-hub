@@ -51,35 +51,70 @@ export const FollowersFollowingList = ({ userId, defaultTab = 'followers' }: Fol
       setLoading(true);
       setError(null);
 
-      // Fetch followers with profile data
+      // Fetch followers (get user IDs first)
       const { data: followersData, error: followersError } = await supabase
         .from('user_follows')
-        .select('*, follower_profiles:profiles!user_follows_follower_id_fkey(*)')
+        .select('*')
         .eq('following_id', userId);
 
       if (followersError) throw followersError;
 
-      // Fetch following with profile data
+      // Fetch following (get user IDs first)
       const { data: followingData, error: followingError } = await supabase
         .from('user_follows')
-        .select('*, following_profiles:profiles!user_follows_following_id_fkey(*)')
+        .select('*')
         .eq('follower_id', userId);
 
       if (followingError) throw followingError;
 
-      // Transform data to match expected format
-      const transformedFollowers = followersData?.map(f => ({
-        ...f,
-        profiles: f.follower_profiles
-      })) || [];
+      // Get profile data for followers
+      const followerIds = followersData?.map(f => f.follower_id) || [];
+      let followersWithProfiles: FollowUser[] = [];
+      
+      if (followerIds.length > 0) {
+        const { data: followerProfiles, error: followerProfilesError } = await supabase
+          .from('profiles')
+          .select('id, username, discord_username, discord_avatar')
+          .in('id', followerIds);
 
-      const transformedFollowing = followingData?.map(f => ({
-        ...f,
-        profiles: f.following_profiles
-      })) || [];
+        if (followerProfilesError) throw followerProfilesError;
 
-      setFollowers(transformedFollowers);
-      setFollowing(transformedFollowing);
+        followersWithProfiles = followersData?.map(follow => ({
+          ...follow,
+          profiles: followerProfiles?.find(p => p.id === follow.follower_id) || {
+            id: follow.follower_id,
+            username: null,
+            discord_username: null,
+            discord_avatar: null
+          }
+        })) || [];
+      }
+
+      // Get profile data for following
+      const followingIds = followingData?.map(f => f.following_id) || [];
+      let followingWithProfiles: FollowUser[] = [];
+      
+      if (followingIds.length > 0) {
+        const { data: followingProfiles, error: followingProfilesError } = await supabase
+          .from('profiles')
+          .select('id, username, discord_username, discord_avatar')
+          .in('id', followingIds);
+
+        if (followingProfilesError) throw followingProfilesError;
+
+        followingWithProfiles = followingData?.map(follow => ({
+          ...follow,
+          profiles: followingProfiles?.find(p => p.id === follow.following_id) || {
+            id: follow.following_id,
+            username: null,
+            discord_username: null,
+            discord_avatar: null
+          }
+        })) || [];
+      }
+
+      setFollowers(followersWithProfiles);
+      setFollowing(followingWithProfiles);
     } catch (error: any) {
       setError(error.message);
     } finally {
