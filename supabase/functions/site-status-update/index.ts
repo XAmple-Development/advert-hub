@@ -452,7 +452,7 @@ function createStatusEmbed(statusData: any) {
       ...statsFields
     ],
     footer: {
-      text: `Automated Status Monitor • Updated every hour • Discord Server Listings`,
+      text: `Automated Status Monitor • Updated every hour • AdvertHub • X-Ample Development`,
       icon_url: 'https://cdn.discordapp.com/attachments/placeholder/bot-icon.png'
     },
     timestamp: statusData.timestamp,
