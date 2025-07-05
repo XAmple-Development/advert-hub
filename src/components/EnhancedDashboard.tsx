@@ -147,10 +147,10 @@ const EnhancedDashboard = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-            Dashboard
+            Welcome to your Dashboard {user?.user_metadata?.full_name || user?.email}!
           </h1>
           <p className="text-gray-300 text-lg">
-            Welcome back, {user?.user_metadata?.full_name || user?.email}! Here's your community overview.
+            Welcome! Here's your listings overview.
           </p>
         </div>
 
