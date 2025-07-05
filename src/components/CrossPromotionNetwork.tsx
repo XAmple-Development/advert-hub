@@ -38,7 +38,7 @@ const CrossPromotionNetwork = () => {
         .select('id, name, description, type, member_count, view_count, avatar_url, invite_url, premium_featured')
         .eq('status', 'active')
         .eq('premium_featured', true)
-        .neq('user_id', user?.id) // Exclude user's own listings
+        //.neq('user_id', user?.id) // Exclude user's own listings
         .order('view_count', { ascending: false })
         .limit(6);
 
