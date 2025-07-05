@@ -215,12 +215,6 @@ const Navbar = () => {
                           Admin Panel
                         </Button>
                       </Link>
-                      <Link to="/moderation" onClick={closeMobileMenu}>
-                        <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
-                          <Flag className="h-5 w-5 mr-3" />
-                          Moderation
-                        </Button>
-                      </Link>
                     </>
                   )}
                   
