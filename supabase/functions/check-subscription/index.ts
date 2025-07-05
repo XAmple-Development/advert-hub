@@ -90,7 +90,7 @@ serve(async (req) => {
         subscriptionTier = "small";
       } else if (amount === 699) {
         subscriptionTier = "medium";
-      } else if (amount === 999) {
+      } else if (amount === 1299) {
         subscriptionTier = "premium";
       } else {
         subscriptionTier = "free"; // Unknown amount defaults to free
