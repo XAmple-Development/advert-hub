@@ -116,6 +116,13 @@ const Navbar = () => {
                     Profile
                   </Button>
                 </Link>
+                
+                <Link to="https://status.x-ampledevelopment.co.uk/">
+                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                    <User className="h-5 w-5 mr-2" />
+                    Live Status
+                  </Button>
+                </Link>
 
                 {isAdmin && (
                   <>

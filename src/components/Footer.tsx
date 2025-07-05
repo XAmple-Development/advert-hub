@@ -70,12 +70,12 @@ const Footer = () => {
           <div className="border-t border-gray-700/50 pt-12 flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8">
               <p className="text-gray-400 text-lg">
-                © 2024 AdvertHub. All rights reserved.
+                © 2025 AdvertHub. All rights reserved.
               </p>
               <div className="flex items-center space-x-2 text-gray-400">
                 <span>Made with</span>
                 <Heart className="h-4 w-4 text-red-400 animate-pulse" />
-                <span>for Discord communities</span>
+                <span>by X-Ample Development</span>
               </div>
             </div>
             
