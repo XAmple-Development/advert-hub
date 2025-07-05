@@ -1906,6 +1906,10 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      populate_sample_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       update_leaderboards: {
         Args: Record<PropertyKey, never>
         Returns: undefined
