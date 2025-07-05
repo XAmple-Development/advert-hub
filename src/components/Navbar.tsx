@@ -116,13 +116,6 @@ const Navbar = () => {
                     Profile
                   </Button>
                 </Link>
-                
-                <Link to="https://status.x-ampledevelopment.co.uk/">
-                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                    <User className="h-5 w-5 mr-2" />
-                    Live Status
-                  </Button>
-                </Link>
 
                 {isAdmin && (
                   <>
@@ -130,12 +123,6 @@ const Navbar = () => {
                       <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
                         <Shield className="h-5 w-5 mr-2" />
                         Admin Panel
-                      </Button>
-                    </Link>
-                    <Link to="/moderation">
-                      <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                        <Flag className="h-5 w-5 mr-2" />
-                        Moderation
                       </Button>
                     </Link>
                   </>
