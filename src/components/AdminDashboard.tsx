@@ -268,7 +268,6 @@ const AdminDashboard = () => {
     if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
-                <Navbar />
                 <div className="flex items-center justify-center min-h-[calc(100vh-64px)] relative">
                     {/* Background Elements */}
                     <div className="absolute inset-0 overflow-hidden">
