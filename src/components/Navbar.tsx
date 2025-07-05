@@ -96,11 +96,11 @@ const Navbar = () => {
                   </Button>
                 </Link>
 
-                <Link to="/gamification">
-                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                    <Trophy className="h-5 w-5 mr-2" />
-                    Rewards
-                  </Button>
+                <Link to="https://status.x-ampledevelopment.co.uk/">
+                  <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                    <Trophy className="h-5 w-5 mr-3" />
+                     Live Status
+                    </Button>
                 </Link>
 
                 <Link to="/activity">
@@ -186,10 +186,10 @@ const Navbar = () => {
                     </Button>
                   </Link>
 
-                  <Link to="/gamification" onClick={closeMobileMenu}>
+                  <Link to="https://status.x-ampledevelopment.co.uk/" onClick={closeMobileMenu}>
                     <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                       <Trophy className="h-5 w-5 mr-3" />
-                      Rewards
+                      Live Status
                     </Button>
                   </Link>
 
