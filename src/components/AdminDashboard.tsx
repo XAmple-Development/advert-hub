@@ -268,6 +268,7 @@ const AdminDashboard = () => {
     if (authLoading || loading) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+                <Navbar />
                 <div className="flex items-center justify-center min-h-[calc(100vh-64px)] relative">
                     {/* Background Elements */}
                     <div className="absolute inset-0 overflow-hidden">
@@ -296,9 +297,7 @@ const AdminDashboard = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">
-            <Navbar />
-            
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">            
             {/* Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
