@@ -150,7 +150,7 @@ const EnhancedDashboard = () => {
             Welcome to your Dashboard, {user?.user_metadata?.full_name || user?.email}!
           </h1>
           <p className="text-gray-300 text-lg">
-            Here's your listings overview.
+            Here's your overview.
           </p>
         </div>
 
