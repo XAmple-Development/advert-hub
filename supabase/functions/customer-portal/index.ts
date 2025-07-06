@@ -119,14 +119,31 @@ Deno.serve(async (req) => {
     });
 
     const responseText = await stripeResponse.text();
-    console.log("Stripe response:", { status: stripeResponse.status, hasText: !!responseText });
+    console.log("Stripe response:", { status: stripeResponse.status, responseText });
     
     if (!stripeResponse.ok) {
-      console.log("Stripe API error:", responseText);
-      return new Response(JSON.stringify({ 
-        error: "Stripe API error",
+      console.error("Stripe API error details:", {
         status: stripeResponse.status,
-        details: responseText
+        statusText: stripeResponse.statusText,
+        responseText,
+        customerId,
+        returnUrl: origin
+      });
+      
+      // Try to parse the error response
+      let errorDetails = responseText;
+      try {
+        const errorJson = JSON.parse(responseText);
+        errorDetails = errorJson.error?.message || errorJson.message || responseText;
+      } catch (e) {
+        // Keep original response text if parsing fails
+      }
+      
+      return new Response(JSON.stringify({ 
+        error: "Stripe billing portal error",
+        message: errorDetails,
+        status: stripeResponse.status,
+        details: "Check that Stripe billing portal is enabled in your Stripe dashboard"
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
