@@ -48,6 +48,9 @@ interface Listing {
   featured: boolean;
   last_bumped_at?: string;
   user_id: string;
+  profiles?: {
+    subscription_tier: 'free' | 'gold' | 'platinum' | 'premium';
+  }[] | null;
 }
 
 const ITEMS_PER_PAGE = 12;
@@ -80,7 +83,10 @@ const EnhancedListingsPage = () => {
     try {
       const { data, error } = await supabase
         .from('listings')
-        .select('*')
+        .select(`
+          *,
+          profiles(subscription_tier)
+        `)
         .eq('status', 'active')
         .eq('type', 'server')
         .order('premium_featured', { ascending: false })
@@ -319,8 +325,33 @@ const EnhancedListingsPage = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {paginatedListings.map((listing) => {
+                const userTier = listing.profiles?.[0]?.subscription_tier || 'free';
+                const getTierBorderColor = (tier: string) => {
+                  switch (tier) {
+                    case 'platinum':
+                    case 'premium':
+                      return 'border-slate-400/70 hover:border-slate-300/80';
+                    case 'gold':
+                      return 'border-yellow-500/70 hover:border-yellow-400/80';
+                    default:
+                      return 'border-gray-700/50 hover:border-purple-500/50';
+                  }
+                };
+                const getTierBadge = (tier: string) => {
+                  switch (tier) {
+                    case 'platinum':
+                    case 'premium':
+                      return { text: 'Platinum', color: 'bg-slate-500/20 text-slate-300 border-slate-500/30' };
+                    case 'gold':
+                      return { text: 'Gold', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' };
+                    default:
+                      return null;
+                  }
+                };
+                const tierBadge = getTierBadge(userTier);
+                
                 return (
-                  <Card key={listing.id} className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden hover:scale-105 transition-all duration-300 hover:border-purple-500/50 group cursor-pointer">
+                  <Card key={listing.id} className={`bg-gray-800/40 backdrop-blur-xl border ${getTierBorderColor(userTier)} rounded-3xl overflow-hidden hover:scale-105 transition-all duration-300 group cursor-pointer`}>
                     {listing.banner_url && (
                       <div 
                         className="h-32 bg-cover bg-center"
@@ -368,6 +399,14 @@ const EnhancedListingsPage = () => {
                             >
                               {listing.type}
                             </Badge>
+                            {tierBadge && (
+                              <Badge 
+                                variant="outline"
+                                className={`text-xs ${tierBadge.color}`}
+                              >
+                                {tierBadge.text}
+                              </Badge>
+                            )}
                             <span className="text-gray-400 text-xs flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               {getTimeSince(listing.created_at)}

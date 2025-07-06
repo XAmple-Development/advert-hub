@@ -27,10 +27,9 @@ interface BotListing {
   invite_url: string | null;
   created_at: string;
   user_id: string;
-  profiles: {
-    username: string | null;
-    discord_username: string | null;
-  } | null;
+  profiles?: {
+    subscription_tier: 'free' | 'gold' | 'platinum' | 'premium';
+  }[] | null;
   hasVotedToday?: boolean;
 }
 
@@ -65,7 +64,10 @@ const Bots = () => {
 
       const { data, error } = await supabase
         .from('listings')
-        .select('*')
+        .select(`
+          *,
+          profiles(subscription_tier)
+        `)
         .eq('type', 'bot')
         .eq('status', 'active')
         .not('bot_id', 'is', null)
@@ -74,11 +76,8 @@ const Bots = () => {
 
       if (error) throw error;
 
-      // Transform the data to match our interface
-      const transformedData = data?.map(item => ({
-        ...item,
-        profiles: null // No profile data available
-      })) || [];
+      // Keep the profiles data instead of nullifying it
+      const transformedData = data || [];
 
       setBots(transformedData);
     } catch (error: any) {
@@ -200,8 +199,34 @@ const Bots = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBots.map((bot) => (
-                <Card key={bot.id} className="group bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 rounded-3xl overflow-hidden">
+              {filteredBots.map((bot) => {
+                const userTier = bot.profiles?.[0]?.subscription_tier || 'free';
+                const getTierBorderColor = (tier: string) => {
+                  switch (tier) {
+                    case 'platinum':
+                    case 'premium':
+                      return 'border-slate-400/70 hover:border-slate-300/80';
+                    case 'gold':
+                      return 'border-yellow-500/70 hover:border-yellow-400/80';
+                    default:
+                      return 'border-gray-700/50 hover:border-purple-500/50';
+                  }
+                };
+                const getTierBadge = (tier: string) => {
+                  switch (tier) {
+                    case 'platinum':
+                    case 'premium':
+                      return { text: 'Platinum', color: 'bg-slate-500/20 text-slate-300 border-slate-500/30' };
+                    case 'gold':
+                      return { text: 'Gold', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' };
+                    default:
+                      return null;
+                  }
+                };
+                const tierBadge = getTierBadge(userTier);
+                
+                return (
+                <Card key={bot.id} className={`group bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border ${getTierBorderColor(userTier)} transition-all duration-500 rounded-3xl overflow-hidden`}>
                   <CardHeader className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center space-x-4">
@@ -246,6 +271,14 @@ const Bots = () => {
                       {bot.library && (
                         <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
                           {bot.library}
+                        </Badge>
+                      )}
+                      {tierBadge && (
+                        <Badge 
+                          variant="outline"
+                          className={`text-xs ${tierBadge.color}`}
+                        >
+                          {tierBadge.text}
                         </Badge>
                       )}
                       {bot.certified_bot && (
@@ -307,7 +340,8 @@ const Bots = () => {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
