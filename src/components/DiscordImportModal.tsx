@@ -261,11 +261,16 @@ const DiscordImportModal = ({
 
   const handleSignInWithDiscord = async () => {
     try {
+      const redirectUrl = `${window.location.origin}/listings`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectUrl,
           scopes: 'identify email guilds',
+          queryParams: {
+            prompt: 'consent' // Force re-consent to ensure we get fresh tokens
+          }
         },
       });
 

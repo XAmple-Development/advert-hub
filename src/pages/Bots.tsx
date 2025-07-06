@@ -65,10 +65,7 @@ const Bots = () => {
 
       const { data, error } = await supabase
         .from('listings')
-        .select(`
-          *,
-          profiles(username, discord_username)
-        `)
+        .select('*')
         .eq('type', 'bot')
         .eq('status', 'active')
         .not('bot_id', 'is', null)
@@ -80,7 +77,7 @@ const Bots = () => {
       // Transform the data to match our interface
       const transformedData = data?.map(item => ({
         ...item,
-        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+        profiles: null // No profile data available
       })) || [];
 
       setBots(transformedData);
@@ -227,7 +224,7 @@ const Bots = () => {
                             )}
                           </CardTitle>
                           <p className="text-gray-400 text-sm">
-                            by {bot.profiles?.discord_username || bot.profiles?.username || 'Unknown'}
+                            Discord Bot
                           </p>
                         </div>
                       </div>
