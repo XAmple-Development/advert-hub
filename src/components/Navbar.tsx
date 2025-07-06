@@ -62,19 +62,19 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 bg-gradient-to-r from-gray-900/95 via-slate-900/95 to-gray-900/95 backdrop-blur-xl border-b border-gray-700/50">
       <div className="max-w-7xl mx-auto px-6 py-4">
-        <div className="hidden md:grid md:grid-cols-3 md:items-center md:gap-8">
+        <div className="hidden md:flex md:items-center md:justify-between md:w-full">
           {/* Left Side Navigation */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             {/* Browse Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                  <Search className="h-5 w-5 mr-2" />
+                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 font-medium px-4 py-2 rounded-xl transition-all duration-300">
+                  <Search className="h-4 w-4 mr-2" />
                   Browse
-                  <ChevronDown className="h-4 w-4 ml-2" />
+                  <ChevronDown className="h-3 w-3 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-gray-800 border-gray-700 rounded-xl p-2 shadow-2xl">
+              <DropdownMenuContent className="bg-gray-800/95 backdrop-blur-xl border-gray-700 rounded-xl p-2 shadow-2xl z-50">
                 <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
                   <Link to="/listings" className="flex items-center w-full text-gray-300 hover:text-white">
                     <Users className="h-4 w-4 mr-2" />
@@ -93,13 +93,13 @@ const Navbar = () => {
             {/* Community Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                  <MessageCircle className="h-5 w-5 mr-2" />
+                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 font-medium px-4 py-2 rounded-xl transition-all duration-300">
+                  <MessageCircle className="h-4 w-4 mr-2" />
                   Community
-                  <ChevronDown className="h-4 w-4 ml-2" />
+                  <ChevronDown className="h-3 w-3 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-gray-800 border-gray-700 rounded-xl p-2 shadow-2xl">
+              <DropdownMenuContent className="bg-gray-800/95 backdrop-blur-xl border-gray-700 rounded-xl p-2 shadow-2xl z-50">
                 <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
                   <Link to="/forum" className="flex items-center w-full text-gray-300 hover:text-white">
                     <MessageCircle className="h-4 w-4 mr-2" />
@@ -129,7 +129,7 @@ const Navbar = () => {
           </div>
 
           {/* Center Logo */}
-          <div className="flex justify-center">
+          <div className="absolute left-1/2 transform -translate-x-1/2">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
                 <Bot className="h-6 w-6 text-white" />
@@ -141,7 +141,7 @@ const Navbar = () => {
           </div>
 
           {/* Right Side Navigation */}
-          <div className="flex items-center justify-end space-x-4">
+          <div className="flex items-center space-x-2">
             {user ? (
               <>
                 <Link to="/">
