@@ -442,6 +442,19 @@ serve(async (req: Request) => {
 
         console.log('[discord-import] Import completed:', { importedServers });
 
+        // Check if any servers were actually imported
+        if (importedServers === 0) {
+          return new Response(JSON.stringify({
+            error: 'Import failed',
+            message: 'No servers were successfully imported',
+            code: 'NO_SERVERS_IMPORTED',
+            details: 'All server imports failed. Check console logs for specific errors.'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400
+          });
+        }
+
         return new Response(JSON.stringify({
           success: true,
           message: `Successfully imported ${importedServers} servers. Note: Member counts need to be updated manually.`,
