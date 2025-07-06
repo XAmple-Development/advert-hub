@@ -67,7 +67,7 @@ const Bots = () => {
         .from('listings')
         .select(`
           *,
-          profiles!inner(username, discord_username)
+          profiles(username, discord_username)
         `)
         .eq('type', 'bot')
         .eq('status', 'active')
