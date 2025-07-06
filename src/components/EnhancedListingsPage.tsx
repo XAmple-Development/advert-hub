@@ -290,7 +290,7 @@ const EnhancedListingsPage = () => {
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Bot/Server
+                  Add Bot Listing
                 </Button>
               </div>
             )}
