@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer") || "https://2b712818-fe7b-4d50-8a53-c875975112ef.lovableproject.com";
     
     console.log("Making Stripe API call to create portal session...");
+    console.log("Portal session params:", { customerId, returnUrl: origin });
     
     const stripeResponse = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
       method: 'POST',
