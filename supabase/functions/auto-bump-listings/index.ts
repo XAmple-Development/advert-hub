@@ -12,15 +12,49 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  console.log('🚀 AUTO-BUMP FUNCTION STARTED');
+  console.log('⏰ Timestamp:', new Date().toISOString());
+  
   if (req.method === "OPTIONS") {
+    console.log('✅ OPTIONS request handled');
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Add detailed logging
+  // Add detailed logging with timestamp
   console.log('=== AUTO-BUMP FUNCTION CALLED ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  
+  try {
+    const body = await req.text();
+    console.log('Request body:', body);
+  } catch (e) {
+    console.log('Could not read request body:', e);
+  }
+  
   console.log('Environment check:');
   console.log('SUPABASE_URL:', Deno.env.get("SUPABASE_URL") ? 'SET' : 'NOT SET');
   console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ? 'SET' : 'NOT SET');
+
+  // Test basic functionality
+  try {
+    console.log('🔄 Testing basic response...');
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Auto-bump function is reachable',
+      timestamp: new Date().toISOString(),
+      test: 'basic_connectivity'
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error) {
+    console.error('❌ Error in basic test:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -84,14 +118,25 @@ serve(async (req) => {
 
       // Check if enough time has passed since last auto-bump
       const now = new Date();
+      logStep(`Checking auto-bump timing for user ${profile.id}`);
+      logStep(`Current time: ${now.toISOString()}`);
+      logStep(`User interval: ${autoBumpUser.interval_hours} hours`);
+      
       if (autoBumpUser.last_auto_bump_at) {
         const lastBump = new Date(autoBumpUser.last_auto_bump_at);
         const hoursSinceLastBump = (now.getTime() - lastBump.getTime()) / (1000 * 60 * 60);
         
+        logStep(`Last auto-bump: ${lastBump.toISOString()}`);
+        logStep(`Hours since last bump: ${hoursSinceLastBump.toFixed(2)}`);
+        
         if (hoursSinceLastBump < autoBumpUser.interval_hours) {
-          logStep(`User ${profile.id} last auto-bumped ${hoursSinceLastBump.toFixed(1)} hours ago, skipping`);
+          logStep(`User ${profile.id} last auto-bumped ${hoursSinceLastBump.toFixed(1)} hours ago, need to wait ${(autoBumpUser.interval_hours - hoursSinceLastBump).toFixed(1)} more hours`);
           continue;
+        } else {
+          logStep(`User ${profile.id} ready for auto-bump! ${hoursSinceLastBump.toFixed(1)} hours >= ${autoBumpUser.interval_hours} hours`);
         }
+      } else {
+        logStep(`User ${profile.id} has never been auto-bumped, proceeding with first auto-bump`);
       }
 
       // Get all active listings for this user
