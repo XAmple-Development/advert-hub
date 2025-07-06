@@ -448,7 +448,6 @@ const DiscordImportModal = ({
                       <SelectValue placeholder="-- Select Discord Server --" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#2C2F33] border-[#40444B]">
-                      <SelectItem value="" className="text-gray-400">-- Select Discord Server --</SelectItem>
                       <SelectItem value="owned" disabled className="text-gray-400">-- Owned Servers --</SelectItem>
                       {servers.filter(s => s.owner).map((server) => (
                         <SelectItem key={server.id} value={server.id} className="text-white">
