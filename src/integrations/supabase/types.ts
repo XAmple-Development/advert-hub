@@ -2104,7 +2104,7 @@ export type Database = {
     Enums: {
       listing_status: "active" | "pending" | "suspended"
       listing_type: "server" | "bot"
-      subscription_tier: "free" | "premium"
+      subscription_tier: "free" | "gold" | "platinum"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2222,7 +2222,7 @@ export const Constants = {
     Enums: {
       listing_status: ["active", "pending", "suspended"],
       listing_type: ["server", "bot"],
-      subscription_tier: ["free", "premium"],
+      subscription_tier: ["free", "gold", "platinum"],
     },
   },
 } as const
