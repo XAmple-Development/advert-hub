@@ -38,7 +38,7 @@ const Hero = () => {
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Connect your Discord servers to our premium advertising network. 
+              Connect your Discord server or bot to our premium advertising network. 
               <span className="text-cyan-300 font-semibold"> Get discovered by millions</span> and 
               <span className="text-purple-300 font-semibold"> grow exponentially</span> with our AI-powered promotion system.
             </p>
@@ -66,7 +66,7 @@ const Hero = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl mb-6">
                   <Users className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-3">1M+ Servers</h3>
+                <h3 className="text-3xl font-bold text-white mb-3">1k+ Servers</h3>
                 <p className="text-gray-300 text-lg">Connected to our massive network</p>
               </div>
             </div>
@@ -88,7 +88,7 @@ const Hero = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl mb-6">
                   <TrendingUp className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-3xl font-bold text-white mb-3">50M+ Views</h3>
+                <h3 className="text-3xl font-bold text-white mb-3">5k+ Views</h3>
                 <p className="text-gray-300 text-lg">Monthly advertisement impressions</p>
               </div>
             </div>
