@@ -105,9 +105,15 @@ export const AdminEventsManagement = () => {
     e.preventDefault();
     
     try {
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const eventData = {
         ...formData,
-        organizer_id: (await supabase.auth.getUser()).data.user?.id,
+        listing_id: formData.listing_id || null, // Convert empty string to null
+        organizer_id: user.id,
         current_participants: 0,
         status: 'upcoming'
       };
