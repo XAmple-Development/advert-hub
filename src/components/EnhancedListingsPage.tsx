@@ -76,6 +76,7 @@ const EnhancedListingsPage = () => {
   }, []);
 
   const fetchListings = async () => {
+    console.log('Fetching listings...');
     try {
       const { data, error } = await supabase
         .from('listings')
@@ -85,9 +86,11 @@ const EnhancedListingsPage = () => {
         .order('last_bumped_at', { ascending: false })
         .order('created_at', { ascending: false });
 
+      console.log('Listings query result:', { data: data?.length, error });
       if (error) throw error;
       setListings(data || []);
     } catch (error: any) {
+      console.error('Failed to fetch listings:', error);
       toast({
         variant: "destructive",
         title: "Error",

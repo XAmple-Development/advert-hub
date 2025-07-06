@@ -496,9 +496,25 @@ const DiscordImportModal = ({
             <div>
               <Label className="text-white">Banner</Label>
               <p className="text-xs text-gray-400 mb-2">Shows up across the top of your Servers page. (Width: 945px - Height: 290px)</p>
-              <div className="border-2 border-dashed border-[#40444B] rounded-lg p-8 text-center bg-[#36393F]">
+              <div 
+                className="border-2 border-dashed border-[#40444B] rounded-lg p-8 text-center bg-[#36393F] cursor-pointer hover:bg-[#3C4042] transition-colors"
+                onClick={() => document.getElementById('banner-upload')?.click()}
+              >
                 <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-400">Drag & Drop your files or <span className="text-blue-400 underline cursor-pointer">Browse</span></p>
+                <p className="text-gray-400">Drag & Drop your files or <span className="text-blue-400 underline">Browse</span></p>
+                <input
+                  id="banner-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      // TODO: Handle file upload
+                      console.log('Banner file selected:', file.name);
+                    }
+                  }}
+                />
               </div>
               <div className="bg-red-900/20 border border-red-500 rounded p-2 mt-2">
                 <p className="text-red-400 text-sm">Don't have graphics for your Discord server? Find Web Banner Artists on Fiverr!</p>
