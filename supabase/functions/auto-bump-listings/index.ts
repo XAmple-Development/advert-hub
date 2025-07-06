@@ -164,6 +164,25 @@ serve(async (req) => {
             logStep(`Error updating analytics for listing ${listing.id}`, analyticsError.message);
           }
 
+          // Send Discord bump notification
+          try {
+            logStep(`Sending Discord notification for listing ${listing.id}`);
+            const notificationResponse = await supabaseClient.functions.invoke('discord-bump-notification', {
+              body: { 
+                listingId: listing.id,
+                bumpType: 'website'
+              }
+            });
+            
+            if (notificationResponse.error) {
+              logStep(`Discord notification error for listing ${listing.id}`, notificationResponse.error);
+            } else {
+              logStep(`Discord notification sent successfully for listing ${listing.id}`);
+            }
+          } catch (notificationError) {
+            logStep(`Failed to send Discord notification for listing ${listing.id}`, notificationError);
+          }
+
           totalBumped++;
           logStep(`Successfully auto-bumped listing: ${listing.name} (${listing.id})`);
 
