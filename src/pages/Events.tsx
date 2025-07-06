@@ -53,7 +53,6 @@ const Events = () => {
           profiles(username)
         `)
         .eq('status', 'upcoming')
-        .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true });
 
       const { data: eventsData, error: eventsError } = await query;
@@ -178,6 +177,7 @@ const Events = () => {
   };
 
   const upcomingEvents = events.filter(event => new Date(event.start_time) > new Date());
+  const pastEvents = events.filter(event => new Date(event.start_time) <= new Date());
   const todayEvents = events.filter(event => {
     const eventDate = new Date(event.start_time);
     const today = new Date();
@@ -224,24 +224,30 @@ const Events = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="all" className="space-y-8">
+          <Tabs defaultValue="upcoming" className="space-y-8">
             <TabsList className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2">
               <TabsTrigger 
-                value="all" 
+                value="upcoming" 
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-6 py-3 font-medium"
               >
-                All Events ({events.length})
+                Upcoming ({upcomingEvents.length})
               </TabsTrigger>
               <TabsTrigger 
                 value="today" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-6 py-3 font-medium"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-blue-600 data-[state=active]:text-white rounded-xl px-6 py-3 font-medium"
               >
                 Today ({todayEvents.length})
               </TabsTrigger>
+              <TabsTrigger 
+                value="all" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gray-600 data-[state=active]:to-gray-700 data-[state=active]:text-white rounded-xl px-6 py-3 font-medium"
+              >
+                All Events ({events.length})
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="space-y-6">
-              {events.length === 0 ? (
+            <TabsContent value="upcoming" className="space-y-6">
+              {upcomingEvents.length === 0 ? (
                 <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
                   <CardContent className="py-16 text-center">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full mb-6">
@@ -253,7 +259,7 @@ const Events = () => {
                 </Card>
               ) : (
                 <div className="grid gap-6">
-                  {events.map((event) => (
+                  {upcomingEvents.map((event) => (
                     <Card key={event.id} className="group bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 rounded-3xl overflow-hidden">
                       <CardHeader className="p-8">
                         <div className="flex items-start justify-between">
@@ -434,6 +440,123 @@ const Events = () => {
                       )}
                     </Card>
                   ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="all" className="space-y-6">
+              {events.length === 0 ? (
+                <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
+                  <CardContent className="py-16 text-center">
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-gray-500/10 to-gray-600/10 rounded-full mb-6">
+                      <Calendar className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <div className="text-2xl font-bold text-white mb-2">No events found</div>
+                    <div className="text-gray-300 text-lg">Events will appear here once they're created!</div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-6">
+                  {events.map((event) => {
+                    const isPastEvent = new Date(event.start_time) <= new Date();
+                    return (
+                      <Card key={event.id} className={`group backdrop-blur-xl border border-gray-700/50 hover:border-gray-500/50 transition-all duration-500 rounded-3xl overflow-hidden ${
+                        isPastEvent 
+                          ? 'bg-gradient-to-r from-gray-800/20 to-gray-900/20 opacity-75' 
+                          : 'bg-gradient-to-r from-gray-800/40 to-gray-900/40 hover:border-purple-500/50'
+                      }`}>
+                        <CardHeader className="p-8">
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center space-x-6">
+                              {event.listings?.avatar_url ? (
+                                <img
+                                  src={event.listings.avatar_url}
+                                  alt={event.listings.name}
+                                  className="w-16 h-16 rounded-2xl"
+                                />
+                              ) : (
+                                <div className={`w-16 h-16 bg-gradient-to-r ${isPastEvent ? 'from-gray-600 to-gray-700' : 'from-purple-600 to-pink-600'} rounded-2xl flex items-center justify-center`}>
+                                  <Calendar className="h-8 w-8 text-white" />
+                                </div>
+                              )}
+                              <div>
+                                <CardTitle className="text-white text-2xl font-bold mb-2">{event.title}</CardTitle>
+                                <div className="flex items-center gap-3 mb-3">
+                                  <Badge className={getEventTypeColor(event.event_type || 'community')}>
+                                    {event.event_type}
+                                  </Badge>
+                                  {event.listings && (
+                                    <Badge variant="outline" className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-gray-600/50 text-gray-300">
+                                      <MapPin className="h-3 w-3 mr-1" />
+                                      {event.listings.name}
+                                    </Badge>
+                                  )}
+                                  {isPastEvent && (
+                                    <Badge className="bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-gray-400 border-gray-500/30">
+                                      Past Event
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-4 text-gray-300">
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-4 w-4" />
+                                    {new Date(event.start_time).toLocaleDateString()} at {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Users className="h-4 w-4" />
+                                    {event.current_participants}/{event.max_participants} registered
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex gap-3">
+                              {!isPastEvent && user ? (
+                                <Button
+                                  onClick={() => handleRSVP(event.id, !event.user_registered)}
+                                  disabled={rsvpLoading === event.id || (!event.user_registered && event.current_participants >= event.max_participants)}
+                                  size="lg"
+                                  className={event.user_registered 
+                                    ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
+                                    : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
+                                  }
+                                >
+                                  {rsvpLoading === event.id ? 'Processing...' : 
+                                   event.user_registered ? 'Cancel RSVP' : 
+                                   event.current_participants >= event.max_participants ? 'Event Full' : 'RSVP'}
+                                </Button>
+                              ) : isPastEvent ? (
+                                <Button
+                                  disabled
+                                  size="lg"
+                                  className="bg-gray-600 text-gray-400 rounded-2xl px-6 py-3 cursor-not-allowed"
+                                >
+                                  Event Ended
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => toast({
+                                    variant: "destructive",
+                                    title: "Authentication Required",
+                                    description: "Please sign in to RSVP to events"
+                                  })}
+                                  size="lg"
+                                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
+                                >
+                                  Sign In to RSVP
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        {event.description && (
+                          <CardContent className="px-8 pb-8">
+                            <p className="text-gray-300 text-lg leading-relaxed">{event.description}</p>
+                          </CardContent>
+                        )}
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>
