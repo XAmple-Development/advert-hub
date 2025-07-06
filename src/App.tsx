@@ -23,6 +23,7 @@ import LiveActivity from "./pages/LiveActivity";
 import Moderation from "./pages/Moderation";
 import Events from "./pages/Events";
 import Forum from "./pages/Forum";
+import CreateForumTopic from "./pages/CreateForumTopic";
 import API from "./pages/API";
 import NotFound from "./pages/NotFound";
 
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/moderation" element={<Moderation />} />
               <Route path="/events" element={<Events />} />
               <Route path="/forum" element={<Forum />} />
+              <Route path="/forum/create" element={<CreateForumTopic />} />
               <Route path="/api" element={<API />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

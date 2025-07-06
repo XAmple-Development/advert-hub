@@ -78,7 +78,7 @@ const Forum = () => {
         .from('forum_topics')
         .select(`
           *,
-          profiles!inner(username, discord_username, discord_avatar)
+          profiles(username, discord_username, discord_avatar)
         `)
         .order('last_reply_at', { ascending: false })
         .limit(10);
