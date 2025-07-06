@@ -225,16 +225,20 @@ serve(async (req: Request) => {
 
         console.log('[discord-import] Manageable servers:', manageableServers.length);
 
-        // Map guild data - Note: member_count will be 0 due to Discord API limitations
+        // Map guild data - Try to get approximate member counts where available
         const serversWithDetails = manageableServers.map((guild: any) => {
           console.log('[discord-import] Processing guild:', guild.name);
+          
+          // Try to get member count from guild data (approximate_member_count or member_count)
+          const memberCount = guild.approximate_member_count || guild.member_count || 0;
           
           return {
             id: guild.id,
             name: guild.name,
             icon: guild.icon,
             permissions: guild.permissions,
-            member_count: 0, // User tokens can't access member counts
+            member_count: memberCount,
+            approximate_member_count: guild.approximate_member_count || 0,
             owner: guild.owner,
             description: guild.description || null
           };
@@ -356,13 +360,14 @@ serve(async (req: Request) => {
                 console.log('[discord-import] Importing server:', server.name);
 
                 // Use form data for the listing
+                const memberCount = server.approximate_member_count || server.member_count || 0;
                 const listingData = {
                   user_id: user.id,
                   type: 'server',
                   name: formData?.name || server.name,
-                  description: formData?.description || (server.description || `Discord server. ${server.owner ? 'You are the owner of this server.' : 'You have manage permissions.'} Member count needs to be updated manually.`),
+                  description: formData?.description || (server.description || `Discord server. ${server.owner ? 'You are the owner of this server.' : 'You have manage permissions.'}${memberCount > 0 ? ` ${memberCount.toLocaleString()} members.` : ' Member count needs to be updated manually.'}`),
                   long_description: formData?.description || server.description || null,
-                  member_count: 0, // Will need manual update
+                  member_count: memberCount,
                   view_count: 0,
                   bump_count: 0,
                   status: 'active',
