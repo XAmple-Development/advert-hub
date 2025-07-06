@@ -105,18 +105,31 @@ export const AdminEventsManagement = () => {
     e.preventDefault();
     
     try {
+      console.log('Starting event creation...');
       const user = (await supabase.auth.getUser()).data.user;
       if (!user) {
         throw new Error('User not authenticated');
       }
+      console.log('User authenticated:', user.id);
+
+      // Convert datetime-local string to ISO format for database
+      const startTime = formData.start_time ? new Date(formData.start_time).toISOString() : null;
+      const endTime = formData.end_time ? new Date(formData.end_time).toISOString() : null;
 
       const eventData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        start_time: startTime,
+        end_time: endTime,
+        event_type: formData.event_type,
+        max_participants: formData.max_participants,
         listing_id: formData.listing_id || null, // Convert empty string to null
         organizer_id: user.id,
         current_participants: 0,
         status: 'upcoming'
       };
+      
+      console.log('Event data to be saved:', eventData);
 
       if (editingEvent) {
         const { error } = await supabase
@@ -124,18 +137,26 @@ export const AdminEventsManagement = () => {
           .update(eventData)
           .eq('id', editingEvent.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error during update:', error);
+          throw error;
+        }
 
         toast({
           title: "Success",
           description: "Event updated successfully"
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('server_events')
           .insert([eventData]);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error during insert:', error);
+          throw error;
+        }
+
+        console.log('Event created successfully:', data);
 
         toast({
           title: "Success",
