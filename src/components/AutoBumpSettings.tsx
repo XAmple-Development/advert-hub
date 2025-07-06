@@ -27,7 +27,7 @@ export const AutoBumpSettings = () => {
 
   // Define interval options based on subscription tier
   const getIntervalOptions = () => {
-    if (subscription_tier === 'premium') {
+    if (subscription_tier === 'platinum') {
       return [
         { value: 2, label: '2 hours' },
         { value: 4, label: '4 hours' },
@@ -35,23 +35,14 @@ export const AutoBumpSettings = () => {
         { value: 12, label: '12 hours' },
         { value: 24, label: '24 hours' }
       ];
-    } else if (subscription_tier === 'free') {
-      return [];
+    } else if (subscription_tier === 'gold') {
+      return [
+        { value: 4, label: '4 hours' },
+        { value: 6, label: '6 hours' },
+        { value: 12, label: '12 hours' },
+        { value: 24, label: '24 hours' }
+      ];
     } else {
-      // Handle other subscription tiers (small, medium, etc.)
-      const tierStr = subscription_tier as string;
-      if (tierStr === 'medium') {
-        return [
-          { value: 6, label: '6 hours' },
-          { value: 12, label: '12 hours' },
-          { value: 24, label: '24 hours' }
-        ];
-      } else if (tierStr === 'small') {
-        return [
-          { value: 12, label: '12 hours' },
-          { value: 24, label: '24 hours' }
-        ];
-      }
       return [];
     }
   };
@@ -79,7 +70,7 @@ export const AutoBumpSettings = () => {
           .insert({
             user_id: user.id,
             enabled: false,
-            interval_hours: subscription_tier === 'premium' ? 4 : (subscription_tier as string) === 'medium' ? 6 : 12
+            interval_hours: subscription_tier === 'platinum' ? 2 : subscription_tier === 'gold' ? 4 : 12
           })
           .select()
           .single();
@@ -148,7 +139,7 @@ export const AutoBumpSettings = () => {
         <CardContent>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Crown className="h-4 w-4" />
-            <span>This feature is available for Small, Medium, and Premium subscribers</span>
+            <span>This feature is available for Gold and Platinum subscribers</span>
           </div>
         </CardContent>
       </Card>

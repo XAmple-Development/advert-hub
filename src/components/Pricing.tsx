@@ -109,7 +109,7 @@ const Pricing = () => {
           {user && (
             <div className="mt-8 flex items-center justify-center gap-4">
               <div className="text-gray-300">
-                Current Plan: <span className="font-bold text-white">{subscription_tier === 'premium' ? 'Premium Pro' : 'Starter'}</span>
+                Current Plan: <span className="font-bold text-white">{subscription_tier === 'platinum' ? 'Platinum' : subscription_tier === 'gold' ? 'Gold' : 'Free'}</span>
               </div>
               <Button
                 onClick={checkSubscription}

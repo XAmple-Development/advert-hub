@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface SubscriptionData {
   subscribed: boolean;
-  subscription_tier: 'free' | 'premium';
+  subscription_tier: 'free' | 'gold' | 'platinum';
   subscription_end: string | null;
   loading: boolean;
 }
@@ -171,6 +171,8 @@ export const useSubscription = () => {
     checkSubscription,
     createCheckout,
     openCustomerPortal,
-    isPremium: subscription.subscription_tier === 'premium',
+    isPremium: subscription.subscription_tier !== 'free',
+    isGold: subscription.subscription_tier === 'gold',
+    isPlatinum: subscription.subscription_tier === 'platinum',
   };
 };

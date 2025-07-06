@@ -88,9 +88,10 @@ const ListingDetail = () => {
                 return;
             }
 
-            const isPremium = profile?.subscription_tier === 'premium';
-            const cooldownMs = isPremium ? PREMIUM_BUMP_COOLDOWN_MS : FREE_BUMP_COOLDOWN_MS;
-            const cooldownHours = isPremium ? 2 : 6;
+            const isPlatinum = profile?.subscription_tier === 'platinum';
+            const isGold = profile?.subscription_tier === 'gold';
+            const cooldownMs = isPlatinum ? PREMIUM_BUMP_COOLDOWN_MS : isGold ? PREMIUM_BUMP_COOLDOWN_MS : FREE_BUMP_COOLDOWN_MS;
+            const cooldownHours = isPlatinum ? 2 : isGold ? 3 : 6;
 
             const { data: cooldown, error } = await supabase
                 .from('bump_cooldowns')
@@ -109,7 +110,7 @@ const ListingDetail = () => {
                 const now = new Date();
                 const timeSinceLastBump = now.getTime() - lastBump.getTime();
 
-                console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeSinceLastBump}ms, Required: ${cooldownMs}ms (${cooldownHours}h for ${isPremium ? 'premium' : 'free'} user)`);
+                console.log(`Last bump: ${lastBump.toISOString()}, Now: ${now.toISOString()}, Time diff: ${timeSinceLastBump}ms, Required: ${cooldownMs}ms (${cooldownHours}h for ${isPlatinum ? 'platinum' : isGold ? 'gold' : 'free'} user)`);
 
                 if (timeSinceLastBump < cooldownMs) {
                     setCanBump(false);
@@ -342,8 +343,9 @@ const ListingDetail = () => {
                 .eq('id', user.id)
                 .single();
 
-            const isPremium = userProfile?.subscription_tier === 'premium';
-            const cooldownHours = isPremium ? 2 : 6;
+            const isPlatinum = userProfile?.subscription_tier === 'platinum';
+            const isGold = userProfile?.subscription_tier === 'gold';
+            const cooldownHours = isPlatinum ? 2 : isGold ? 3 : 6;
 
             toast({
                 title: "Success!",
