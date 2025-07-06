@@ -390,6 +390,24 @@ serve(async (req: Request) => {
                 if (serverError) {
                   console.error('[discord-import][ERROR] Failed to import server:', server.name, serverError);
                   console.error('[discord-import][ERROR] Full error details:', JSON.stringify(serverError, null, 2));
+                  console.error('[discord-import][ERROR] Listing data that failed:', JSON.stringify(listingData, null, 2));
+                  
+                  // Add the error to our response for debugging
+                  return new Response(JSON.stringify({
+                    error: 'Database insertion failed',
+                    message: serverError.message || 'Failed to insert listing into database',
+                    code: serverError.code || 'DB_INSERT_ERROR',
+                    details: `Error inserting server "${server.name}": ${serverError.message}`,
+                    debugInfo: {
+                      serverName: server.name,
+                      errorCode: serverError.code,
+                      errorMessage: serverError.message,
+                      listingData: listingData
+                    }
+                  }), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                    status: 400
+                  });
                 } else {
                   importedServers++;
                   console.log('[discord-import] Successfully imported server:', server.name);
