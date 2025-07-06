@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag } from 'lucide-react';
+import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar } from 'lucide-react';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -103,6 +103,13 @@ const Navbar = () => {
                     </Button>
                 </Link>
 
+                <Link to="/events">
+                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    Events
+                  </Button>
+                </Link>
+
                 <Link to="/activity">
                   <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
                     <Activity className="h-5 w-5 mr-2" />
@@ -190,6 +197,13 @@ const Navbar = () => {
                     <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                       <Trophy className="h-5 w-5 mr-3" />
                       Live Status
+                    </Button>
+                  </Link>
+
+                  <Link to="/events" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                      <Calendar className="h-5 w-5 mr-3" />
+                      Events
                     </Button>
                   </Link>
 
