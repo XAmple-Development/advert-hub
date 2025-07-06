@@ -32,20 +32,14 @@ serve(async (req) => {
     logStep("Starting auto-bump process");
 
     // Get all users with auto-bump enabled and premium subscriptions
+    logStep("Fetching auto-bump users");
     const { data: autoBumpUsers, error: usersError } = await supabaseClient
       .from('auto_bump_settings')
-      .select(`
-        *,
-        profiles!inner(
-          id,
-          subscription_tier,
-          subscription_expires_at
-        )
-      `)
-      .eq('enabled', true)
-      .in('profiles.subscription_tier', ['small', 'medium', 'premium']);
+      .select('*')
+      .eq('enabled', true);
 
     if (usersError) {
+      logStep("Error fetching auto-bump users", usersError);
       throw new Error(`Error fetching auto-bump users: ${usersError.message}`);
     }
 
@@ -62,7 +56,25 @@ serve(async (req) => {
     let totalBumped = 0;
 
     for (const autoBumpUser of autoBumpUsers) {
-      const profile = autoBumpUser.profiles;
+      logStep(`Processing user ${autoBumpUser.user_id}`);
+      
+      // Get user profile separately
+      const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('id, subscription_tier, subscription_expires_at')
+        .eq('id', autoBumpUser.user_id)
+        .single();
+
+      if (profileError || !profile) {
+        logStep(`Error fetching profile for user ${autoBumpUser.user_id}`, profileError);
+        continue;
+      }
+
+      // Check if user has premium subscription
+      if (!['small', 'medium', 'premium'].includes(profile.subscription_tier)) {
+        logStep(`User ${profile.id} does not have premium subscription (tier: ${profile.subscription_tier}), skipping`);
+        continue;
+      }
       
       // Check if subscription is still active
       if (profile.subscription_expires_at && new Date(profile.subscription_expires_at) < new Date()) {
