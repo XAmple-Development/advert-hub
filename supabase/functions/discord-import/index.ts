@@ -42,10 +42,10 @@ serve(async (req: Request) => {
       });
     }
 
-    // 3. Create Supabase client
+    // 3. Create Supabase client with service role for database operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     // 4. Get user via Supabase JWT
