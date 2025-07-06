@@ -26,7 +26,7 @@ import FavoriteButton from './FavoriteButton';
 import ShareButton from './ShareButton';
 import CopyButton from './CopyButton';
 import CreateListingModal from './CreateListingModal';
-import DiscordImportModal from './DiscordImportModal';
+import LiveDiscordImport from './enhanced/LiveDiscordImport';
 
 interface Listing {
   id: string;
@@ -512,7 +512,7 @@ const EnhancedListingsPage = () => {
         }}
       />
 
-      <DiscordImportModal
+      <LiveDiscordImport
         open={showImportModal}
         onOpenChange={setShowImportModal}
         onImportComplete={() => {
