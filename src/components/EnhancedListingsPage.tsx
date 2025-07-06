@@ -82,6 +82,7 @@ const EnhancedListingsPage = () => {
         .from('listings')
         .select('*')
         .eq('status', 'active')
+        .eq('type', 'server')
         .order('premium_featured', { ascending: false })
         .order('last_bumped_at', { ascending: false })
         .order('created_at', { ascending: false });
@@ -396,14 +397,7 @@ const EnhancedListingsPage = () => {
                         </div>
                       )}
 
-                      <div className="grid grid-cols-3 gap-3 text-center">
-                        <div>
-                          <div className="text-white font-bold text-lg">{formatMemberCount(listing.member_count || 0)}</div>
-                          <div className="text-gray-400 text-xs flex items-center justify-center gap-1">
-                            <Users className="h-3 w-3" />
-                            Members
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-2 gap-3 text-center">
                         <div>
                           <div className="text-white font-bold text-lg">{listing.view_count || 0}</div>
                           <div className="text-gray-400 text-xs flex items-center justify-center gap-1">
