@@ -53,6 +53,9 @@ verify_jwt = false
 [functions.site-status-update]
 verify_jwt = false
 
+[functions.auto-bump-listings]
+verify_jwt = false
+
 [functions.simple-portal]
 verify_jwt = false
 
