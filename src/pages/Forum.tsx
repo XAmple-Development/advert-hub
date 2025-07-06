@@ -78,7 +78,7 @@ const Forum = () => {
         .from('forum_topics')
         .select(`
           *,
-          profiles(username, discord_username, discord_avatar)
+          profiles!forum_topics_user_id_fkey(username, discord_username, discord_avatar)
         `)
         .order('last_reply_at', { ascending: false })
         .limit(10);
@@ -88,7 +88,7 @@ const Forum = () => {
       // Transform the data to match our interface
       const transformedTopics = topicsData?.map(item => ({
         ...item,
-        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+        profiles: item.profiles
       })) || [];
 
       setCategories(categoriesData || []);
