@@ -70,12 +70,12 @@ const AdminSubscriptions = () => {
     try {
       setLoading(true);
       
-      // Fetch all subscriptions with user profiles
+      // Fetch all subscriptions with user profiles using a simpler approach
       const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscribers')
         .select(`
           *,
-          profiles (
+          profiles!subscribers_user_id_fkey (
             username,
             discord_username
           )
