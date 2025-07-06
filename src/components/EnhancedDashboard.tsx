@@ -274,7 +274,7 @@ const EnhancedDashboard = () => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => window.open('https://discord.gg/your-support-server', '_blank')}
+                onClick={() => window.open('https://discord.gg/3mNGT2AwNy', '_blank')}
                 className="w-full border-2 border-gray-700/50 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 hover:text-white py-6 rounded-2xl text-lg"
               >
                 <Users className="h-5 w-5 mr-2" />
@@ -288,16 +288,7 @@ const EnhancedDashboard = () => {
                   className="border-blue-500/50 text-blue-300 hover:bg-blue-600/20 rounded-xl"
                 >
                   <TrendingUp className="h-4 w-4 mr-1" />
-                  Leaderboard
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/admin')}
-                  className="border-green-500/50 text-green-300 hover:bg-green-600/20 rounded-xl"
-                >
-                  <Bot className="h-4 w-4 mr-1" />
-                  Bot Panel
+                  Advert Listings
                 </Button>
               </div>
             </CardContent>
