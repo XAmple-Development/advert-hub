@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { AdminEventsManagement } from '@/components/admin/AdminEventsManagement';
 import {
     Server,
     Bot,
@@ -339,6 +340,13 @@ const AdminDashboard = () => {
                                 <Shield className="h-4 w-4 mr-2" />
                                 Recent Actions
                             </TabsTrigger>
+                            <TabsTrigger 
+                                value="events" 
+                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-6 py-3 font-medium"
+                            >
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Events Management
+                            </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="pending" className="space-y-8">
@@ -544,6 +552,10 @@ const AdminDashboard = () => {
                                     )}
                                 </CardContent>
                             </Card>
+                        </TabsContent>
+
+                        <TabsContent value="events">
+                            <AdminEventsManagement />
                         </TabsContent>
                     </Tabs>
                 </div>
