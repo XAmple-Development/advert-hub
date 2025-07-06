@@ -24,8 +24,8 @@ serve(async (req) => {
     const { plan } = await req.json();
     console.log("Received plan:", plan);
     
-    if (!plan || plan !== 'premium') {
-      throw new Error(`Invalid plan selected: ${plan}. Must be 'premium'`);
+    if (!plan || !['gold', 'platinum'].includes(plan)) {
+      throw new Error(`Invalid plan selected: ${plan}. Must be 'gold' or 'platinum'`);
     }
     
     const authHeader = req.headers.get("Authorization");
@@ -65,9 +65,20 @@ serve(async (req) => {
       console.log("No existing customer found, will create new one");
     }
 
-    // Standard USD pricing in cents
+    // Standard USD pricing in cents (30-day billing cycle)
     const planPricing = {
-      premium: { amount: 1299, name: "Premium Plan", description: "All features for large communities" }
+      gold: { 
+        amount: 479, // $4.79
+        name: "Gold Plan", 
+        description: "Gold bot accent with premium features",
+        tier: "gold"
+      },
+      platinum: { 
+        amount: 959, // $9.59
+        name: "Platinum Plan", 
+        description: "White bot accent with top-tier features",
+        tier: "platinum"
+      }
     };
 
     const selectedPlan = planPricing[plan as keyof typeof planPricing];

@@ -85,13 +85,13 @@ serve(async (req) => {
       const price = await stripe.prices.retrieve(priceId);
       const amount = price.unit_amount || 0;
       
-      // Determine tier based on GBP amounts (in pence)
-      if (amount === 499) {
-        subscriptionTier = "small";
-      } else if (amount === 699) {
-        subscriptionTier = "medium";
+      // Determine tier based on USD amounts (in cents)
+      if (amount === 479) {
+        subscriptionTier = "gold";
+      } else if (amount === 959) {
+        subscriptionTier = "platinum";
       } else if (amount === 1299) {
-        subscriptionTier = "premium";
+        subscriptionTier = "premium"; // Keep legacy premium support
       } else {
         subscriptionTier = "free"; // Unknown amount defaults to free
       }
