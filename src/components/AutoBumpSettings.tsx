@@ -128,6 +128,37 @@ export const AutoBumpSettings = () => {
     }
   };
 
+  // Debug function to test auto-bump manually
+  const testAutoBump = async () => {
+    try {
+      console.log('Testing auto-bump function...');
+      const { data, error } = await supabase.functions.invoke('auto-bump-listings', {
+        body: { trigger: 'manual_test_from_ui' }
+      });
+      console.log('Auto-bump test result:', { data, error });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Test Failed",
+          description: `Auto-bump test failed: ${error.message}`
+        });
+      } else {
+        toast({
+          title: "Test Successful",
+          description: "Auto-bump function executed successfully"
+        });
+      }
+    } catch (err) {
+      console.error('Auto-bump test error:', err);
+      toast({
+        variant: "destructive",
+        title: "Test Error",
+        description: "Failed to test auto-bump function"
+      });
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
   }, [user, subscription_tier]);
@@ -183,6 +214,17 @@ export const AutoBumpSettings = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Debug test button */}
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+          <h4 className="font-medium mb-2 text-yellow-800">Debug Test</h4>
+          <button
+            onClick={testAutoBump}
+            className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
+          >
+            Test Auto-Bump Function
+          </button>
+        </div>
+        
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label className="text-base font-medium">Enable Auto-Bump</Label>
