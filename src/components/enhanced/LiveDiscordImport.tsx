@@ -191,7 +191,12 @@ const LiveDiscordImport = ({
           body: {
             action: 'import',
             servers: [serverId],
-            liveData: liveCounts[serverId]
+            formData: {
+              name: server?.name || '',
+              description: server?.description || `Discord server with ${liveCounts[serverId]?.members || 0} members`,
+              tags: '',
+              nsfw: false
+            }
           },
           headers: {
             Authorization: `Bearer ${session.access_token}`,
