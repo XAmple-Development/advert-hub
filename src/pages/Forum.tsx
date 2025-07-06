@@ -78,15 +78,21 @@ const Forum = () => {
         .from('forum_topics')
         .select(`
           *,
-          profiles(username, discord_username, discord_avatar)
+          profiles!inner(username, discord_username, discord_avatar)
         `)
         .order('last_reply_at', { ascending: false })
         .limit(10);
 
       if (topicsError) throw topicsError;
 
+      // Transform the data to match our interface
+      const transformedTopics = topicsData?.map(item => ({
+        ...item,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+      })) || [];
+
       setCategories(categoriesData || []);
-      setRecentTopics(topicsData || []);
+      setRecentTopics(transformedTopics);
     } catch (error: any) {
       console.error('Error fetching forum data:', error);
       toast({

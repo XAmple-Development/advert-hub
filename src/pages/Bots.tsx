@@ -27,7 +27,7 @@ interface BotListing {
   invite_url: string | null;
   created_at: string;
   user_id: string;
-  profiles?: {
+  profiles: {
     username: string | null;
     discord_username: string | null;
   } | null;
@@ -67,7 +67,7 @@ const Bots = () => {
         .from('listings')
         .select(`
           *,
-          profiles(username, discord_username)
+          profiles!inner(username, discord_username)
         `)
         .eq('type', 'bot')
         .eq('status', 'active')
@@ -77,7 +77,13 @@ const Bots = () => {
 
       if (error) throw error;
 
-      setBots(data || []);
+      // Transform the data to match our interface
+      const transformedData = data?.map(item => ({
+        ...item,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+      })) || [];
+
+      setBots(transformedData);
     } catch (error: any) {
       console.error('Error fetching bots:', error);
       toast({
