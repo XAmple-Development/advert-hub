@@ -385,8 +385,11 @@ serve(async (req: Request) => {
                   .select()
                   .single();
 
+                console.log('[discord-import] Insert result:', { newListing, serverError });
+
                 if (serverError) {
                   console.error('[discord-import][ERROR] Failed to import server:', server.name, serverError);
+                  console.error('[discord-import][ERROR] Full error details:', JSON.stringify(serverError, null, 2));
                 } else {
                   importedServers++;
                   console.log('[discord-import] Successfully imported server:', server.name);

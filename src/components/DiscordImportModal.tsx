@@ -199,6 +199,7 @@ const DiscordImportModal = ({
       return;
     }
 
+    console.log('[DiscordImportModal] Starting import with formData:', formData);
     setImporting(true);
     try {
       const {
@@ -210,6 +211,7 @@ const DiscordImportModal = ({
         throw new Error('No active session found. Please log in.');
       }
 
+      console.log('[DiscordImportModal] Invoking discord-import function...');
       const { data, error } = await supabase.functions.invoke('discord-import', {
         body: {
           action: 'import',
@@ -220,6 +222,8 @@ const DiscordImportModal = ({
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+
+      console.log('[DiscordImportModal] Function response:', { data, error });
 
       if (error) throw new Error(error.message);
 
