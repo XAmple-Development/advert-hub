@@ -73,23 +73,34 @@ const Forum = () => {
 
       if (categoriesError) throw categoriesError;
 
-      // Fetch recent topics
+      // Fetch recent topics with user profiles
       const { data: topicsData, error: topicsError } = await supabase
         .from('forum_topics')
-        .select(`
-          *,
-          profiles!forum_topics_user_id_fkey(username, discord_username, discord_avatar)
-        `)
+        .select('*')
         .order('last_reply_at', { ascending: false })
         .limit(10);
 
       if (topicsError) throw topicsError;
 
+      // Get user profiles for the topics
+      const userIds = topicsData?.map(topic => topic.user_id) || [];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, username, discord_username, discord_avatar')
+        .in('id', userIds);
+
       // Transform the data to match our interface
-      const transformedTopics = topicsData?.map(item => ({
-        ...item,
-        profiles: item.profiles
-      })) || [];
+      const transformedTopics = topicsData?.map(item => {
+        const profile = profilesData?.find(p => p.id === item.user_id);
+        return {
+          ...item,
+          profiles: profile ? {
+            username: profile.username || null,
+            discord_username: profile.discord_username || null,
+            discord_avatar: profile.discord_avatar || null
+          } : null
+        };
+      }) || [];
 
       setCategories(categoriesData || []);
       setRecentTopics(transformedTopics);
