@@ -203,7 +203,28 @@ const LiveDiscordImport = ({
           },
         });
 
-        if (error) throw new Error(error.message);
+        if (error) {
+          console.error('[LiveDiscordImport] Import error:', error);
+          
+          // Parse error response for subscription limits
+          let errorMessage = error.message;
+          try {
+            // Check if it's a subscription error
+            if (typeof error.message === 'string' && error.message.includes('{"')) {
+              const parsedError = JSON.parse(error.message);
+              if (parsedError.code === 'PREMIUM_UPGRADE_REQUIRED' || parsedError.error === 'SUBSCRIPTION_LIMIT_EXCEEDED') {
+                throw new Error(`SUBSCRIPTION_LIMIT_EXCEEDED: ${parsedError.details || parsedError.message}`);
+              }
+            }
+          } catch (parseError) {
+            // If parsing fails, check message content
+            if (errorMessage.includes('limit exceeded') || errorMessage.includes('Payment Required') || errorMessage.includes('402')) {
+              throw new Error('SUBSCRIPTION_LIMIT_EXCEEDED: Free users can create up to 3 listings. Upgrade to Premium for unlimited listings.');
+            }
+          }
+          
+          throw new Error(errorMessage);
+        }
         
         setImportProgress(((i + 1) / selectedServers.length) * 100);
         
