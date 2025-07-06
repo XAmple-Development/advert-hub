@@ -75,12 +75,18 @@ const ListingDetail = () => {
         console.log(`Checking bump cooldown for user ${user.id} and listing ${id}`);
 
         try {
-            // Get user's subscription tier
+            // Get user's subscription tier and Discord ID
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('subscription_tier')
+                .select('subscription_tier, discord_id')
                 .eq('id', user.id)
                 .single();
+
+            if (!profile?.discord_id) {
+                console.log('User has no Discord ID, allowing bump');
+                setCanBump(true);
+                return;
+            }
 
             const isPremium = profile?.subscription_tier === 'premium';
             const cooldownMs = isPremium ? PREMIUM_BUMP_COOLDOWN_MS : FREE_BUMP_COOLDOWN_MS;
@@ -89,7 +95,7 @@ const ListingDetail = () => {
             const { data: cooldown, error } = await supabase
                 .from('bump_cooldowns')
                 .select('last_bump_at')
-                .eq('user_discord_id', user.id)
+                .eq('user_discord_id', profile.discord_id)
                 .eq('listing_id', id)
                 .single();
 
@@ -222,13 +228,29 @@ const ListingDetail = () => {
         console.log(`Attempting to bump listing ${listing.id} by user ${user.id}`);
 
         try {
+            // Get user's Discord ID first
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('discord_id')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile?.discord_id) {
+                toast({
+                    variant: "destructive",
+                    title: "Discord Account Required",
+                    description: "You need to link your Discord account to bump listings",
+                });
+                return;
+            }
+
             const now = new Date();
 
             // Update cooldown first
             const { error: cooldownError } = await supabase
                 .from('bump_cooldowns')
                 .upsert({
-                    user_discord_id: user.id,
+                    user_discord_id: profile.discord_id,
                     listing_id: listing.id,
                     last_bump_at: now.toISOString(),
                 }, {
@@ -314,13 +336,13 @@ const ListingDetail = () => {
             }
 
             // Get user's subscription tier for success message
-            const { data: profile } = await supabase
+            const { data: userProfile } = await supabase
                 .from('profiles')
                 .select('subscription_tier')
                 .eq('id', user.id)
                 .single();
 
-            const isPremium = profile?.subscription_tier === 'premium';
+            const isPremium = userProfile?.subscription_tier === 'premium';
             const cooldownHours = isPremium ? 2 : 6;
 
             toast({
