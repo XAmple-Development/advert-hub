@@ -267,7 +267,7 @@ serve(async (req: Request) => {
     // Handle import action
     if (action === 'import') {
       console.log('[discord-import] Starting import process...');
-      const { servers: selectedServerIds } = requestBody;
+      const { servers: selectedServerIds, formData } = requestBody;
       
       if (!selectedServerIds?.length) {
         return new Response(JSON.stringify({
@@ -355,35 +355,33 @@ serve(async (req: Request) => {
               try {
                 console.log('[discord-import] Importing server:', server.name);
 
-                // Create a better description
-                let description = '';
-                if (server.description) {
-                  description = server.description;
-                } else {
-                  const ownerStatus = server.owner ? 'You are the owner of this server.' : 'You have manage permissions.';
-                  description = `Discord server. ${ownerStatus} Member count needs to be updated manually.`;
-                }
+                // Use form data for the listing
+                const listingData = {
+                  user_id: user.id,
+                  type: 'server',
+                  name: formData?.name || server.name,
+                  description: formData?.description || (server.description || `Discord server. ${server.owner ? 'You are the owner of this server.' : 'You have manage permissions.'} Member count needs to be updated manually.`),
+                  long_description: formData?.description || server.description || null,
+                  member_count: 0, // Will need manual update
+                  view_count: 0,
+                  bump_count: 0,
+                  status: 'active',
+                  avatar_url: server.icon ? `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png` : null,
+                  discord_id: server.id,
+                  invite_url: null,
+                  premium_featured: isPremium,
+                  priority_ranking: isPremium ? 100 : 0,
+                  analytics_enabled: isPremium,
+                  verified_badge: isPremium,
+                  nsfw: formData?.nsfw || false,
+                  tags: formData?.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : null
+                };
+
+                console.log('[discord-import] Inserting listing with data:', listingData);
 
                 const { data: newListing, error: serverError } = await supabaseClient
                   .from('listings')
-                  .insert({
-                    user_id: user.id,
-                    type: 'server',
-                    name: server.name,
-                    description: description,
-                    long_description: server.description || null,
-                    member_count: 0, // Will need manual update
-                    view_count: 0,
-                    bump_count: 0,
-                    status: 'active',
-                    avatar_url: server.icon ? `https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png` : null,
-                    discord_id: server.id,
-                    invite_url: null,
-                    premium_featured: isPremium,
-                    priority_ranking: isPremium ? 100 : 0,
-                    analytics_enabled: isPremium,
-                    verified_badge: isPremium
-                  })
+                  .insert(listingData)
                   .select()
                   .single();
 
@@ -392,6 +390,35 @@ serve(async (req: Request) => {
                 } else {
                   importedServers++;
                   console.log('[discord-import] Successfully imported server:', server.name);
+                  
+                  // Add categories if specified
+                  if (formData?.primary_category) {
+                    try {
+                      await supabaseClient
+                        .from('listing_categories')
+                        .insert({
+                          listing_id: newListing.id,
+                          category_id: formData.primary_category
+                        });
+                      console.log('[discord-import] Added primary category:', formData.primary_category);
+                    } catch (categoryError) {
+                      console.error('[discord-import] Failed to add primary category:', categoryError);
+                    }
+                  }
+                  
+                  if (formData?.secondary_category) {
+                    try {
+                      await supabaseClient
+                        .from('listing_categories')
+                        .insert({
+                          listing_id: newListing.id,
+                          category_id: formData.secondary_category
+                        });
+                      console.log('[discord-import] Added secondary category:', formData.secondary_category);
+                    } catch (categoryError) {
+                      console.error('[discord-import] Failed to add secondary category:', categoryError);
+                    }
+                  }
                   
                   // Send Discord notification for new listing (background task)
                   try {

@@ -53,7 +53,6 @@ const DiscordImportModal = ({
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    vanity_url: '',
     primary_category: '',
     secondary_category: '',
     tags: '',
@@ -506,21 +505,6 @@ const DiscordImportModal = ({
               </div>
             </div>
 
-            {/* Vanity URL */}
-            <div>
-              <Label htmlFor="vanity" className="text-white">Vanity URL</Label>
-              <div className="flex">
-                <span className="bg-[#36393F] border border-[#40444B] px-3 py-2 text-gray-300 rounded-l-md">https://discord.me/</span>
-                <Input
-                  id="vanity"
-                  value={formData.vanity_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, vanity_url: e.target.value }))}
-                  className="bg-[#2C2F33] border-[#40444B] text-white rounded-l-none"
-                  placeholder="vanity-url-here"
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">Required</p>
-            </div>
 
             {/* Categories */}
             <div className="grid grid-cols-2 gap-4">
