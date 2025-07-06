@@ -83,10 +83,7 @@ const EnhancedListingsPage = () => {
     try {
       const { data, error } = await supabase
         .from('listings')
-        .select(`
-          *,
-          profiles(subscription_tier)
-        `)
+        .select('*')
         .eq('status', 'active')
         .eq('type', 'server')
         .order('premium_featured', { ascending: false })
