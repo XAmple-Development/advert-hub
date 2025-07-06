@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -8,20 +7,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Server, AlertCircle, RefreshCw, LogOut, LogIn } from 'lucide-react';
+import { Loader2, Server, AlertCircle, RefreshCw, LogOut, LogIn, Upload } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -33,6 +27,11 @@ interface DiscordServer {
   member_count: number;
   owner: boolean;
   description?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
 }
 
 interface DiscordImportModalProps {
@@ -48,8 +47,18 @@ const DiscordImportModal = ({
 }: DiscordImportModalProps) => {
   const [loading, setLoading] = useState(false);
   const [servers, setServers] = useState<DiscordServer[]>([]);
-  const [selectedServers, setSelectedServers] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedServer, setSelectedServer] = useState<string>('');
   const [importing, setImporting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    vanity_url: '',
+    primary_category: '',
+    secondary_category: '',
+    tags: '',
+    nsfw: false
+  });
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const { toast } = useToast();
@@ -142,13 +151,51 @@ const DiscordImportModal = ({
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error('Failed to load categories:', error);
+    }
+  };
+
   useEffect(() => {
     if (open && isDiscordUser) {
       fetchDiscordData();
+      fetchCategories();
     }
   }, [open, isDiscordUser]);
 
+  // Update form data when server selection changes
+  useEffect(() => {
+    if (selectedServer) {
+      const server = servers.find(s => s.id === selectedServer);
+      if (server) {
+        setFormData(prev => ({
+          ...prev,
+          name: server.name,
+          description: server.description || `Discord server ${server.owner ? 'owned by you' : 'where you have manage permissions'}.`
+        }));
+      }
+    }
+  }, [selectedServer, servers]);
+
   const handleImport = async () => {
+    if (!selectedServer) {
+      toast({
+        variant: 'destructive',
+        title: 'No server selected',
+        description: 'Please select a server to import.',
+      });
+      return;
+    }
+
     setImporting(true);
     try {
       const {
@@ -163,7 +210,8 @@ const DiscordImportModal = ({
       const { data, error } = await supabase.functions.invoke('discord-import', {
         body: {
           action: 'import',
-          servers: selectedServers,
+          servers: [selectedServer],
+          formData: formData
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -174,7 +222,7 @@ const DiscordImportModal = ({
 
       toast({
         title: 'Import Successful!',
-        description: `Imported ${selectedServers.length} servers.`,
+        description: 'Your Discord server has been imported successfully.',
       });
 
       onImportComplete();
@@ -201,14 +249,6 @@ const DiscordImportModal = ({
     } finally {
       setImporting(false);
     }
-  };
-
-  const toggleServer = (serverId: string) => {
-    setSelectedServers((prev) =>
-      prev.includes(serverId)
-        ? prev.filter((id) => id !== serverId)
-        : [...prev, serverId]
-    );
   };
 
   const handleRetry = () => {
@@ -294,11 +334,11 @@ const DiscordImportModal = ({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !importing && onOpenChange(next)}>
-      <DialogContent className="max-w-2xl max-h-[80vh] bg-[#1A1A1A] border-[#333] text-white">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-[#2C2F33] border-[#40444B] text-white">
         <DialogHeader>
-          <DialogTitle className="text-white">Import from Discord</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Select your Discord servers to import automatically
+          <DialogTitle className="text-white text-2xl">Add Your Server</DialogTitle>
+          <DialogDescription className="text-green-400">
+            We need a little information to get you started
           </DialogDescription>
         </DialogHeader>
 
@@ -316,7 +356,7 @@ const DiscordImportModal = ({
               <Button
                 onClick={handleSignOut}
                 variant="outline"
-                className="border-[#333] text-gray-300 hover:bg-[#333]"
+                className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -344,7 +384,7 @@ const DiscordImportModal = ({
                   <Button
                     onClick={handleSignOut}
                     variant="outline"
-                    className="border-[#333] text-gray-300 hover:bg-[#333]"
+                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
@@ -369,7 +409,7 @@ const DiscordImportModal = ({
                   <Button
                     variant="outline"
                     onClick={() => onOpenChange(false)}
-                    className="border-[#333] text-gray-300 hover:bg-[#333]"
+                    className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
                   >
                     Close
                   </Button>
@@ -383,123 +423,193 @@ const DiscordImportModal = ({
             <span className="ml-2 text-white">Fetching your Discord data...</span>
           </div>
         ) : (
-          <>
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Server className="h-5 w-5" />
-                Your Servers ({servers.length})
-              </h3>
-              <ScrollArea className="h-[400px]">
-                <div className="space-y-3">
-                  {servers.map((server) => (
-                    <Card key={server.id} className="bg-[#0F0F0F] border-[#333]">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center space-x-3">
-                          <Checkbox
-                            checked={selectedServers.includes(server.id)}
-                            onCheckedChange={() => toggleServer(server.id)}
-                          />
-                          {server.icon ? (
-                            <img
-                              src={`https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png`}
-                              alt={server.name}
-                              className="w-10 h-10 rounded-full"
-                              onError={(e) =>
-                                (e.currentTarget.src = '/fallback-icon.png')
-                              }
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center">
-                              <Server className="h-5 w-5 text-white" />
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <CardTitle className="text-sm text-white">
-                              {server.name}
-                            </CardTitle>
-                            <div className="flex items-center gap-2 mt-1">
-                              {server.owner && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-xs bg-green-900 text-green-200"
-                                >
-                                  Owner
-                                </Badge>
-                              )}
-                              {server.member_count && (
-                                <div className="flex items-center gap-1 text-xs text-gray-400">
-                                  <Users className="h-3 w-3" />
-                                  {server.member_count.toLocaleString()}
-                                </div>
-                              )}
-                            </div>
-                            {server.description && (
-                              <p className="text-xs text-gray-400 mt-1 line-clamp-2">
-                                {server.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                  {servers.length === 0 && (
-                    <p className="text-gray-400 text-center py-4">
-                      No servers found where you have manage permissions
-                    </p>
-                  )}
+          <div className="space-y-6">
+            {/* Server Information Section */}
+            <div className="bg-[#36393F] rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Server className="h-5 w-5 text-white" />
+                <h3 className="text-white font-semibold">Server Information</h3>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="server-select" className="text-white">Select Server</Label>
+                  <Select value={selectedServer} onValueChange={setSelectedServer}>
+                    <SelectTrigger className="bg-[#2C2F33] border-[#40444B] text-white">
+                      <SelectValue placeholder="-- Select Discord Server --" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#2C2F33] border-[#40444B]">
+                      <SelectItem value="" className="text-gray-400">-- Select Discord Server --</SelectItem>
+                      <SelectItem value="owned" disabled className="text-gray-400">-- Owned Servers --</SelectItem>
+                      {servers.filter(s => s.owner).map((server) => (
+                        <SelectItem key={server.id} value={server.id} className="text-white">
+                          {server.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="managed" disabled className="text-gray-400">-- Managed Servers --</SelectItem>
+                      {servers.filter(s => !s.owner).map((server) => (
+                        <SelectItem key={server.id} value={server.id} className="text-white">
+                          {server.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </ScrollArea>
+
+                <div>
+                  <Label htmlFor="server-name" className="text-white">Server Name</Label>
+                  <Input
+                    id="server-name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="bg-[#2C2F33] border-[#40444B] text-white"
+                    placeholder="Server name"
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Required</p>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
-                <p className="text-yellow-400 text-sm">
-                  <strong>Note:</strong> Member counts cannot be retrieved automatically due to Discord API limitations. 
-                  You can update them manually after importing.
+            {/* Server Description */}
+            <div>
+              <Label htmlFor="description" className="text-white">Server Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="bg-[#2C2F33] border-[#40444B] text-white min-h-[120px]"
+                placeholder="A good description is vital so people can find your server. Your description will also be used by Google and other search engines to rank your page in their search results."
+                required
+              />
+              <p className="text-xs text-gray-400 mt-1">Required</p>
+            </div>
+
+            {/* Banner Upload */}
+            <div>
+              <Label className="text-white">Banner</Label>
+              <p className="text-xs text-gray-400 mb-2">Shows up across the top of your Servers page. (Width: 945px - Height: 290px)</p>
+              <div className="border-2 border-dashed border-[#40444B] rounded-lg p-8 text-center bg-[#36393F]">
+                <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-400">Drag & Drop your files or <span className="text-blue-400 underline cursor-pointer">Browse</span></p>
+              </div>
+              <div className="bg-red-900/20 border border-red-500 rounded p-2 mt-2">
+                <p className="text-red-400 text-sm">Don't have graphics for your Discord server? Find Web Banner Artists on Fiverr!</p>
+              </div>
+            </div>
+
+            {/* Vanity URL */}
+            <div>
+              <Label htmlFor="vanity" className="text-white">Vanity URL</Label>
+              <div className="flex">
+                <span className="bg-[#36393F] border border-[#40444B] px-3 py-2 text-gray-300 rounded-l-md">https://discord.me/</span>
+                <Input
+                  id="vanity"
+                  value={formData.vanity_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, vanity_url: e.target.value }))}
+                  className="bg-[#2C2F33] border-[#40444B] text-white rounded-l-none"
+                  placeholder="vanity-url-here"
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Required</p>
+            </div>
+
+            {/* Categories */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="primary-category" className="text-white">Primary Category</Label>
+                <Select value={formData.primary_category} onValueChange={(value) => setFormData(prev => ({ ...prev, primary_category: value }))}>
+                  <SelectTrigger className="bg-[#2C2F33] border-[#40444B] text-white">
+                    <SelectValue placeholder="-- Select a Category --" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#2C2F33] border-[#40444B]">
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id} className="text-white">
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-400 mt-1">Required</p>
+              </div>
+
+              <div>
+                <Label htmlFor="secondary-category" className="text-white">Secondary Category</Label>
+                <Select value={formData.secondary_category} onValueChange={(value) => setFormData(prev => ({ ...prev, secondary_category: value }))}>
+                  <SelectTrigger className="bg-[#2C2F33] border-[#40444B] text-white">
+                    <SelectValue placeholder="-- Select a Category --" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#2C2F33] border-[#40444B]">
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id} className="text-white">
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-400 mt-1">Optional</p>
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <Label htmlFor="tags" className="text-white">Tags</Label>
+              <Input
+                id="tags"
+                value={formData.tags}
+                onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                className="bg-[#2C2F33] border-[#40444B] text-white"
+                placeholder="Search for tags"
+              />
+              <p className="text-xs text-gray-400 mt-1">Optional - You can select up to 5 tags.</p>
+            </div>
+
+            {/* NSFW Toggle */}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="nsfw"
+                checked={formData.nsfw}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, nsfw: checked }))}
+              />
+              <Label htmlFor="nsfw" className="text-white">Server is NSFW-Focused</Label>
+            </div>
+
+            {/* Premium Notice */}
+            {!isPremium && (
+              <div className="p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
+                <p className="text-purple-400 text-sm">
+                  <strong>Free Plan:</strong> You can import up to 3 servers total. 
+                  Upgrade to Premium for unlimited imports and enhanced features.
                 </p>
               </div>
-              
-              {!isPremium && (
-                <div className="p-3 bg-purple-900/20 border border-purple-600/30 rounded-lg">
-                  <p className="text-purple-400 text-sm">
-                    <strong>Free Plan:</strong> You can import up to 3 servers total. 
-                    Upgrade to Premium for unlimited imports and enhanced features.
-                  </p>
-                </div>
-              )}
-            </div>
+            )}
 
-            <div className="flex justify-between items-center pt-4 border-t border-[#333]">
-              <div className="text-sm text-gray-400">
-                Selected: {selectedServers.length} servers
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={importing}
-                  className="border-[#333] text-gray-300 hover:bg-[#333]"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleImport}
-                  disabled={importing || selectedServers.length === 0}
-                  className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                >
-                  {importing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Importing...
-                    </>
-                  ) : (
-                    'Import Selected'
-                  )}
-                </Button>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 pt-4 border-t border-[#40444B]">
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={importing}
+                className="border-[#40444B] text-gray-300 hover:bg-[#40444B]"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleImport}
+                disabled={importing || !selectedServer || !formData.name.trim() || !formData.description.trim()}
+                className="bg-[#5865F2] hover:bg-[#4752C4] text-white"
+              >
+                {importing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Importing...
+                  </>
+                ) : (
+                  'Add Server'
+                )}
+              </Button>
             </div>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>
