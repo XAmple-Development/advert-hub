@@ -65,8 +65,12 @@ const DiscordImportModal = ({
   const { user } = useAuth();
   const { isPremium } = useSubscription();
 
-  // Check if user signed in with Discord
-  const isDiscordUser = user?.app_metadata?.providers?.includes('discord');
+  // Check if user signed in with Discord - be more flexible with detection
+  const isDiscordUser = user && (
+    user.app_metadata?.provider === 'discord' ||
+    user.app_metadata?.providers?.includes('discord') ||
+    user.identities?.some(identity => identity.provider === 'discord')
+  );
 
   const fetchDiscordData = async () => {
     setLoading(true);

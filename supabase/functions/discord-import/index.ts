@@ -292,7 +292,7 @@ serve(async (req: Request) => {
           console.error('[discord-import][ERROR] Failed to fetch user profile:', profileError);
         }
 
-        const isPremium = profile?.subscription_tier === 'premium';
+        const isPremium = profile?.subscription_tier === 'gold' || profile?.subscription_tier === 'platinum';
         
         // Check current listing count for free users
         if (!isPremium) {
