@@ -124,6 +124,18 @@ const Navbar = () => {
                     Gamification
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
+                  <Link to="/" className="flex items-center w-full text-gray-300 hover:text-white">
+                    <Home className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
+                  <Link to="/analytics" className="flex items-center w-full text-gray-300 hover:text-white">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analytics
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -144,19 +156,6 @@ const Navbar = () => {
           <div className="flex items-center space-x-2">
             {user ? (
               <>
-                <Link to="/">
-                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                    <Home className="h-5 w-5 mr-2" />
-                    Dashboard
-                  </Button>
-                </Link>
-
-                <Link to="/analytics">
-                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                    <BarChart3 className="h-5 w-5 mr-2" />
-                    Analytics
-                  </Button>
-                </Link>
 
                 {/* More Dropdown */}
                 <DropdownMenu>
