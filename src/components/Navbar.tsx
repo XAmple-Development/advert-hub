@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar } from 'lucide-react';
+import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar, MessageCircle, Code } from 'lucide-react';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -76,7 +76,21 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/listings">
               <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                Browse Servers
+                Servers
+              </Button>
+            </Link>
+            
+            <Link to="/bots">
+              <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                <Bot className="h-5 w-5 mr-2" />
+                Bots
+              </Button>
+            </Link>
+            
+            <Link to="/forum">
+              <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Forum
               </Button>
             </Link>
 
@@ -114,6 +128,13 @@ const Navbar = () => {
                   <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
                     <Activity className="h-5 w-5 mr-2" />
                     Activity
+                  </Button>
+                </Link>
+                
+                <Link to="/api">
+                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
+                    <Code className="h-5 w-5 mr-2" />
+                    API
                   </Button>
                 </Link>
 
@@ -173,7 +194,21 @@ const Navbar = () => {
             <div className="flex flex-col space-y-4">
               <Link to="/listings" onClick={closeMobileMenu}>
                 <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
-                  Browse Servers
+                  Servers
+                </Button>
+              </Link>
+              
+              <Link to="/bots" onClick={closeMobileMenu}>
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                  <Bot className="h-5 w-5 mr-3" />
+                  Bots
+                </Button>
+              </Link>
+              
+              <Link to="/forum" onClick={closeMobileMenu}>
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                  <MessageCircle className="h-5 w-5 mr-3" />
+                  Forum
                 </Button>
               </Link>
 
@@ -211,6 +246,13 @@ const Navbar = () => {
                     <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                       <Activity className="h-5 w-5 mr-3" />
                       Activity
+                    </Button>
+                  </Link>
+                  
+                  <Link to="/api" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                      <Code className="h-5 w-5 mr-3" />
+                      API
                     </Button>
                   </Link>
 

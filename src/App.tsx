@@ -12,6 +12,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Listings from "./pages/Listings";
+import Bots from "./pages/Bots";
 import ListingDetail from "./pages/ListingDetail";
 import Analytics from "./pages/Analytics";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -21,6 +22,8 @@ import Gamification from "./pages/Gamification";
 import LiveActivity from "./pages/LiveActivity";
 import Moderation from "./pages/Moderation";
 import Events from "./pages/Events";
+import Forum from "./pages/Forum";
+import API from "./pages/API";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -45,6 +48,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/listings" element={<Listings />} />
+              <Route path="/bots" element={<Bots />} />
               <Route path="/listings/:id" element={<ListingDetail />} />
               <Route path="/profile/:userId" element={<Profile />} />
               <Route path="/profile/edit" element={<ProfileEdit />} />
@@ -54,6 +58,8 @@ const App = () => (
               <Route path="/activity" element={<LiveActivity />} />
               <Route path="/moderation" element={<Moderation />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/api" element={<API />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNavigation />

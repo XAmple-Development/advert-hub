@@ -626,6 +626,121 @@ export type Database = {
           },
         ]
       }
+      forum_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      forum_replies: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          topic_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          topic_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          topic_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "forum_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_topics: {
+        Row: {
+          category_id: string
+          content: string
+          created_at: string
+          id: string
+          last_reply_at: string | null
+          locked: boolean | null
+          pinned: boolean | null
+          reply_count: number | null
+          title: string
+          updated_at: string
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          category_id: string
+          content: string
+          created_at?: string
+          id?: string
+          last_reply_at?: string | null
+          locked?: boolean | null
+          pinned?: boolean | null
+          reply_count?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          category_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          last_reply_at?: string | null
+          locked?: boolean | null
+          pinned?: boolean | null
+          reply_count?: number | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_topics_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "forum_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leaderboards: {
         Row: {
           calculated_at: string
@@ -771,19 +886,26 @@ export type Database = {
           avatar_url: string | null
           banner_url: string | null
           boost_level: number | null
+          bot_id: string | null
           bump_count: number | null
+          certified_bot: boolean | null
+          commands_count: number | null
           created_at: string
           custom_styling: Json | null
           description: string
           discord_id: string
           discord_webhook_url: string | null
           featured: boolean | null
+          github_url: string | null
+          guilds_count: number | null
           id: string
           invite_url: string | null
           join_count: number | null
           last_bumped_at: string | null
+          library: string | null
           long_description: string | null
           member_count: number | null
+          monthly_votes: number | null
           name: string
           nsfw: boolean | null
           online_count: number | null
@@ -799,6 +921,7 @@ export type Database = {
           verification_level: string | null
           verified_badge: boolean | null
           view_count: number | null
+          vote_count: number | null
           website_url: string | null
         }
         Insert: {
@@ -806,19 +929,26 @@ export type Database = {
           avatar_url?: string | null
           banner_url?: string | null
           boost_level?: number | null
+          bot_id?: string | null
           bump_count?: number | null
+          certified_bot?: boolean | null
+          commands_count?: number | null
           created_at?: string
           custom_styling?: Json | null
           description: string
           discord_id: string
           discord_webhook_url?: string | null
           featured?: boolean | null
+          github_url?: string | null
+          guilds_count?: number | null
           id?: string
           invite_url?: string | null
           join_count?: number | null
           last_bumped_at?: string | null
+          library?: string | null
           long_description?: string | null
           member_count?: number | null
+          monthly_votes?: number | null
           name: string
           nsfw?: boolean | null
           online_count?: number | null
@@ -834,6 +964,7 @@ export type Database = {
           verification_level?: string | null
           verified_badge?: boolean | null
           view_count?: number | null
+          vote_count?: number | null
           website_url?: string | null
         }
         Update: {
@@ -841,19 +972,26 @@ export type Database = {
           avatar_url?: string | null
           banner_url?: string | null
           boost_level?: number | null
+          bot_id?: string | null
           bump_count?: number | null
+          certified_bot?: boolean | null
+          commands_count?: number | null
           created_at?: string
           custom_styling?: Json | null
           description?: string
           discord_id?: string
           discord_webhook_url?: string | null
           featured?: boolean | null
+          github_url?: string | null
+          guilds_count?: number | null
           id?: string
           invite_url?: string | null
           join_count?: number | null
           last_bumped_at?: string | null
+          library?: string | null
           long_description?: string | null
           member_count?: number | null
+          monthly_votes?: number | null
           name?: string
           nsfw?: boolean | null
           online_count?: number | null
@@ -869,6 +1007,7 @@ export type Database = {
           verification_level?: string | null
           verified_badge?: boolean | null
           view_count?: number | null
+          vote_count?: number | null
           website_url?: string | null
         }
         Relationships: []
@@ -1885,6 +2024,36 @@ export type Database = {
           },
         ]
       }
+      votes: {
+        Row: {
+          id: string
+          ip_address: string | null
+          target_id: string
+          target_type: string
+          user_id: string
+          vote_date: string
+          voted_at: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          target_id: string
+          target_type: string
+          user_id: string
+          vote_date?: string
+          voted_at?: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          target_id?: string
+          target_type?: string
+          user_id?: string
+          vote_date?: string
+          voted_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1909,6 +2078,15 @@ export type Database = {
       get_user_subscription_tier: {
         Args: { user_id: string }
         Returns: string
+      }
+      handle_vote: {
+        Args: {
+          p_user_id: string
+          p_target_id: string
+          p_target_type: string
+          p_ip_address?: string
+        }
+        Returns: boolean
       }
       populate_sample_data: {
         Args: Record<PropertyKey, never>
