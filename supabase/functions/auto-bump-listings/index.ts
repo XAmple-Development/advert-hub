@@ -16,6 +16,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Add detailed logging
+  console.log('=== AUTO-BUMP FUNCTION CALLED ===');
+  console.log('Environment check:');
+  console.log('SUPABASE_URL:', Deno.env.get("SUPABASE_URL") ? 'SET' : 'NOT SET');
+  console.log('SUPABASE_SERVICE_ROLE_KEY:', Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ? 'SET' : 'NOT SET');
+
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
