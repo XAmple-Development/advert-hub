@@ -20,6 +20,7 @@ import ProfileEdit from "./pages/ProfileEdit";
 import Gamification from "./pages/Gamification";
 import LiveActivity from "./pages/LiveActivity";
 import Moderation from "./pages/Moderation";
+import Events from "./pages/Events";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/gamification" element={<Gamification />} />
               <Route path="/activity" element={<LiveActivity />} />
               <Route path="/moderation" element={<Moderation />} />
+              <Route path="/events" element={<Events />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNavigation />
