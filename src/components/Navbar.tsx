@@ -124,20 +124,6 @@ const Navbar = () => {
                   </Button>
                 </Link>
 
-                <Link to="/activity">
-                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                    <Activity className="h-5 w-5 mr-2" />
-                    Activity
-                  </Button>
-                </Link>
-                
-                <Link to="/api">
-                  <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                    <Code className="h-5 w-5 mr-2" />
-                    API
-                  </Button>
-                </Link>
-
                 <Link to={`/profile/${user.id}`}>
                   <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
                     <User className="h-5 w-5 mr-2" />
@@ -239,20 +225,6 @@ const Navbar = () => {
                     <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                       <Calendar className="h-5 w-5 mr-3" />
                       Events
-                    </Button>
-                  </Link>
-
-                  <Link to="/activity" onClick={closeMobileMenu}>
-                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
-                      <Activity className="h-5 w-5 mr-3" />
-                      Activity
-                    </Button>
-                  </Link>
-                  
-                  <Link to="/api" onClick={closeMobileMenu}>
-                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
-                      <Code className="h-5 w-5 mr-3" />
-                      API
                     </Button>
                   </Link>
 
