@@ -45,7 +45,7 @@ const Footer = () => {
               </h3>
               <ul className="space-y-3">
                 <li><a href="#features" className="text-gray-400 hover:text-purple-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Features</a></li>
-                <li><a href="#pricing" className="text-gray-400 hover:text-purple-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Pricing</a></li>
+                <li><a href="/pricing" className="text-gray-400 hover:text-purple-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Pricing</a></li>
                 <li><a href="#how-it-works" className="text-gray-400 hover:text-purple-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">How it Works</a></li>
                 <li><a href="#" className="text-gray-400 hover:text-purple-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Analytics</a></li>
               </ul>
@@ -58,10 +58,10 @@ const Footer = () => {
                 Support
               </h3>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Help Center</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Discord Server</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Contact Us</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Status</a></li>
+                <li><a href="https://discord.gg/3mNGT2AwNy" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Help Center</a></li>
+                <li><a href="https://discord.gg/3mNGT2AwNy" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Discord Server</a></li>
+                <li><a href="https://discord.gg/3mNGT2AwNy" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Contact Us</a></li>
+                <li><a href="https://status.x-ampledevelopment.co.uk" className="text-gray-400 hover:text-cyan-300 transition-colors text-lg hover:translate-x-1 transform duration-200 inline-block">Status</a></li>
               </ul>
             </div>
           </div>
