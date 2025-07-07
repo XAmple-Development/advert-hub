@@ -5,8 +5,7 @@ Advert Hub is a modern and powerful platform built to manage and showcase Discor
 ![License](https://img.shields.io/github/license/XAmple-Development/advert-hub?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/XAmple-Development/advert-hub?style=for-the-badge)
 ![Last Commit](https://img.shields.io/github/last-commit/XAmple-Development/advert-hub?style=for-the-badge)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/93e37679-1f50-4966-96d3-10da2eaad2f6/deploy-status)](https://app.netlify.com/projects/adverthubsite/deploys)
-
+[![Netlify Status](https://api.netlify.com/api/v1/badges/26e254ed-9f9e-46a4-a3db-399c5148be96/deploy-status)](https://app.netlify.com/projects/adverthubwebsite/deploys)
 ---
 
 ## ✨ Features
