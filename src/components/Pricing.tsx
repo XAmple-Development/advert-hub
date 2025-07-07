@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 
 const Pricing = () => {
   const { user } = useAuth();
-  const { subscription_tier, createCheckout, openCustomerPortal, checkSubscription, loading, isPremium } = useSubscription();
+  const { subscription_tier, createCheckout, openCustomerPortal, checkSubscription, loading, isPremium, isGold, isPlatinum } = useSubscription();
 
   const plans = [
     {
@@ -32,29 +32,54 @@ const Pricing = () => {
       current: subscription_tier === 'free'
     },
     {
-      name: "Premium Pro",
-      price: "$12.99",
+      name: "Gold",
+      price: "$4.79",
       period: "/month",
-      description: "Supercharge your server growth",
+      description: "Boost your server visibility",
       features: [
-        "Unlimited server/bot listings",
-        "Priority bumps every 2 hours",
-        "Featured listing placement",
-        "Advanced analytics & AI insights",
-        "24/7 premium support",
-        "Custom embed styling & branding",
-        "Cross-promotion network access",
-        "Verified server badge",
-        "Growth optimization tools",
-        "Early access to new features"
+        "4% Loyalty Discount!",
+        "Gold bot accent",
+        "Higher listing priority",
+        "Up to 2 vanity URLs",
+        "1.5x bump power",
+        "Up to 12 team members",
+        "Premium rank on support server",
+        "YouTube trailer on bot page",
+        "Links in bot posts"
       ],
-      buttonText: user ? (isPremium ? "Manage Subscription" : "Upgrade to Premium") : "Go Premium",
+      buttonText: user ? (isGold ? "Current Plan" : "Upgrade to Gold") : "Go Gold",
+      buttonVariant: "outline" as const,
+      popular: false,
+      gradient: "from-yellow-500 to-yellow-600",
+      bgGradient: "from-yellow-500/10 to-yellow-600/10",
+      icon: Star,
+      current: isGold
+    },
+    {
+      name: "Platinum",
+      price: "$9.59",
+      period: "/month",
+      description: "Premium features for serious communities",
+      features: [
+        "4% Loyalty Discount!",
+        "White bot accent",
+        "Top listing priority",
+        "Up to 3 vanity URLs",
+        "2x bump power",
+        "Up to 15 team members",
+        "Premium rank on support server",
+        "YouTube trailer on bot page",
+        "Links in bot posts",
+        "Large banner placement",
+        "30-day bot statistics"
+      ],
+      buttonText: user ? (isPlatinum ? "Current Plan" : "Upgrade to Platinum") : "Go Platinum",
       buttonVariant: "default" as const,
       popular: true,
-      gradient: "from-purple-600 to-pink-600",
-      bgGradient: "from-purple-600/10 to-pink-600/10",
+      gradient: "from-slate-400 to-slate-600",
+      bgGradient: "from-slate-400/10 to-slate-600/10",
       icon: Crown,
-      current: isPremium
+      current: isPlatinum
     }
   ];
 
@@ -66,14 +91,15 @@ const Pricing = () => {
       return;
     }
 
-    if (plan.name === "Premium Pro") {
-      if (!isPremium) {
-        console.log('Upgrading to premium');
-        await createCheckout();
-      } else {
-        console.log('Opening customer portal');
-        await openCustomerPortal();
-      }
+    if (plan.name === "Gold" && !isGold) {
+      console.log('Upgrading to gold');
+      await createCheckout();
+    } else if (plan.name === "Platinum" && !isPlatinum) {
+      console.log('Upgrading to platinum');
+      await createCheckout();
+    } else if (isPremium && (plan.name === "Gold" || plan.name === "Platinum")) {
+      console.log('Opening customer portal');
+      await openCustomerPortal();
     } else if (plan.name === "Starter" && isPremium) {
       console.log('Opening customer portal for downgrade');
       await openCustomerPortal();

@@ -64,7 +64,10 @@ const Bots = () => {
 
       const { data, error } = await supabase
         .from('listings')
-        .select('*')
+        .select(`
+          *,
+          profiles!listings_user_id_fkey(subscription_tier)
+        `)
         .eq('type', 'bot')
         .eq('status', 'active')
         .not('bot_id', 'is', null)
