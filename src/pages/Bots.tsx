@@ -66,7 +66,7 @@ const Bots = () => {
         .from('listings')
         .select(`
           *,
-          profiles!listings_user_id_fkey(subscription_tier)
+          profiles(subscription_tier)
         `)
         .eq('type', 'bot')
         .eq('status', 'active')

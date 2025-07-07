@@ -85,7 +85,7 @@ const EnhancedListingsPage = () => {
         .from('listings')
         .select(`
           *,
-          profiles!listings_user_id_fkey(subscription_tier)
+          profiles(subscription_tier)
         `)
         .eq('status', 'active')
         .eq('type', 'server')
