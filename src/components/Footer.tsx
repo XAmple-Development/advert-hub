@@ -10,9 +10,9 @@ const Footer = () => {
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative z-10 py-20 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 py-16 md:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
             {/* Brand Section */}
             <div className="col-span-1 md:col-span-2 space-y-6">
               <div className="flex items-center space-x-3 mb-6">
@@ -21,18 +21,18 @@ const Footer = () => {
                 </div>
                 <span className="text-white text-3xl font-black">AdvertHub</span>
               </div>
-              <p className="text-gray-300 text-lg leading-relaxed max-w-md">
+              <p className="text-gray-300 text-base md:text-lg leading-relaxed max-w-md">
                 The ultimate platform for Discord server and bot promotion. Join thousands of communities 
                 growing their audience through our premium network.
               </p>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
+                <div className="flex items-center space-x-2 px-3 md:px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full backdrop-blur-sm">
                   <Star className="h-4 w-4 text-yellow-400" />
-                  <span className="text-white font-medium">4.9/5 Rating</span>
+                  <span className="text-white font-medium text-sm md:text-base">4.9/5 Rating</span>
                 </div>
-                <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-full backdrop-blur-sm">
+                <div className="flex items-center space-x-2 px-3 md:px-4 py-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-full backdrop-blur-sm">
                   <Heart className="h-4 w-4 text-red-400" />
-                  <span className="text-white font-medium">1M+ Happy Users</span>
+                  <span className="text-white font-medium text-sm md:text-base">1M+ Happy Users</span>
                 </div>
               </div>
             </div>

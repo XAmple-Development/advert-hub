@@ -63,19 +63,19 @@ const Features = () => {
             <span className="text-purple-200 font-medium">Premium Features</span>
           </div>
           
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 px-4">
             Powerful Features for 
             <span className="block bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
               Discord Domination
             </span>
           </h2>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed px-4">
             Everything you need to transform your Discord community into a thriving empire. 
             Built for growth, designed for success.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4">
           {features.map((feature, index) => (
             <Card 
               key={index} 
@@ -83,24 +83,24 @@ const Features = () => {
             >
               <div className={`absolute inset-0 bg-gradient-to-br ${feature.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
               
-              <CardHeader className="relative z-10 pb-4">
-                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r ${feature.gradient} rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className="h-8 w-8 text-white" />
+              <CardHeader className="relative z-10 pb-4 p-4 md:p-6">
+                <div className={`inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r ${feature.gradient} rounded-2xl mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className="h-6 w-6 md:h-8 md:w-8 text-white" />
                 </div>
-                <CardTitle className="text-white text-2xl font-bold group-hover:text-white transition-colors">
+                <CardTitle className="text-white text-xl md:text-2xl font-bold group-hover:text-white transition-colors leading-tight">
                   {feature.title}
                 </CardTitle>
               </CardHeader>
               
-              <CardContent className="relative z-10">
-                <p className="text-gray-300 text-lg leading-relaxed group-hover:text-gray-200 transition-colors">
+              <CardContent className="relative z-10 p-4 md:p-6 pt-0">
+                <p className="text-gray-300 text-base md:text-lg leading-relaxed group-hover:text-gray-200 transition-colors">
                   {feature.description}
                 </p>
               </CardContent>
 
               {/* Sparkle Effect */}
               <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <Sparkles className="h-5 w-5 text-purple-300" />
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-purple-300" />
               </div>
             </Card>
           ))}

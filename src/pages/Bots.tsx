@@ -135,13 +135,13 @@ const Bots = () => {
               <span className="text-purple-200 font-medium">Discord Bots</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-black text-white mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 px-4">
               Discover
               <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                 Amazing Bots
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 max-w-4xl leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-4xl leading-relaxed px-4">
               Find the perfect Discord bots to enhance your server. Vote for your favorites and discover new functionality.
             </p>
           </div>
@@ -195,8 +195,8 @@ const Bots = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBots.map((bot) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-4">
+            {filteredBots.map((bot) => {
                 const userTier = bot.profiles?.[0]?.subscription_tier || 'free';
                 const getTierBorderColor = (tier: string) => {
                   switch (tier) {

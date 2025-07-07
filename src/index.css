@@ -74,25 +74,40 @@
   /* Improved text contrast and readability */
   h1, h2, h3, h4, h5, h6 {
     @apply text-white font-semibold;
-    line-height: 1.2;
+    line-height: 1.3;
+    word-wrap: break-word;
+    hyphens: auto;
   }
   
   p {
     @apply text-gray-200;
-    line-height: 1.7;
+    line-height: 1.8;
+    word-wrap: break-word;
   }
   
-  /* Ensure all text has sufficient contrast */
+  /* Ensure all text has sufficient contrast and proper spacing */
   .text-gray-300 {
-    color: rgb(209 213 219) !important; /* Lighter gray for better readability */
+    color: rgb(229 231 235) !important; /* Much lighter for better readability */
   }
   
   .text-gray-400 {
-    color: rgb(156 163 175) !important; /* Adjusted for better contrast */
+    color: rgb(209 213 219) !important; /* Lighter for better contrast */
   }
   
   .text-gray-500 {
-    color: rgb(107 114 128) !important; /* Minimum contrast maintained */
+    color: rgb(156 163 175) !important; /* Minimum contrast maintained */
+  }
+  
+  /* Prevent text overflow and ensure readability */
+  * {
+    word-wrap: break-word;
+  }
+  
+  /* Better text rendering */
+  body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   /* Improved button text contrast */
@@ -193,6 +208,49 @@
   
   .btn-outline {
     @apply border-2 border-gray-500 text-gray-200 hover:bg-gray-700 hover:text-white hover:border-gray-400 font-medium px-6 py-3 rounded-xl transition-all duration-300;
+  }
+  
+  /* Text truncation utilities for better layout */
+  .text-truncate {
+    @apply truncate;
+  }
+  
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Responsive text scaling */
+  .text-responsive-sm {
+    @apply text-sm lg:text-base;
+  }
+  
+  .text-responsive-base {
+    @apply text-base lg:text-lg;
+  }
+  
+  .text-responsive-lg {
+    @apply text-lg lg:text-xl;
+  }
+  
+  .text-responsive-xl {
+    @apply text-xl lg:text-2xl;
+  }
+  
+  /* Container improvements */
+  .container-responsive {
+    @apply px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto;
   }
 }
 

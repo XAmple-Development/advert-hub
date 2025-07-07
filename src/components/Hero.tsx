@@ -30,30 +30,30 @@ const Hero = () => {
               <span className="text-purple-200 font-medium">Premium Discord Growth Platform</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-8 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white mb-6 md:mb-8 leading-tight">
               Boost Your 
               <span className="block bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-pulse">
                 Discord Empire
               </span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 md:mb-12 max-w-4xl mx-auto leading-relaxed px-4">
               Connect your Discord server or bot to our premium advertising network. 
               <span className="text-cyan-300 font-semibold"> Get discovered by millions</span> and 
               <span className="text-purple-300 font-semibold"> grow exponentially</span> with our AI-powered promotion system.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
-              <Link to="/auth">
-                <Button size="lg" className="group relative bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white px-12 py-6 text-xl font-bold rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 border-0">
-                  <span className="flex items-center">
+            <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center mb-12 md:mb-16 px-4">
+              <Link to="/auth" className="w-full sm:w-auto">
+                <Button size="lg" className="group relative w-full sm:w-auto bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 hover:from-purple-700 hover:via-pink-700 hover:to-orange-700 text-white px-8 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105 border-0">
+                  <span className="flex items-center justify-center">
                     Start Growing Now
-                    <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="ml-2 md:ml-3 h-5 md:h-6 w-5 md:w-6 group-hover:translate-x-1 transition-transform" />
                   </span>
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity -z-10"></div>
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-2 border-gray-400/50 text-white hover:bg-white/10 hover:border-white/50 px-12 py-6 text-xl font-semibold rounded-2xl backdrop-blur-sm transition-all duration-300 transform hover:scale-105">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto border-2 border-gray-400/50 text-white hover:bg-white/10 hover:border-white/50 px-8 md:px-12 py-4 md:py-6 text-lg md:text-xl font-semibold rounded-2xl backdrop-blur-sm transition-all duration-300 transform hover:scale-105">
                 Watch Demo
               </Button>
             </div>

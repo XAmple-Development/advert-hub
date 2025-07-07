@@ -121,13 +121,13 @@ const Pricing = () => {
             <span className="text-purple-200 font-medium">Flexible Pricing</span>
           </div>
 
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 px-4">
             Simple, 
             <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
               {" "}Transparent Pricing
             </span>
           </h2>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed px-4">
             Choose the perfect plan for your Discord empire. Scale your community with confidence 
             and unlock premium growth features that deliver real results.
           </p>
@@ -151,7 +151,7 @@ const Pricing = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto px-4">
           {plans.map((plan, index) => (
             <Card 
               key={index} 

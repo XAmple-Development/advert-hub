@@ -265,10 +265,10 @@ const EnhancedListingsPage = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
                 Discord Communities
               </h1>
-              <p className="text-gray-300 text-lg">
+              <p className="text-gray-300 text-base sm:text-lg">
                 Discover amazing Discord servers and bots. Join the best communities today!
               </p>
             </div>
@@ -376,7 +376,7 @@ const EnhancedListingsPage = () => {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-white text-lg font-bold truncate flex items-center gap-2">
+                            <CardTitle className="text-white text-base sm:text-lg font-bold truncate flex items-center gap-2">
                               {listing.name}
                               {listing.featured && <Star className="h-4 w-4 text-yellow-400 flex-shrink-0" />}
                             </CardTitle>
@@ -413,8 +413,8 @@ const EnhancedListingsPage = () => {
                       </div>
                     </CardHeader>
 
-                    <CardContent className="space-y-4">
-                      <p className="text-gray-300 text-sm line-clamp-3">
+                    <CardContent className="space-y-3 md:space-y-4 p-3 md:p-6">
+                      <p className="text-gray-300 text-sm line-clamp-3 leading-relaxed">
                         {listing.description}
                       </p>
 
