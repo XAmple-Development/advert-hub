@@ -67,7 +67,7 @@ serve(async (req) => {
       }
 
       // Check if user has premium subscription
-      if (!['small', 'medium', 'premium'].includes(profile.subscription_tier)) {
+      if (!['gold', 'premium', 'platinum'].includes(profile.subscription_tier)) {
         logStep(`User ${profile.id} does not have premium subscription (tier: ${profile.subscription_tier}), skipping`);
         continue;
       }
