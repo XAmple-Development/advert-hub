@@ -81,6 +81,7 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
         ...review,
         profiles: review.profiles && 
                   typeof review.profiles === 'object' && 
+                  !Array.isArray(review.profiles) &&
                   !('error' in review.profiles) 
           ? review.profiles 
           : null
@@ -406,10 +407,10 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
                     )}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">
-                        {review.profiles?.username || review.profiles?.discord_username || 'Anonymous'}
-                      </span>
+                     <div className="flex items-center gap-2">
+                       <span className="text-white font-medium">
+                         {review.profiles ? (review.profiles.username || review.profiles.discord_username || 'Anonymous') : 'Anonymous'}
+                       </span>
                       {review.is_verified && (
                         <Badge className="bg-green-600 text-white text-xs">
                           <Check className="h-3 w-3 mr-1" />
