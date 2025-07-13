@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useActivityTracker } from '@/hooks/useActivityTracker';
 import { useToast } from '@/hooks/use-toast';
 import { Star, MessageSquare, ThumbsUp, ThumbsDown, Flag, Edit, Trash2, Users } from 'lucide-react';
 import { EnhancedLoadingSpinner, LoadingStateManager } from '@/components/enhanced/EnhancedLoadingStates';
@@ -321,6 +322,7 @@ const ReviewForm = ({
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { trackActivity } = useActivityTracker();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,6 +355,17 @@ const ReviewForm = ({
           }]);
 
         if (error) throw error;
+        
+        // Track the review activity
+        await trackActivity({
+          activity_type: 'review_posted',
+          target_type: 'listing',
+          target_id: listingId,
+          metadata: { 
+            rating: rating,
+            has_comment: !!comment 
+          }
+        });
         
         toast({
           title: 'Review submitted!',

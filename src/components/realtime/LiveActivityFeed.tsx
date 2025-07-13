@@ -157,6 +157,10 @@ const LiveActivityFeed = () => {
         return <Eye className="h-4 w-4 text-gray-500" />;
       case 'bump':
         return <TrendingUp className="h-4 w-4 text-cyan-500" />;
+      case 'vote_cast':
+        return <Star className="h-4 w-4 text-pink-500" />;
+      case 'user_followed':
+        return <Users className="h-4 w-4 text-indigo-500" />;
       default:
         return <Activity className="h-4 w-4 text-gray-500" />;
     }
@@ -178,6 +182,8 @@ const LiveActivityFeed = () => {
         return `${username} is viewing "${activity.listing?.name || 'a listing'}"`;
       case 'bump':
         return `${username} bumped "${activity.listing?.name || 'a listing'}"`;
+      case 'vote_cast':
+        return `${username} voted for "${activity.listing?.name || 'a listing'}"`;
       case 'user_followed':
         return `${username} followed another user`;
       case 'achievement_earned':
@@ -199,6 +205,10 @@ const LiveActivityFeed = () => {
         return 'border-l-blue-500';
       case 'comment_posted':
         return 'border-l-purple-500';
+      case 'vote_cast':
+        return 'border-l-pink-500';
+      case 'user_followed':
+        return 'border-l-indigo-500';
       case 'achievement_earned':
         return 'border-l-orange-500';
       case 'level_up':
