@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useActivityTracker } from '@/hooks/useActivityTracker';
 import EditListingModal from '@/components/EditListingModal';
 import { ReviewSystem } from '@/components/reviews/ReviewSystem';
 import { UserProfile } from '@/components/social/UserProfile';
@@ -58,6 +59,7 @@ const ListingDetail = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const { user } = useAuth();
     const { toast } = useToast();
+    const { trackActivity } = useActivityTracker();
 
     useEffect(() => {
         if (id) {
@@ -198,6 +200,16 @@ const ListingDetail = () => {
                     p_listing_id: id,
                     p_event_type: 'view'
                 });
+                
+                // Track the viewing activity
+                if (user) {
+                    await trackActivity({
+                        activity_type: 'viewing',
+                        target_type: 'listing',
+                        target_id: id,
+                        metadata: { view_count: currentListing.view_count + 1 }
+                    });
+                }
             }
         } catch (error) {
             // Silent fail for view counting
@@ -300,6 +312,17 @@ const ListingDetail = () => {
             }
 
             console.log(`Bump successful for listing ${listing.id}`);
+            
+            // Track the bump activity
+            await trackActivity({
+                activity_type: 'bump',
+                target_type: 'listing',
+                target_id: listing.id,
+                metadata: { 
+                    listing_name: listing.name,
+                    bump_count: listing.bump_count + 1 
+                }
+            });
 
             // Track bump analytics
             try {
@@ -391,6 +414,19 @@ const ListingDetail = () => {
                     .from('listings')
                     .update({ join_count: (listing.join_count || 0) + 1 })
                     .eq('id', listing.id);
+                    
+                // Track the join activity
+                if (user) {
+                    await trackActivity({
+                        activity_type: 'server_joined',
+                        target_type: 'listing',
+                        target_id: listing.id,
+                        metadata: { 
+                            listing_name: listing.name,
+                            join_count: listing.join_count + 1 
+                        }
+                    });
+                }
             } catch (error) {
                 console.log('Failed to track join analytics:', error);
             }
