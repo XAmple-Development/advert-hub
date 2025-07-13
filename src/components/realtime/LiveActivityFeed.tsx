@@ -43,7 +43,7 @@ const LiveActivityFeed = () => {
     
     // Set up real-time subscription
     const subscription = supabase
-      .channel('live_activity')
+      .channel('live_activity_feed')
       .on(
         'postgres_changes',
         {
@@ -53,11 +53,14 @@ const LiveActivityFeed = () => {
           filter: 'is_public=eq.true',
         },
         (payload) => {
+          console.log('Real-time activity received:', payload);
           // Fetch the complete activity with profile info
           fetchSingleActivity(payload.new.id);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Real-time subscription status:', status);
+      });
 
     return () => {
       subscription.unsubscribe();
@@ -79,7 +82,12 @@ const LiveActivityFeed = () => {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching activities:', error);
+        throw error;
+      }
+      
+      console.log('Fetched activities:', data?.length || 0);
       
       // Transform data to handle potential errors in relations
       const transformedData = (data || []).map(activity => ({
