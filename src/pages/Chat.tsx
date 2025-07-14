@@ -187,14 +187,10 @@ const Chat = () => {
                       <div className={`flex-1 ${
                         message.role === 'user' ? 'text-right' : 'text-left'
                       }`}>
-                        <div className={`inline-block rounded-2xl px-6 py-4 max-w-[85%] shadow-sm ${
-                          message.role === 'user'
-                            ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground'
-                            : 'bg-gradient-to-br from-muted to-muted/50 border border-border/50'
+                        <div className={`text-sm leading-relaxed max-w-[85%] ${
+                          message.role === 'user' ? 'ml-auto' : 'mr-auto'
                         }`}>
-                          <div className="text-sm leading-relaxed">
-                            {formatMessage(message.content)}
-                          </div>
+                          {formatMessage(message.content)}
                         </div>
                         <div className={`mt-2 text-xs text-muted-foreground ${
                           message.role === 'user' ? 'text-right' : 'text-left'
@@ -213,18 +209,50 @@ const Chat = () => {
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-secondary/80 text-secondary-foreground border border-border/50 flex items-center justify-center shadow-md">
                         <Bot className="h-5 w-5" />
                       </div>
-                      <div className="bg-gradient-to-br from-muted to-muted/50 border border-border/50 rounded-2xl px-6 py-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                          <span className="text-sm text-muted-foreground">
-                            Thinking...
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        <span className="text-sm text-muted-foreground">
+                          Thinking...
+                        </span>
                       </div>
                     </div>
                   )}
                 </div>
               </ScrollArea>
+              
+              {/* Input Section */}
+              <div className="border-t bg-gradient-to-r from-background to-muted/20 p-6 rounded-b-lg">
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1 relative">
+                    <Input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Ask about Discord promotion strategies, listing optimization, or AdvertHub features..."
+                      disabled={isLoading}
+                      className="pr-12 py-6 text-base border-2 focus:border-primary/50 transition-colors rounded-xl resize-none"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={sendMessage} 
+                    disabled={!input.trim() || isLoading}
+                    size="lg"
+                    className="h-12 w-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send className="h-5 w-5" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  Press Enter to send • AI responses are generated and may contain inaccuracies
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
