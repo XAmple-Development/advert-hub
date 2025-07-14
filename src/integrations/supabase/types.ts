@@ -1068,47 +1068,6 @@ export type Database = {
         }
         Relationships: []
       }
-      live_activity: {
-        Row: {
-          activity_type: string
-          created_at: string
-          id: string
-          is_public: boolean | null
-          metadata: Json | null
-          target_id: string | null
-          target_type: string | null
-          user_id: string | null
-        }
-        Insert: {
-          activity_type: string
-          created_at?: string
-          id?: string
-          is_public?: boolean | null
-          metadata?: Json | null
-          target_id?: string | null
-          target_type?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          activity_type?: string
-          created_at?: string
-          id?: string
-          is_public?: boolean | null
-          metadata?: Json | null
-          target_id?: string | null
-          target_type?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "live_activity_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       moderation_actions: {
         Row: {
           action_type: string
