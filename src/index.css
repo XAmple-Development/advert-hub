@@ -204,11 +204,20 @@
   }
 
   .hover-lift {
-    @apply transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl;
+    @apply transition-all duration-500 hover:-translate-y-2;
+    box-shadow: var(--shadow-elevation);
+  }
+
+  .hover-lift:hover {
+    box-shadow: var(--shadow-glow);
   }
 
   .hover-glow {
-    @apply transition-all duration-300 hover:shadow-glow;
+    @apply transition-all duration-300;
+  }
+
+  .hover-glow:hover {
+    box-shadow: var(--shadow-glow);
   }
 
   .hover-tilt {
@@ -301,16 +310,28 @@
   /* Enhanced Buttons */
   .btn-cosmic {
     background: var(--gradient-cosmic);
-    @apply text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-glow border-0;
+    @apply text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 transform hover:scale-105 border-0;
+  }
+
+  .btn-cosmic:hover {
+    box-shadow: var(--shadow-glow);
   }
 
   .btn-glow {
     background: var(--gradient-primary);
-    @apply text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-glow border-0;
+    @apply text-white font-semibold px-6 py-3 rounded-xl transition-all duration-300 border-0;
+  }
+
+  .btn-glow:hover {
+    box-shadow: var(--shadow-glow);
   }
 
   .btn-outline-glow {
-    @apply border-2 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground font-medium px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-glow;
+    @apply border-2 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground font-medium px-6 py-3 rounded-xl transition-all duration-300;
+  }
+
+  .btn-outline-glow:hover {
+    box-shadow: var(--shadow-glow);
   }
   
   /* Improved card styling with better text contrast */
