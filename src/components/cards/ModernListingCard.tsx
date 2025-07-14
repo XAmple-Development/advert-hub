@@ -75,67 +75,75 @@ export const ModernListingCard = ({
 
   return (
     <Card className={cn(
-      "group relative overflow-hidden bg-gradient-to-br from-card/95 to-card/80",
-      "border border-border/50 hover:border-border/80",
-      "backdrop-blur-sm transition-all duration-300",
-      "hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1",
-      listing.premium_featured && "ring-2 ring-primary/20 border-primary/30",
+      "card-glow group relative overflow-hidden",
+      "hover-lift hover-tilt transition-all duration-500",
+      "hover:shadow-glow-secondary",
+      listing.premium_featured && "ring-2 ring-primary/30 border-primary/40 animate-glow-pulse",
       className
     )}>
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-secondary/[0.02]" />
-      <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity" />
+      {/* Enhanced Background Pattern */}
+      <div className="absolute inset-0" style={{background: 'var(--gradient-surface)'}} />
+      <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-all duration-500" 
+           style={{background: 'var(--gradient-primary)'}} />
+      <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full blur-2xl opacity-10 group-hover:opacity-25 transition-all duration-500" 
+           style={{background: 'var(--gradient-accent)'}} />
       
-      {/* Featured Badge */}
+      {/* Enhanced Featured Badge */}
       {(listing.featured || listing.premium_featured) && (
-        <div className="absolute top-3 right-3 z-20">
+        <div className="absolute top-4 right-4 z-20">
           <Badge className={cn(
-            "gap-1 text-xs font-medium shadow-lg",
+            "gap-2 text-sm font-bold shadow-2xl px-4 py-2 rounded-full animate-glow-pulse",
             listing.premium_featured 
-              ? "bg-gradient-to-r from-primary to-secondary text-primary-foreground border-0" 
-              : "bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0"
-          )}>
-            <Star className="h-3 w-3" />
+              ? "border-0 text-white" 
+              : "border-0 text-white"
+          )} style={{
+            background: listing.premium_featured 
+              ? 'var(--gradient-cosmic)' 
+              : 'linear-gradient(135deg, #fbbf24, #f59e0b)'
+          }}>
+            <Star className="h-4 w-4 animate-bounce-gentle" />
             {listing.premium_featured ? "Premium" : "Featured"}
           </Badge>
         </div>
       )}
 
-      <CardContent className="relative p-6 space-y-4">
-        {/* Header Section */}
-        <div className="flex items-start gap-4">
+      <CardContent className="relative p-8 space-y-6">
+        {/* Enhanced Header Section */}
+        <div className="flex items-start gap-5">
           <div className="relative">
-            <Avatar className="h-14 w-14 ring-2 ring-border/20">
+            <Avatar className="h-16 w-16 ring-2 ring-primary/30 hover:ring-primary/50 transition-all duration-300 hover-glow">
               <AvatarImage src={listing.avatar_url} alt={listing.name} />
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              <AvatarFallback className="text-primary font-bold text-lg" 
+                             style={{background: 'var(--gradient-primary)', opacity: 0.2}}>
                 {listing.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             {listing.online_count && listing.type === 'server' && (
-              <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-card shadow-sm" />
+              <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 rounded-full border-3 border-card shadow-lg animate-glow-pulse" />
             )}
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-lg leading-tight truncate group-hover:text-primary transition-colors">
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="flex items-center gap-3">
+              <h3 className="font-black text-xl leading-tight truncate group-hover:gradient-text transition-all duration-300">
                 {listing.name}
               </h3>
               <ListingVerificationBadge listingId={listing.id} size="sm" />
             </div>
             
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs h-5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Badge className="text-sm h-7 px-3 font-semibold rounded-lg" 
+                     style={{background: 'var(--gradient-primary)', color: 'white'}}>
                 {listing.type === 'server' ? 'Server' : 'Bot'}
               </Badge>
               {listing.tags?.slice(0, 2).map(tag => (
-                <Badge key={tag} variant="outline" className="text-xs h-5 px-2">
+                <Badge key={tag} variant="outline" className="text-sm h-7 px-3 rounded-lg hover-glow">
                   {tag}
                 </Badge>
               ))}
               {listing.tags && listing.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground">
-                  +{listing.tags.length - 2}
+                <span className="text-sm text-muted-foreground font-medium">
+                  +{listing.tags.length - 2} more
                 </span>
               )}
             </div>
@@ -154,8 +162,8 @@ export const ModernListingCard = ({
           </Button>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+        {/* Enhanced Description */}
+        <p className="text-base text-muted-foreground line-clamp-3 leading-relaxed">
           {listing.description}
         </p>
 
@@ -200,23 +208,23 @@ export const ModernListingCard = ({
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 pt-2">
+        {/* Enhanced Action Buttons */}
+        <div className="flex gap-3 pt-4">
           <Button
             onClick={() => onView?.(listing.id)}
             variant="outline"
             size="sm"
-            className="flex-1 h-9"
+            className="flex-1 h-11 hover-glow font-medium"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            View
+            View Details
           </Button>
           
           {listing.invite_url && (
             <Button
               onClick={() => onJoin?.(listing)}
               size="sm"
-              className="flex-1 h-9 bg-primary hover:bg-primary/90"
+              className="btn-glow flex-1 h-11 font-bold"
             >
               Join {listing.type === 'server' ? 'Server' : 'Bot'}
             </Button>
@@ -227,9 +235,9 @@ export const ModernListingCard = ({
               onClick={() => onWebsite?.(listing)}
               variant="ghost"
               size="icon"
-              className="h-9 w-9"
+              className="h-11 w-11 hover-glow"
             >
-              <Globe className="h-4 w-4" />
+              <Globe className="h-5 w-5" />
             </Button>
           )}
           
@@ -237,9 +245,9 @@ export const ModernListingCard = ({
             onClick={() => onShare?.(listing.id)}
             variant="ghost"
             size="icon"
-            className="h-9 w-9"
+            className="h-11 w-11 hover-glow"
           >
-            <Share2 className="h-4 w-4" />
+            <Share2 className="h-5 w-5" />
           </Button>
         </div>
       </CardContent>

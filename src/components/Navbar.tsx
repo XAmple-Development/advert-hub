@@ -60,7 +60,8 @@ const Navbar = () => {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-gradient-to-r from-gray-900/95 via-slate-900/95 to-gray-900/95 backdrop-blur-xl border-b border-gray-700/50">
+    <nav className="sticky top-0 z-50 glass-effect-strong border-b border-border/30 backdrop-blur-3xl" 
+         style={{background: 'var(--gradient-surface)'}}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-4">
         <div className="hidden md:flex md:items-center md:justify-between md:w-full">
           {/* Left Side Navigation */}
@@ -68,13 +69,13 @@ const Navbar = () => {
             {/* Browse Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 font-medium px-4 py-2 rounded-xl transition-all duration-300">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-card/50 font-medium px-4 py-2 rounded-xl transition-all duration-300 hover-glow">
                   <Search className="h-4 w-4 mr-2" />
                   Browse
                   <ChevronDown className="h-3 w-3 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-gray-800/95 backdrop-blur-xl border-gray-700 rounded-xl p-2 shadow-2xl z-50">
+              <DropdownMenuContent className="glass-effect-strong border-border rounded-xl p-2 shadow-2xl z-50">
                 <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
                   <Link to="/listings" className="flex items-center w-full text-gray-300 hover:text-white">
                     <Users className="h-4 w-4 mr-2" />
@@ -143,10 +144,11 @@ const Navbar = () => {
           {/* Center Logo */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                <Bot className="h-6 w-6 text-white" />
+              <div className="p-3 rounded-2xl group-hover:scale-110 transition-all duration-300 animate-glow-pulse" 
+                   style={{background: 'var(--gradient-primary)'}}>
+                <Bot className="h-7 w-7 text-white" />
               </div>
-              <span className="text-white text-xl md:text-2xl font-black group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+              <span className="text-white text-xl md:text-2xl font-black group-hover:gradient-text transition-all duration-300">
                 AdvertHub
               </span>
             </Link>
@@ -222,7 +224,7 @@ const Navbar = () => {
               </>
             ) : (
               <Link to="/auth">
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-3 text-lg rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-purple-500/25">
+                <Button className="btn-cosmic px-8 py-3 text-lg rounded-2xl shadow-2xl hover:shadow-glow transform hover:scale-105">
                   <Crown className="h-5 w-5 mr-2" />
                   Get Started
                 </Button>
