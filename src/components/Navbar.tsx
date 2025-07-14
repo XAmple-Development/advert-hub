@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar, MessageCircle, Code, ChevronDown, Search, Users, Settings, Gamepad2, MessageSquare } from 'lucide-react';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -157,6 +158,7 @@ const Navbar = () => {
           <div className="flex items-center space-x-2">
             {user ? (
               <>
+                <NotificationCenter />
 
                 {/* More Dropdown */}
                 <DropdownMenu>
