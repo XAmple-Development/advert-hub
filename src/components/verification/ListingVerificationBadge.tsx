@@ -20,6 +20,7 @@ const ListingVerificationBadge = ({
 
   useEffect(() => {
     const fetchVerification = async () => {
+      console.log('Fetching verification for listing:', listingId);
       try {
         const { data, error } = await supabase
           .from('server_verification')
@@ -27,16 +28,21 @@ const ListingVerificationBadge = ({
           .eq('listing_id', listingId)
           .maybeSingle();
 
+        console.log('Verification query result:', { data, error });
+
         if (error) {
           console.error('Error fetching verification:', error);
           return;
         }
 
         if (data) {
+          console.log('Setting verification status:', data);
           setVerificationStatus({
             status: data.verification_status as 'pending' | 'verified' | 'rejected',
             level: data.verification_level as 'basic' | 'premium' | 'partner' || 'basic'
           });
+        } else {
+          console.log('No verification data found for listing:', listingId);
         }
       } catch (error) {
         console.error('Error fetching verification:', error);
