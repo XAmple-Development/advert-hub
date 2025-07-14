@@ -115,6 +115,63 @@ export type Database = {
           },
         ]
       }
+      ai_recommendations: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          listing_id: string
+          metadata: Json | null
+          reasoning: string | null
+          recommendation_type: string
+          shown_to_user: boolean | null
+          user_id: string | null
+          user_interaction: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          listing_id: string
+          metadata?: Json | null
+          reasoning?: string | null
+          recommendation_type?: string
+          shown_to_user?: boolean | null
+          user_id?: string | null
+          user_interaction?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          listing_id?: string
+          metadata?: Json | null
+          reasoning?: string | null
+          recommendation_type?: string
+          shown_to_user?: boolean | null
+          user_id?: string | null
+          user_interaction?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_recommendations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_recommendations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics: {
         Row: {
           created_at: string
@@ -149,6 +206,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "analytics_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_insights: {
+        Row: {
+          confidence_score: number | null
+          expires_at: string | null
+          generated_at: string
+          id: string
+          insight_data: Json
+          insight_type: string
+          listing_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          expires_at?: string | null
+          generated_at?: string
+          id?: string
+          insight_data: Json
+          insight_type: string
+          listing_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          expires_at?: string | null
+          generated_at?: string
+          id?: string
+          insight_data?: Json
+          insight_type?: string
+          listing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_insights_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
@@ -438,6 +533,64 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_participations: {
+        Row: {
+          challenge_id: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          progress: Json | null
+          rank: number | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          progress?: Json | null
+          rank?: number | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          progress?: Json | null
+          rank?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participations_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "community_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_participations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comment_likes: {
         Row: {
           comment_id: string | null
@@ -468,6 +621,59 @@ export type Database = {
           {
             foreignKeyName: "comment_likes_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean | null
+          participation_criteria: Json
+          reward_metadata: Json | null
+          reward_type: string | null
+          start_date: string
+          title: string
+        }
+        Insert: {
+          challenge_type: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          participation_criteria?: Json
+          reward_metadata?: Json | null
+          reward_type?: string | null
+          start_date: string
+          title: string
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          participation_criteria?: Json
+          reward_metadata?: Json | null
+          reward_type?: string | null
+          start_date?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_challenges_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -601,6 +807,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      discovery_categories: {
+        Row: {
+          auto_generated: boolean | null
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          parent_category_id: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          auto_generated?: boolean | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          parent_category_id?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          auto_generated?: boolean | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          parent_category_id?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discovery_categories_parent_category_id_fkey"
+            columns: ["parent_category_id"]
+            isOneToOne: false
+            referencedRelation: "discovery_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_participants: {
         Row: {
@@ -793,6 +1046,41 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "forum_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geographic_regions: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          parent_region_id: string | null
+          region_type: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          parent_region_id?: string | null
+          region_type: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          parent_region_id?: string | null
+          region_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geographic_regions_parent_region_id_fkey"
+            columns: ["parent_region_id"]
+            isOneToOne: false
+            referencedRelation: "geographic_regions"
             referencedColumns: ["id"]
           },
         ]
@@ -1108,6 +1396,45 @@ export type Database = {
             columns: ["moderator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      network_memberships: {
+        Row: {
+          id: string
+          joined_at: string
+          listing_id: string
+          network_id: string
+          role: string | null
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          listing_id: string
+          network_id: string
+          role?: string | null
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          listing_id?: string
+          network_id?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_memberships_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_memberships_network_id_fkey"
+            columns: ["network_id"]
+            isOneToOne: false
+            referencedRelation: "server_networks"
             referencedColumns: ["id"]
           },
         ]
@@ -1552,6 +1879,47 @@ export type Database = {
           },
         ]
       }
+      server_networks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          network_type: string | null
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          network_type?: string | null
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          network_type?: string | null
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_networks_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       server_statistics: {
         Row: {
           channels_count: number | null
@@ -1601,6 +1969,60 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      server_verification: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          rejection_reason: string | null
+          updated_at: string
+          verification_criteria: Json | null
+          verification_level: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          rejection_reason?: string | null
+          updated_at?: string
+          verification_criteria?: Json | null
+          verification_level?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          rejection_reason?: string | null
+          updated_at?: string
+          verification_criteria?: Json | null
+          verification_level?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_verification_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "server_verification_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1706,6 +2128,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      trending_metrics: {
+        Row: {
+          created_at: string
+          date: string
+          engagement_score: number | null
+          growth_velocity: number | null
+          id: string
+          listing_id: string
+          member_growth: number | null
+          trending_score: number | null
+          updated_at: string
+          view_growth: number | null
+          vote_growth: number | null
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          engagement_score?: number | null
+          growth_velocity?: number | null
+          id?: string
+          listing_id: string
+          member_growth?: number | null
+          trending_score?: number | null
+          updated_at?: string
+          view_growth?: number | null
+          vote_growth?: number | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          engagement_score?: number | null
+          growth_velocity?: number | null
+          id?: string
+          listing_id?: string
+          member_growth?: number | null
+          trending_score?: number | null
+          updated_at?: string
+          view_growth?: number | null
+          vote_growth?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trending_metrics_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_achievements: {
         Row: {
@@ -2294,6 +2766,10 @@ export type Database = {
       award_achievement: {
         Args: { p_user_id: string; p_achievement_name: string }
         Returns: boolean
+      }
+      calculate_trending_scores: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       cleanup_orphaned_records: {
         Args: Record<PropertyKey, never>
