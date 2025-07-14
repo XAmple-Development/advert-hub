@@ -79,6 +79,7 @@ const EnhancedListingsPage = () => {
         .from('listings')
         .select('*')
         .eq('status', 'active')
+        .eq('type', 'server')
         .order('premium_featured', { ascending: false })
         .order('last_bumped_at', { ascending: false })
         .order('created_at', { ascending: false });
