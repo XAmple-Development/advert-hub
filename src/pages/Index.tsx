@@ -15,6 +15,8 @@ import Footer from '@/components/Footer';
 import Dashboard from '@/components/Dashboard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AdminUpgrade from '@/components/AdminUpgrade';
+import TrendingSection from '@/components/discovery/TrendingSection';
+import SmartRecommendations from '@/components/discovery/SmartRecommendations';
 import { Button } from '@/components/ui/button';
 import { Home, Globe } from 'lucide-react';
 
@@ -118,6 +120,12 @@ const Index = () => {
         ) : (
           <>
             <Hero />
+            <div className="max-w-7xl mx-auto px-6 py-12">
+              <TrendingSection />
+              <div className="mt-12">
+                <SmartRecommendations />
+              </div>
+            </div>
             <Features />
             <HowItWorks />
             <PremiumFeatures />
@@ -133,6 +141,12 @@ const Index = () => {
     <div className="min-h-screen bg-[#2C2F33]">
       <Navbar />
       <Hero />
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <TrendingSection />
+        <div className="mt-12">
+          <SmartRecommendations />
+        </div>
+      </div>
       <Features />
       <HowItWorks />
       <PremiumFeatures />
