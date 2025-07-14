@@ -7,7 +7,7 @@ import { AlertTriangle, Settings, Clock } from 'lucide-react';
 interface MaintenanceStatus {
   id: string;
   is_maintenance_mode: boolean;
-  maintenance_message: string;
+  maintenance_message: string | null;
   created_at: string;
 }
 

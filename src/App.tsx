@@ -53,31 +53,31 @@ const App = () => (
           <AuthProvider>
             <MaintenanceMode>
               <KeyboardShortcuts />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/listings" element={<Listings />} />
-              <Route path="/bots" element={<Bots />} />
-              <Route path="/listings/:id" element={<ListingDetail />} />
-              <Route path="/profile/:userId" element={<Profile />} />
-              <Route path="/profile/edit" element={<ProfileEdit />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/gamification" element={<Gamification />} />
-              
-              <Route path="/moderation" element={<Moderation />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/forum" element={<Forum />} />
-              <Route path="/forum/category/:id" element={<ForumCategory />} />
-              <Route path="/forum/topic/:id" element={<ForumTopic />} />
-              <Route path="/forum/create" element={<CreateForumTopic />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-              <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-              <Route path="/api" element={<API />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/listings" element={<Listings />} />
+                <Route path="/bots" element={<Bots />} />
+                <Route path="/listings/:id" element={<ListingDetail />} />
+                <Route path="/profile/:userId" element={<Profile />} />
+                <Route path="/profile/edit" element={<ProfileEdit />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/gamification" element={<Gamification />} />
+                
+                <Route path="/moderation" element={<Moderation />} />
+                <Route path="/events" element={<Events />} />
+                <Route path="/forum" element={<Forum />} />
+                <Route path="/forum/category/:id" element={<ForumCategory />} />
+                <Route path="/forum/topic/:id" element={<ForumTopic />} />
+                <Route path="/forum/create" element={<CreateForumTopic />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+                <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+                <Route path="/api" element={<API />} />
+                <Route path="/chat" element={<Chat />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
               <BottomNavigation />
             </MaintenanceMode>
           </AuthProvider>
