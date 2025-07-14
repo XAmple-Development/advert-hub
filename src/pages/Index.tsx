@@ -19,8 +19,17 @@ import TrendingSection from '@/components/discovery/TrendingSection';
 import SmartRecommendations from '@/components/discovery/SmartRecommendations';
 import { Button } from '@/components/ui/button';
 import { Home, Globe } from 'lucide-react';
+import { testRecommendations } from '@/utils/testRecommendations';
+import DebugPanel from '@/components/DebugPanel';
 
 const Index = () => {
+  // Test the recommendations on page load in development
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log('Testing AI recommendations and trending...');
+      testRecommendations();
+    }
+  }, []);
   const { user, loading } = useAuth();
   const { checkSubscription } = useSubscription();
   const { toast } = useToast();
@@ -152,6 +161,7 @@ const Index = () => {
       <PremiumFeatures />
       <Pricing />
       <Footer />
+      <DebugPanel />
     </div>
   );
 };
