@@ -134,10 +134,10 @@ const Chat = () => {
                         )}
                       </div>
                       
-                      <div className={`flex-1 max-w-[80%] ${
+                      <div className={`flex-1 ${
                         message.role === 'user' ? 'text-right' : 'text-left'
                       }`}>
-                        <div className={`rounded-lg px-4 py-3 ${
+                        <div className={`inline-block rounded-lg px-4 py-3 max-w-[85%] ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground ml-auto'
                             : 'bg-muted'
