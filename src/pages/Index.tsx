@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -78,94 +77,73 @@ const Index = () => {
 
   console.log('Index: Rendering with loading:', loading, 'user:', !!user);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  const handleViewChange = (newView: string) => {
+    setSearchParams({ view: newView });
+  };
+
+  // ONE BIG BACKGROUND WRAPPER FOR EVERYTHING
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center space-y-4">
             <LoadingSpinner size="lg" />
             <div className="text-white text-xl font-medium">Loading...</div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  const handleViewChange = (newView: string) => {
-    setSearchParams({ view: newView });
-  };
-
-  if (user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="pb-20 md:pb-0">
+      ) : (
+        <>
           <Navbar />
           
-          {/* View Toggle for Logged In Users */}
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex justify-center space-x-4">
-              <Button
-                onClick={() => handleViewChange('dashboard')}
-                variant={view === 'dashboard' ? 'default' : 'outline'}
-                className="flex items-center space-x-2"
-              >
-                <Home className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Button>
-              <Button
-                onClick={() => handleViewChange('home')}
-                variant={view === 'home' ? 'default' : 'outline'}
-                className="flex items-center space-x-2"
-              >
-                <Globe className="h-4 w-4" />
-                <span>Website</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Content based on view */}
-          {view === 'dashboard' ? (
-            <>
-              <Dashboard />
-              <AdminUpgrade />
-            </>
-          ) : (
-            <>
-              <Hero />
-              <div className="max-w-7xl mx-auto px-6 py-12">
-                <TrendingSection />
-                <div className="mt-12">
-                  <SmartRecommendations />
-                </div>
+          {user && (
+            <div className="max-w-7xl mx-auto px-6 py-4">
+              <div className="flex justify-center space-x-4">
+                <Button
+                  onClick={() => handleViewChange('dashboard')}
+                  variant={view === 'dashboard' ? 'default' : 'outline'}
+                  className="flex items-center space-x-2"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </Button>
+                <Button
+                  onClick={() => handleViewChange('home')}
+                  variant={view === 'home' ? 'default' : 'outline'}
+                  className="flex items-center space-x-2"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>Website</span>
+                </Button>
               </div>
-              <Features />
-              <HowItWorks />
-              <PremiumFeatures />
-              <Pricing />
-              <Footer />
-            </>
+            </div>
           )}
-        </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Navbar />
-      <Hero />
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <TrendingSection />
-        <div className="mt-12">
-          <SmartRecommendations />
-        </div>
-      </div>
-      <Features />
-      <HowItWorks />
-      <PremiumFeatures />
-      <Pricing />
-      <Footer />
-      <DebugPanel />
+          <div className="pb-20 md:pb-0">
+            {user && view === 'dashboard' ? (
+              <>
+                <Dashboard />
+                <AdminUpgrade />
+              </>
+            ) : (
+              <>
+                <Hero />
+                <div className="max-w-7xl mx-auto px-6 py-12">
+                  <TrendingSection />
+                  <div className="mt-12">
+                    <SmartRecommendations />
+                  </div>
+                </div>
+                <Features />
+                <HowItWorks />
+                <PremiumFeatures />
+                <Pricing />
+                <Footer />
+                {!user && <DebugPanel />}
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };
