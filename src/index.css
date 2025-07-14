@@ -285,7 +285,11 @@
     border-radius: var(--radius);
     box-shadow: var(--shadow-elevation);
     backdrop-filter: blur(20px);
-    @apply transition-all duration-500 hover:-translate-y-1 hover:shadow-glow;
+    @apply transition-all duration-500 hover:-translate-y-1;
+  }
+
+  .card-premium:hover {
+    box-shadow: var(--shadow-glow);
   }
 
   .card-glow {
