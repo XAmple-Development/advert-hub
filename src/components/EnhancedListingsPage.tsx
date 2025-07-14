@@ -377,10 +377,10 @@ const EnhancedListingsPage = () => {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-white text-base sm:text-lg font-bold truncate flex items-center gap-2">
+                            <CardTitle className="text-white text-base sm:text-lg font-bold truncate flex items-center gap-3">
                               {listing.name}
                               {listing.featured && <Star className="h-4 w-4 text-yellow-400 flex-shrink-0" />}
-                              <ListingVerificationBadge listingId={listing.id} />
+                              <ListingVerificationBadge listingId={listing.id} size="md" />
                             </CardTitle>
                             <div className="flex gap-1">
                               <FavoriteButton listingId={listing.id} />
