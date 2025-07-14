@@ -80,28 +80,40 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-card overflow-hidden">
-        {/* Cosmic Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div 
-            className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-float opacity-20"
-            style={{
-              background: 'var(--gradient-primary)',
-              animation: 'float 6s ease-in-out infinite, morphShape 8s ease-in-out infinite'
-            }}
-          ></div>
-          <div 
-            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-3xl animate-float opacity-15"
-            style={{
-              background: 'var(--gradient-secondary)',
-              animation: 'float 4s ease-in-out infinite reverse, morphShape 6s ease-in-out infinite reverse',
-              animationDelay: '2s'
-            }}
-          ></div>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Beautiful starry background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+          }}
+        />
+        
+        {/* Gradient overlays for depth and readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-transparent to-blue-900/30" />
+        
+        {/* Subtle animated particles */}
+        <div className="absolute inset-0">
+          {Array.from({ length: 15 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white/60 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
         </div>
-        <div className="relative z-10 flex items-center justify-center space-y-4">
-          <LoadingSpinner size="lg" />
-          <div className="text-white text-xl">Loading...</div>
+        
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center space-y-4">
+            <LoadingSpinner size="lg" />
+            <div className="text-white text-xl font-medium">Loading...</div>
+          </div>
         </div>
       </div>
     );
@@ -113,24 +125,33 @@ const Index = () => {
 
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-card overflow-hidden relative">
-        {/* Cosmic Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div 
-            className="absolute top-1/3 left-1/5 w-80 h-80 rounded-full blur-3xl animate-float opacity-15"
-            style={{
-              background: 'var(--gradient-primary)',
-              animation: 'float 8s ease-in-out infinite, morphShape 12s ease-in-out infinite'
-            }}
-          ></div>
-          <div 
-            className="absolute bottom-1/3 right-1/5 w-96 h-96 rounded-full blur-3xl animate-float opacity-10"
-            style={{
-              background: 'var(--gradient-accent)',
-              animation: 'float 6s ease-in-out infinite reverse, morphShape 10s ease-in-out infinite reverse',
-              animationDelay: '3s'
-            }}
-          ></div>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Beautiful starry background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+          }}
+        />
+        
+        {/* Gradient overlays for depth and readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20" />
+        
+        {/* Subtle animated particles */}
+        <div className="absolute inset-0">
+          {Array.from({ length: 25 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white/40 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 4}s`,
+                animationDuration: `${2 + Math.random() * 3}s`
+              }}
+            />
+          ))}
         </div>
         
         <div className="relative z-10 pb-20 md:pb-0">
@@ -142,7 +163,7 @@ const Index = () => {
               <Button
                 onClick={() => handleViewChange('dashboard')}
                 variant={view === 'dashboard' ? 'default' : 'outline'}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm border-white/20 hover:bg-black/30"
               >
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
@@ -150,7 +171,7 @@ const Index = () => {
               <Button
                 onClick={() => handleViewChange('home')}
                 variant={view === 'home' ? 'default' : 'outline'}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm border-white/20 hover:bg-black/30"
               >
                 <Globe className="h-4 w-4" />
                 <span>Website</span>
@@ -186,32 +207,33 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card overflow-hidden relative">
-      {/* Cosmic Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div 
-          className="absolute top-1/4 left-1/6 w-72 h-72 rounded-full blur-3xl animate-float opacity-12"
-          style={{
-            background: 'var(--gradient-secondary)',
-            animation: 'float 10s ease-in-out infinite, morphShape 15s ease-in-out infinite'
-          }}
-        ></div>
-        <div 
-          className="absolute bottom-1/5 right-1/6 w-80 h-80 rounded-full blur-3xl animate-float opacity-8"
-          style={{
-            background: 'var(--gradient-primary)',
-            animation: 'float 7s ease-in-out infinite reverse, morphShape 12s ease-in-out infinite reverse',
-            animationDelay: '4s'
-          }}
-        ></div>
-        <div 
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl animate-float opacity-5"
-          style={{
-            background: 'var(--gradient-accent)',
-            animation: 'float 12s ease-in-out infinite, morphShape 18s ease-in-out infinite',
-            animationDelay: '2s'
-          }}
-        ></div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Beautiful starry background */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+        }}
+      />
+      
+      {/* Gradient overlays for depth and readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20" />
+      
+      {/* Subtle animated particles */}
+      <div className="absolute inset-0">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-white/30 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${2 + Math.random() * 3}s`
+            }}
+          />
+        ))}
       </div>
       
       <div className="relative z-10">
