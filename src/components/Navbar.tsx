@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar, MessageCircle, Code, ChevronDown, Search, Users, Settings, Gamepad2 } from 'lucide-react';
+import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar, MessageCircle, Code, ChevronDown, Search, Users, Settings, Gamepad2, MessageSquare } from 'lucide-react';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -105,6 +105,12 @@ const Navbar = () => {
                   <Link to="/forum" className="flex items-center w-full text-gray-300 hover:text-white">
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Forum
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
+                  <Link to="/chat" className="flex items-center w-full text-gray-300 hover:text-white">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    AI Chat Advisor
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
@@ -276,6 +282,13 @@ const Navbar = () => {
                 <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                   <MessageCircle className="h-5 w-5 mr-3" />
                   Forum
+                </Button>
+              </Link>
+
+              <Link to="/chat" onClick={closeMobileMenu}>
+                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                  <MessageSquare className="h-5 w-5 mr-3" />
+                  AI Chat Advisor
                 </Button>
               </Link>
 

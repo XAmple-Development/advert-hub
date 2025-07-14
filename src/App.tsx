@@ -30,6 +30,7 @@ import Pricing from "./pages/Pricing";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import AdminSubscriptions from "./pages/AdminSubscriptions";
 import API from "./pages/API";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -72,6 +73,7 @@ const App = () => (
               <Route path="/subscription-success" element={<SubscriptionSuccess />} />
               <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
               <Route path="/api" element={<API />} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <BottomNavigation />
