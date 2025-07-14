@@ -476,21 +476,31 @@ const AdminDashboard = () => {
         if (!announcement.trim()) return;
 
         try {
+            // Get all users to send individual notifications
+            const { data: users, error: usersError } = await supabase
+                .from('profiles')
+                .select('id');
+
+            if (usersError) throw usersError;
+
+            // Send notification to each user
+            const notifications = users.map(user => ({
+                user_id: user.id,
+                type: 'announcement',
+                title: 'System Announcement',
+                message: announcement,
+                priority: announcementType === 'error' ? 'high' : 'normal'
+            }));
+
             const { error } = await supabase
                 .from('notifications')
-                .insert({
-                    user_id: null, // Global announcement
-                    type: 'announcement',
-                    title: 'System Announcement',
-                    message: announcement,
-                    priority: announcementType === 'error' ? 'high' : 'normal'
-                });
+                .insert(notifications);
 
             if (error) throw error;
 
             toast({
                 title: "Success!",
-                description: "Global announcement sent to all users",
+                description: `Global announcement sent to ${users.length} users`,
             });
 
             setAnnouncement('');
@@ -642,21 +652,31 @@ const AdminDashboard = () => {
         }
 
         try {
+            // Get all users to send individual notifications
+            const { data: users, error: usersError } = await supabase
+                .from('profiles')
+                .select('id');
+
+            if (usersError) throw usersError;
+
+            // Send emergency maintenance notification to each user
+            const notifications = users.map(user => ({
+                user_id: user.id,
+                type: 'announcement',
+                title: 'Emergency Maintenance',
+                message: 'The platform is currently under emergency maintenance. Please check back later.',
+                priority: 'high'
+            }));
+
             const { error } = await supabase
                 .from('notifications')
-                .insert({
-                    user_id: null,
-                    type: 'announcement',
-                    title: 'Emergency Maintenance',
-                    message: 'The platform is currently under emergency maintenance. Please check back later.',
-                    priority: 'high'
-                });
+                .insert(notifications);
 
             if (error) throw error;
 
             toast({
                 title: "Emergency Maintenance Activated",
-                description: "Maintenance notification sent to all users",
+                description: `Maintenance notification sent to ${users.length} users`,
             });
         } catch (error: any) {
             toast({
