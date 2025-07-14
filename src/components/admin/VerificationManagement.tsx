@@ -256,11 +256,6 @@ const VerificationManagement = () => {
                   
                   <TableCell>
                     <ListingVerificationBadge listingId={listing.id} size="sm" />
-                    {!listing.verification && (
-                      <Badge variant="outline" className="bg-gray-800/50 border-gray-600/50 text-gray-400">
-                        Unverified
-                      </Badge>
-                    )}
                   </TableCell>
                   
                   <TableCell>

@@ -15,6 +15,7 @@ const VerificationBadge = ({
   showTooltip = true, 
   size = 'sm' 
 }: VerificationBadgeProps) => {
+  // Only render if status is verified or pending
   if (!status || status === 'rejected') return null;
 
   const getIcon = () => {
