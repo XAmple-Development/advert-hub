@@ -80,37 +80,8 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="relative">
-        {/* Beautiful starry background - full page height */}
-        <div 
-          className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
-            minHeight: '200vh'
-          }}
-        />
-        
-        {/* Gradient overlays for depth and readability */}
-        <div className="fixed inset-0 w-full h-full bg-gradient-to-b from-black/70 via-black/50 to-black/80 z-0" style={{ minHeight: '200vh' }} />
-        <div className="fixed inset-0 w-full h-full bg-gradient-to-r from-purple-900/30 via-transparent to-blue-900/30 z-0" style={{ minHeight: '200vh' }} />
-        
-        {/* Subtle animated particles */}
-        <div className="fixed inset-0 w-full h-full z-0" style={{ minHeight: '200vh' }}>
-          {Array.from({ length: 15 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/60 rounded-full animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 200}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
-              }}
-            />
-          ))}
-        </div>
-        
-        <div className="relative z-10 min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center space-y-4">
             <LoadingSpinner size="lg" />
             <div className="text-white text-xl font-medium">Loading...</div>
@@ -126,37 +97,8 @@ const Index = () => {
 
   if (user) {
     return (
-      <div className="relative">
-        {/* Beautiful starry background - full page height */}
-        <div 
-          className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
-            minHeight: '200vh'
-          }}
-        />
-        
-        {/* Gradient overlays for depth and readability */}
-        <div className="fixed inset-0 w-full h-full bg-gradient-to-b from-black/70 via-black/40 to-black/70 z-0" style={{ minHeight: '200vh' }} />
-        <div className="fixed inset-0 w-full h-full bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20 z-0" style={{ minHeight: '200vh' }} />
-        
-        {/* Subtle animated particles */}
-        <div className="fixed inset-0 w-full h-full z-0" style={{ minHeight: '200vh' }}>
-          {Array.from({ length: 25 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white/40 rounded-full animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 200}%`,
-                animationDelay: `${Math.random() * 4}s`,
-                animationDuration: `${2 + Math.random() * 3}s`
-              }}
-            />
-          ))}
-        </div>
-        
-        <div className="relative z-10 pb-20 md:pb-0">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="pb-20 md:pb-0">
           <Navbar />
           
           {/* View Toggle for Logged In Users */}
@@ -165,7 +107,7 @@ const Index = () => {
               <Button
                 onClick={() => handleViewChange('dashboard')}
                 variant={view === 'dashboard' ? 'default' : 'outline'}
-                className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm border-white/20 hover:bg-black/30"
+                className="flex items-center space-x-2"
               >
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
@@ -173,7 +115,7 @@ const Index = () => {
               <Button
                 onClick={() => handleViewChange('home')}
                 variant={view === 'home' ? 'default' : 'outline'}
-                className="flex items-center space-x-2 bg-black/20 backdrop-blur-sm border-white/20 hover:bg-black/30"
+                className="flex items-center space-x-2"
               >
                 <Globe className="h-4 w-4" />
                 <span>Website</span>
@@ -209,52 +151,21 @@ const Index = () => {
   }
 
   return (
-    <div className="relative">
-      {/* Beautiful starry background - full page height */}
-      <div 
-        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
-          minHeight: '200vh'
-        }}
-      />
-      
-      {/* Gradient overlays for depth and readability */}
-      <div className="fixed inset-0 w-full h-full bg-gradient-to-b from-black/60 via-black/30 to-black/70 z-0" style={{ minHeight: '200vh' }} />
-      <div className="fixed inset-0 w-full h-full bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20 z-0" style={{ minHeight: '200vh' }} />
-      
-      {/* Subtle animated particles */}
-      <div className="fixed inset-0 w-full h-full z-0" style={{ minHeight: '200vh' }}>
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 200}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${2 + Math.random() * 3}s`
-            }}
-          />
-        ))}
-      </div>
-      
-      <div className="relative z-10">
-        <Navbar />
-        <Hero />
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <TrendingSection />
-          <div className="mt-12">
-            <SmartRecommendations />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Navbar />
+      <Hero />
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <TrendingSection />
+        <div className="mt-12">
+          <SmartRecommendations />
         </div>
-        <Features />
-        <HowItWorks />
-        <PremiumFeatures />
-        <Pricing />
-        <Footer />
-        <DebugPanel />
       </div>
+      <Features />
+      <HowItWorks />
+      <PremiumFeatures />
+      <Pricing />
+      <Footer />
+      <DebugPanel />
     </div>
   );
 };
