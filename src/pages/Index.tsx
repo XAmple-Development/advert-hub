@@ -80,28 +80,29 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen relative overflow-hidden">
-        {/* Beautiful starry background */}
+      <div className="relative">
+        {/* Beautiful starry background - full page height */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
+            minHeight: '200vh'
           }}
         />
         
         {/* Gradient overlays for depth and readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-transparent to-blue-900/30" />
+        <div className="fixed inset-0 w-full h-full bg-gradient-to-b from-black/70 via-black/50 to-black/80 z-0" style={{ minHeight: '200vh' }} />
+        <div className="fixed inset-0 w-full h-full bg-gradient-to-r from-purple-900/30 via-transparent to-blue-900/30 z-0" style={{ minHeight: '200vh' }} />
         
         {/* Subtle animated particles */}
-        <div className="absolute inset-0">
+        <div className="fixed inset-0 w-full h-full z-0" style={{ minHeight: '200vh' }}>
           {Array.from({ length: 15 }).map((_, i) => (
             <div
               key={i}
               className="absolute w-1 h-1 bg-white/60 rounded-full animate-pulse"
               style={{
                 left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                top: `${Math.random() * 200}%`,
                 animationDelay: `${Math.random() * 3}s`,
                 animationDuration: `${2 + Math.random() * 2}s`
               }}
@@ -109,7 +110,7 @@ const Index = () => {
           ))}
         </div>
         
-        <div className="relative z-10 flex items-center justify-center min-h-screen">
+        <div className="relative z-10 min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center space-y-4">
             <LoadingSpinner size="lg" />
             <div className="text-white text-xl font-medium">Loading...</div>
@@ -125,28 +126,29 @@ const Index = () => {
 
   if (user) {
     return (
-      <div className="min-h-screen relative overflow-hidden">
-        {/* Beautiful starry background */}
+      <div className="relative">
+        {/* Beautiful starry background - full page height */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+            backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
+            minHeight: '200vh'
           }}
         />
         
         {/* Gradient overlays for depth and readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20" />
+        <div className="fixed inset-0 w-full h-full bg-gradient-to-b from-black/70 via-black/40 to-black/70 z-0" style={{ minHeight: '200vh' }} />
+        <div className="fixed inset-0 w-full h-full bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20 z-0" style={{ minHeight: '200vh' }} />
         
         {/* Subtle animated particles */}
-        <div className="absolute inset-0">
+        <div className="fixed inset-0 w-full h-full z-0" style={{ minHeight: '200vh' }}>
           {Array.from({ length: 25 }).map((_, i) => (
             <div
               key={i}
               className="absolute w-1 h-1 bg-white/40 rounded-full animate-pulse"
               style={{
                 left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
+                top: `${Math.random() * 200}%`,
                 animationDelay: `${Math.random() * 4}s`,
                 animationDuration: `${2 + Math.random() * 3}s`
               }}
@@ -207,28 +209,29 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Beautiful starry background */}
+    <div className="relative">
+      {/* Beautiful starry background - full page height */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+          backgroundImage: `url('https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`,
+          minHeight: '200vh'
         }}
       />
       
       {/* Gradient overlays for depth and readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20" />
+      <div className="fixed inset-0 w-full h-full bg-gradient-to-b from-black/60 via-black/30 to-black/70 z-0" style={{ minHeight: '200vh' }} />
+      <div className="fixed inset-0 w-full h-full bg-gradient-to-r from-purple-900/20 via-transparent to-blue-900/20 z-0" style={{ minHeight: '200vh' }} />
       
       {/* Subtle animated particles */}
-      <div className="absolute inset-0">
+      <div className="fixed inset-0 w-full h-full z-0" style={{ minHeight: '200vh' }}>
         {Array.from({ length: 30 }).map((_, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-white/30 rounded-full animate-pulse"
             style={{
               left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              top: `${Math.random() * 200}%`,
               animationDelay: `${Math.random() * 5}s`,
               animationDuration: `${2 + Math.random() * 3}s`
             }}
