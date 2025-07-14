@@ -87,10 +87,10 @@ const VerificationBadge = ({
   };
 
   const badge = (
-    <div className="inline-flex">
+    <div className="inline-flex relative z-10">
       <Badge 
         variant={badgeProps.variant}
-        className={`${badgeProps.className} ${size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'} gap-1`}
+        className={`${badgeProps.className} ${size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'} gap-1 relative z-10`}
       >
         {badgeProps.icon}
         {badgeProps.text}
