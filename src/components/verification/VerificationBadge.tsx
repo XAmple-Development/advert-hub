@@ -81,13 +81,15 @@ const VerificationBadge = ({
   };
 
   const badge = (
-    <Badge 
-      variant={badgeProps.variant}
-      className={`${badgeProps.className} ${size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'} gap-1`}
-    >
-      {badgeProps.icon}
-      {badgeProps.text}
-    </Badge>
+    <div className="inline-flex">
+      <Badge 
+        variant={badgeProps.variant}
+        className={`${badgeProps.className} ${size === 'sm' ? 'text-xs' : size === 'md' ? 'text-sm' : 'text-base'} gap-1`}
+      >
+        {badgeProps.icon}
+        {badgeProps.text}
+      </Badge>
+    </div>
   );
 
   if (!showTooltip) return badge;
@@ -96,7 +98,9 @@ const VerificationBadge = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          {badge}
+          <div>
+            {badge}
+          </div>
         </TooltipTrigger>
         <TooltipContent>
           <p>{getTooltipContent()}</p>

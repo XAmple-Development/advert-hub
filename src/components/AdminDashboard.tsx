@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminEventsManagement } from '@/components/admin/AdminEventsManagement';
+import VerificationManagement from '@/components/admin/VerificationManagement';
 import {
     Server,
     Bot,
@@ -334,10 +335,17 @@ const AdminDashboard = () => {
                                 Pending Reviews ({pendingListings.length})
                             </TabsTrigger>
                             <TabsTrigger 
-                                value="actions" 
+                                value="verification" 
                                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-6 py-3 font-medium"
                             >
                                 <Shield className="h-4 w-4 mr-2" />
+                                Verification Management
+                            </TabsTrigger>
+                            <TabsTrigger 
+                                value="actions" 
+                                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-6 py-3 font-medium"
+                            >
+                                <Eye className="h-4 w-4 mr-2" />
                                 Recent Actions
                             </TabsTrigger>
                             <TabsTrigger 
@@ -496,6 +504,10 @@ const AdminDashboard = () => {
                                     ))}
                                 </div>
                             )}
+                        </TabsContent>
+
+                        <TabsContent value="verification">
+                            <VerificationManagement />
                         </TabsContent>
 
                         <TabsContent value="actions">
