@@ -2027,6 +2027,33 @@ export type Database = {
           },
         ]
       }
+      site_maintenance: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_maintenance_mode: boolean
+          maintenance_message: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_maintenance_mode?: boolean
+          maintenance_message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_maintenance_mode?: boolean
+          maintenance_message?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_status_messages: {
         Row: {
           created_at: string

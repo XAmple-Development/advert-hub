@@ -652,6 +652,17 @@ const AdminDashboard = () => {
         }
 
         try {
+            // Enable maintenance mode
+            const { error: maintenanceError } = await supabase
+                .from('site_maintenance')
+                .insert({
+                    is_maintenance_mode: true,
+                    maintenance_message: 'The platform is currently under emergency maintenance. Please check back later.',
+                    created_by: user?.id
+                });
+
+            if (maintenanceError) throw maintenanceError;
+
             // Get all users to send individual notifications
             const { data: users, error: usersError } = await supabase
                 .from('profiles')
@@ -676,13 +687,42 @@ const AdminDashboard = () => {
 
             toast({
                 title: "Emergency Maintenance Activated",
-                description: `Maintenance notification sent to ${users.length} users`,
+                description: `Maintenance mode enabled and notification sent to ${users.length} users`,
             });
         } catch (error: any) {
             toast({
                 variant: "destructive",
                 title: "Error",
                 description: "Failed to activate emergency maintenance",
+            });
+        }
+    };
+
+    const disableMaintenanceMode = async () => {
+        if (!confirm('Are you sure you want to disable maintenance mode?')) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('site_maintenance')
+                .insert({
+                    is_maintenance_mode: false,
+                    maintenance_message: 'Maintenance mode has been disabled',
+                    created_by: user?.id
+                });
+
+            if (error) throw error;
+
+            toast({
+                title: "Maintenance Mode Disabled",
+                description: "The platform is now accessible to all users",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error", 
+                description: "Failed to disable maintenance mode",
             });
         }
     };
@@ -1322,10 +1362,14 @@ const AdminDashboard = () => {
                                             <Webhook className="h-4 w-4 mr-2" />
                                             Test Webhooks
                                         </Button>
-                                        <Button variant="destructive" className="w-full justify-start" onClick={emergencyMaintenance}>
-                                            <AlertTriangle className="h-4 w-4 mr-2" />
-                                            Emergency Maintenance
-                                        </Button>
+                                         <Button variant="destructive" className="w-full justify-start" onClick={emergencyMaintenance}>
+                                             <AlertTriangle className="h-4 w-4 mr-2" />
+                                             Emergency Maintenance
+                                         </Button>
+                                         <Button variant="outline" className="w-full justify-start" onClick={disableMaintenanceMode}>
+                                             <CheckCircle className="h-4 w-4 mr-2" />
+                                             Disable Maintenance
+                                         </Button>
                                     </CardContent>
                                 </Card>
                             </div>

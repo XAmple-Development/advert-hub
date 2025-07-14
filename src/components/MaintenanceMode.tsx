@@ -30,7 +30,7 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
           schema: 'public', 
           table: 'site_maintenance'
         }, 
-        (payload) => {
+        () => {
           checkMaintenanceStatus();
         }
       )
@@ -54,7 +54,7 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
         console.error('Error checking maintenance status:', error);
       }
 
-      setMaintenanceStatus(data);
+      setMaintenanceStatus(data as MaintenanceStatus | null);
     } catch (error) {
       console.error('Error checking maintenance status:', error);
     } finally {

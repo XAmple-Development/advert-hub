@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import MaintenanceMode from "@/components/MaintenanceMode";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import BottomNavigation from "@/components/BottomNavigation";
 
@@ -50,7 +51,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <KeyboardShortcuts />
+            <MaintenanceMode>
+              <KeyboardShortcuts />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -76,7 +78,8 @@ const App = () => (
               <Route path="/chat" element={<Chat />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <BottomNavigation />
+              <BottomNavigation />
+            </MaintenanceMode>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
