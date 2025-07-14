@@ -80,8 +80,26 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#2C2F33] flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-card overflow-hidden">
+        {/* Cosmic Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div 
+            className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-float opacity-20"
+            style={{
+              background: 'var(--gradient-primary)',
+              animation: 'float 6s ease-in-out infinite, morphShape 8s ease-in-out infinite'
+            }}
+          ></div>
+          <div 
+            className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-3xl animate-float opacity-15"
+            style={{
+              background: 'var(--gradient-secondary)',
+              animation: 'float 4s ease-in-out infinite reverse, morphShape 6s ease-in-out infinite reverse',
+              animationDelay: '2s'
+            }}
+          ></div>
+        </div>
+        <div className="relative z-10 flex items-center justify-center space-y-4">
           <LoadingSpinner size="lg" />
           <div className="text-white text-xl">Loading...</div>
         </div>
@@ -95,73 +113,123 @@ const Index = () => {
 
   if (user) {
     return (
-      <div className="min-h-screen bg-[#2C2F33] pb-20 md:pb-0">
-        <Navbar />
-        
-        {/* View Toggle for Logged In Users */}
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-center space-x-4">
-            <Button
-              onClick={() => handleViewChange('dashboard')}
-              variant={view === 'dashboard' ? 'default' : 'outline'}
-              className="flex items-center space-x-2"
-            >
-              <Home className="h-4 w-4" />
-              <span>Dashboard</span>
-            </Button>
-            <Button
-              onClick={() => handleViewChange('home')}
-              variant={view === 'home' ? 'default' : 'outline'}
-              className="flex items-center space-x-2"
-            >
-              <Globe className="h-4 w-4" />
-              <span>Website</span>
-            </Button>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-card overflow-hidden relative">
+        {/* Cosmic Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div 
+            className="absolute top-1/3 left-1/5 w-80 h-80 rounded-full blur-3xl animate-float opacity-15"
+            style={{
+              background: 'var(--gradient-primary)',
+              animation: 'float 8s ease-in-out infinite, morphShape 12s ease-in-out infinite'
+            }}
+          ></div>
+          <div 
+            className="absolute bottom-1/3 right-1/5 w-96 h-96 rounded-full blur-3xl animate-float opacity-10"
+            style={{
+              background: 'var(--gradient-accent)',
+              animation: 'float 6s ease-in-out infinite reverse, morphShape 10s ease-in-out infinite reverse',
+              animationDelay: '3s'
+            }}
+          ></div>
         </div>
-
-        {/* Content based on view */}
-        {view === 'dashboard' ? (
-          <>
-            <Dashboard />
-            <AdminUpgrade />
-          </>
-        ) : (
-          <>
-            <Hero />
-            <div className="max-w-7xl mx-auto px-6 py-12">
-              <TrendingSection />
-              <div className="mt-12">
-                <SmartRecommendations />
-              </div>
+        
+        <div className="relative z-10 pb-20 md:pb-0">
+          <Navbar />
+          
+          {/* View Toggle for Logged In Users */}
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex justify-center space-x-4">
+              <Button
+                onClick={() => handleViewChange('dashboard')}
+                variant={view === 'dashboard' ? 'default' : 'outline'}
+                className="flex items-center space-x-2"
+              >
+                <Home className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Button>
+              <Button
+                onClick={() => handleViewChange('home')}
+                variant={view === 'home' ? 'default' : 'outline'}
+                className="flex items-center space-x-2"
+              >
+                <Globe className="h-4 w-4" />
+                <span>Website</span>
+              </Button>
             </div>
-            <Features />
-            <HowItWorks />
-            <PremiumFeatures />
-            <Pricing />
-            <Footer />
-          </>
-        )}
+          </div>
+
+          {/* Content based on view */}
+          {view === 'dashboard' ? (
+            <>
+              <Dashboard />
+              <AdminUpgrade />
+            </>
+          ) : (
+            <>
+              <Hero />
+              <div className="max-w-7xl mx-auto px-6 py-12">
+                <TrendingSection />
+                <div className="mt-12">
+                  <SmartRecommendations />
+                </div>
+              </div>
+              <Features />
+              <HowItWorks />
+              <PremiumFeatures />
+              <Pricing />
+              <Footer />
+            </>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#2C2F33]">
-      <Navbar />
-      <Hero />
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <TrendingSection />
-        <div className="mt-12">
-          <SmartRecommendations />
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card overflow-hidden relative">
+      {/* Cosmic Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div 
+          className="absolute top-1/4 left-1/6 w-72 h-72 rounded-full blur-3xl animate-float opacity-12"
+          style={{
+            background: 'var(--gradient-secondary)',
+            animation: 'float 10s ease-in-out infinite, morphShape 15s ease-in-out infinite'
+          }}
+        ></div>
+        <div 
+          className="absolute bottom-1/5 right-1/6 w-80 h-80 rounded-full blur-3xl animate-float opacity-8"
+          style={{
+            background: 'var(--gradient-primary)',
+            animation: 'float 7s ease-in-out infinite reverse, morphShape 12s ease-in-out infinite reverse',
+            animationDelay: '4s'
+          }}
+        ></div>
+        <div 
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl animate-float opacity-5"
+          style={{
+            background: 'var(--gradient-accent)',
+            animation: 'float 12s ease-in-out infinite, morphShape 18s ease-in-out infinite',
+            animationDelay: '2s'
+          }}
+        ></div>
       </div>
-      <Features />
-      <HowItWorks />
-      <PremiumFeatures />
-      <Pricing />
-      <Footer />
-      <DebugPanel />
+      
+      <div className="relative z-10">
+        <Navbar />
+        <Hero />
+        <div className="max-w-7xl mx-auto px-6 py-12">
+          <TrendingSection />
+          <div className="mt-12">
+            <SmartRecommendations />
+          </div>
+        </div>
+        <Features />
+        <HowItWorks />
+        <PremiumFeatures />
+        <Pricing />
+        <Footer />
+        <DebugPanel />
+      </div>
     </div>
   );
 };
