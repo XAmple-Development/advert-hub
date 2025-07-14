@@ -66,7 +66,6 @@ const Bots = () => {
         .select('*')
         .eq('type', 'bot')
         .eq('status', 'active')
-        .not('bot_id', 'is', null)
         .order(orderBy, { ascending })
         .limit(50);
 
