@@ -225,40 +225,6 @@ const Chat = () => {
                   )}
                 </div>
               </ScrollArea>
-              
-              {/* Input Section */}
-              <div className="border-t bg-gradient-to-r from-background to-muted/20 p-6 rounded-b-lg">
-                <div className="flex gap-3 items-end">
-                  <div className="flex-1 relative">
-                    <Input
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Ask about Discord promotion strategies, listing optimization, or AdvertHub features..."
-                      disabled={isLoading}
-                      className="pr-12 py-6 text-base border-2 focus:border-primary/50 transition-colors rounded-xl resize-none"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={sendMessage} 
-                    disabled={!input.trim() || isLoading}
-                    size="lg"
-                    className="h-12 w-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Send className="h-5 w-5" />
-                    )}
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-3 text-center">
-                  Press Enter to send • AI responses are generated and may contain inaccuracies
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>
