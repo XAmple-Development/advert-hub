@@ -120,12 +120,6 @@ const Navbar = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/activity" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <Activity className="h-4 w-4 mr-2" />
-                    Live Activity
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
                   <Link to="/gamification" className="flex items-center w-full text-gray-300 hover:text-white">
                     <Gamepad2 className="h-4 w-4 mr-2" />
                     Gamification
@@ -296,13 +290,6 @@ const Navbar = () => {
                 <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                   <Calendar className="h-5 w-5 mr-3" />
                   Events
-                </Button>
-              </Link>
-
-              <Link to="/activity" onClick={closeMobileMenu}>
-                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
-                  <Activity className="h-5 w-5 mr-3" />
-                  Live Activity
                 </Button>
               </Link>
 
