@@ -829,7 +829,436 @@ async function handleSetBumpChannelCommand(interaction: any) {
     }
 }
 
-// Main handler
+// Handle trending command
+async function handleTrendingCommand(interaction: any) {
+    const typeFilter = interaction.data?.options?.[0]?.value || 'all';
+    
+    try {
+        let query = supabase
+            .from('trending_metrics')
+            .select(`
+                listing_id,
+                trending_score,
+                listings!inner(id, name, description, type, member_count, featured, created_at)
+            `)
+            .order('trending_score', { ascending: false })
+            .limit(5);
+
+        if (typeFilter !== 'all') {
+            query = query.eq('listings.type', typeFilter);
+        }
+
+        const { data: trending, error } = await query;
+
+        if (error || !trending || trending.length === 0) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '📈 No trending listings found.',
+                    flags: 64,
+                },
+            };
+        }
+
+        const fields = trending.map((item, index) => {
+            const listing = item.listings;
+            const emoji = index === 0 ? '🔥' : index === 1 ? '📈' : '⭐';
+            
+            return {
+                name: `${emoji} ${listing.name} ${listing.featured ? '✨' : ''}`,
+                value: `${listing.description.substring(0, 100)}${listing.description.length > 100 ? '...' : ''}\n👥 ${listing.member_count || 0} members | Trending Score: ${Math.round(item.trending_score)}`,
+                inline: false
+            };
+        });
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: `📈 Trending ${typeFilter === 'all' ? 'Listings' : typeFilter === 'server' ? 'Servers' : 'Bots'}`,
+                    color: 0xFF6B35,
+                    fields: fields,
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in trending command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while fetching trending listings.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle random command
+async function handleRandomCommand(interaction: any) {
+    const typeFilter = interaction.data?.options?.[0]?.value;
+    
+    try {
+        let query = supabase
+            .from('listings')
+            .select('name, description, type, member_count, featured, created_at, avatar_url')
+            .eq('status', 'active');
+
+        if (typeFilter) {
+            query = query.eq('type', typeFilter);
+        }
+
+        const { data: listings, error } = await query;
+
+        if (error || !listings || listings.length === 0) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '🎲 No listings found.',
+                    flags: 64,
+                },
+            };
+        }
+
+        const randomListing = listings[Math.floor(Math.random() * listings.length)];
+        
+        const embed = {
+            title: `🎲 Random ${randomListing.type === 'server' ? 'Server' : 'Bot'} Discovery`,
+            color: 0x9B59B6,
+            fields: [
+                {
+                    name: `${randomListing.featured ? '✨ ' : ''}${randomListing.name}`,
+                    value: randomListing.description,
+                    inline: false
+                },
+                {
+                    name: '👥 Members',
+                    value: (randomListing.member_count || 0).toString(),
+                    inline: true
+                },
+                {
+                    name: '📅 Listed',
+                    value: `<t:${Math.floor(new Date(randomListing.created_at).getTime() / 1000)}:R>`,
+                    inline: true
+                }
+            ],
+            timestamp: new Date().toISOString(),
+        };
+
+        if (randomListing.avatar_url) {
+            embed.thumbnail = { url: randomListing.avatar_url };
+        }
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [embed],
+            },
+        };
+    } catch (error) {
+        console.error('Error in random command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while finding a random listing.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle vote command  
+async function handleVoteCommand(interaction: any) {
+    const userId = interaction.member?.user?.id || interaction.user?.id;
+    const serverName = interaction.data?.options?.[0]?.value;
+    
+    if (!userId || !serverName) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Error: Missing required information.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        // Find listing by name
+        const { data: listing, error: listingError } = await supabase
+            .from('listings')
+            .select('id, name, vote_count')
+            .ilike('name', `%${serverName}%`)
+            .eq('status', 'active')
+            .single();
+
+        if (listingError || !listing) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: `❌ No listing found with name "${serverName}".`,
+                    flags: 64,
+                },
+            };
+        }
+
+        // Check if user already voted today
+        const today = new Date().toISOString().split('T')[0];
+        const { data: existingVote } = await supabase
+            .from('votes')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('target_id', listing.id)
+            .gte('voted_at', today)
+            .single();
+
+        if (existingVote) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '⏳ You can only vote once per day for each listing.',
+                    flags: 64,
+                },
+            };
+        }
+
+        // Add vote
+        await supabase
+            .from('votes')
+            .insert({
+                user_id: userId,
+                target_id: listing.id,
+                target_type: 'listing'
+            });
+
+        // Update vote count
+        await supabase
+            .from('listings')
+            .update({
+                vote_count: (listing.vote_count || 0) + 1
+            })
+            .eq('id', listing.id);
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: '🗳️ Vote Successful!',
+                    description: `Thank you for voting for **${listing.name}**!\n\nYour vote helps them climb the rankings. Come back tomorrow to vote again!`,
+                    color: 0x00FF00,
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in vote command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while processing your vote.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle mylistings command
+async function handleMyListingsCommand(interaction: any) {
+    const userId = interaction.member?.user?.id || interaction.user?.id;
+    
+    if (!userId) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Error: Unable to identify user.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        // Get user's profile to find their listings
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('discord_id', userId)
+            .single();
+            
+        if (!profile) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '❌ No profile found. Please create an account on our website first.',
+                    flags: 64,
+                },
+            };
+        }
+        
+        const { data: listings, error } = await supabase
+            .from('listings')
+            .select('id, name, type, status, bump_count, vote_count, created_at, featured')
+            .eq('user_id', profile.id)
+            .order('created_at', { ascending: false });
+            
+        if (error || !listings || listings.length === 0) {
+            return {
+                type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+                data: {
+                    content: '📋 You don\'t have any listings yet. Create one on our website!',
+                    flags: 64,
+                },
+            };
+        }
+        
+        const fields = listings.slice(0, 10).map(listing => {
+            const statusEmoji = listing.status === 'active' ? '✅' : listing.status === 'pending' ? '⏳' : '❌';
+            
+            return {
+                name: `${statusEmoji} ${listing.name} ${listing.featured ? '✨' : ''} (${listing.type})`,
+                value: `🚀 ${listing.bump_count || 0} bumps | 🗳️ ${listing.vote_count || 0} votes | Created <t:${Math.floor(new Date(listing.created_at).getTime() / 1000)}:R>`,
+                inline: false
+            };
+        });
+        
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: '📋 Your Listings',
+                    color: 0x0099ff,
+                    fields: fields,
+                    footer: {
+                        text: `Showing ${Math.min(listings.length, 10)} of ${listings.length} listings`
+                    },
+                    timestamp: new Date().toISOString(),
+                }],
+                flags: 64,
+            },
+        };
+    } catch (error) {
+        console.error('Error in mylistings command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while fetching your listings.',
+                flags: 64,
+            },
+        };
+    }
+}
+
+// Handle premium command
+async function handlePremiumCommand(interaction: any) {
+    return {
+        type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+        data: {
+            embeds: [{
+                title: '✨ Premium Features',
+                description: 'Upgrade to Premium and unlock exclusive benefits!',
+                color: 0xFFD700,
+                fields: [
+                    {
+                        name: '🚀 Faster Bumping',
+                        value: 'Bump every 2 hours instead of 6 hours',
+                        inline: false
+                    },
+                    {
+                        name: '⭐ Priority Support',
+                        value: 'Get priority customer support',
+                        inline: false
+                    },
+                    {
+                        name: '📊 Advanced Analytics',
+                        value: 'Detailed insights about your server performance',
+                        inline: false
+                    },
+                    {
+                        name: '🎨 Custom Styling',
+                        value: 'Customize your listing appearance',
+                        inline: false
+                    },
+                    {
+                        name: '✨ Featured Listing',
+                        value: 'Get your server featured in special sections',
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: 'Visit our website to upgrade to Premium!'
+                },
+                timestamp: new Date().toISOString(),
+            }],
+        },
+    };
+}
+
+// Handle setstatuschannel command
+async function handleSetStatusChannelCommand(interaction: any) {
+    const userId = interaction.member?.user?.id || interaction.user?.id;
+    const guildId = interaction.guild_id;
+    const channelId = interaction.data?.options?.[0]?.value;
+    
+    if (!userId || !guildId || !channelId) {
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'Error: Missing required information.',
+                flags: 64,
+            },
+        };
+    }
+
+    try {
+        // Update or create bot configuration for status channel
+        const { data: existingConfig } = await supabase
+            .from('discord_bot_configs')
+            .select('*')
+            .eq('discord_server_id', guildId)
+            .single();
+
+        if (existingConfig) {
+            // Update existing configuration
+            await supabase
+                .from('discord_bot_configs')
+                .update({
+                    status_channel_id: channelId,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('discord_server_id', guildId);
+        } else {
+            // Create new configuration
+            await supabase
+                .from('discord_bot_configs')
+                .insert({
+                    discord_server_id: guildId,
+                    status_channel_id: channelId,
+                    admin_user_id: userId,
+                    active: true,
+                    updated_at: new Date().toISOString(),
+                });
+        }
+
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                embeds: [{
+                    title: '🔧 Status Channel Set',
+                    description: `System status updates will now be posted to <#${channelId}>\n\nThis includes maintenance notifications, new features, and important announcements.`,
+                    color: 0x00FF00,
+                    timestamp: new Date().toISOString(),
+                }],
+            },
+        };
+    } catch (error) {
+        console.error('Error in setstatuschannel command:', error);
+        return {
+            type: INTERACTION_RESPONSE_TYPES.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+                content: 'An error occurred while setting up the status channel.',
+                flags: 64,
+            },
+        };
+    }
+}
 serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response(null, { headers: corsHeaders });
@@ -868,6 +1297,15 @@ serve(async (req) => {
                 case 'search':
                     response = await handleSearchCommand(body);
                     break;
+                case 'trending':
+                    response = await handleTrendingCommand(body);
+                    break;
+                case 'random':
+                    response = await handleRandomCommand(body);
+                    break;
+                case 'vote':
+                    response = await handleVoteCommand(body);
+                    break;
                 case 'stats':
                     response = await handleStatsCommand(body);
                     break;
@@ -877,6 +1315,12 @@ serve(async (req) => {
                 case 'featured':
                     response = await handleFeaturedCommand(body);
                     break;
+                case 'mylistings':
+                    response = await handleMyListingsCommand(body);
+                    break;
+                case 'premium':
+                    response = await handlePremiumCommand(body);
+                    break;
                 case 'help':
                     response = await handleHelpCommand(body);
                     break;
@@ -885,6 +1329,9 @@ serve(async (req) => {
                     break;
                 case 'setbumpchannel':
                     response = await handleSetBumpChannelCommand(body);
+                    break;
+                case 'setstatuschannel':
+                    response = await handleSetStatusChannelCommand(body);
                     break;
                 default:
                     response = {
