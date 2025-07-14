@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import Navbar from '@/components/Navbar';
 
 interface Message {
   id: string;
@@ -97,6 +98,7 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <Card className="h-[80vh] flex flex-col">
@@ -135,12 +137,28 @@ const Chat = () => {
                       <div className={`flex-1 max-w-[80%] ${
                         message.role === 'user' ? 'text-right' : 'text-left'
                       }`}>
-                        <div className={`rounded-lg px-4 py-2 ${
+                        <div className={`rounded-lg px-4 py-3 ${
                           message.role === 'user'
                             ? 'bg-primary text-primary-foreground ml-auto'
                             : 'bg-muted'
                         }`}>
-                          <p className="whitespace-pre-wrap">{message.content}</p>
+                          <div className="whitespace-pre-wrap leading-relaxed text-sm">
+                            {message.content.split('\n').map((line, index) => (
+                              <div key={index} className={index > 0 ? 'mt-2' : ''}>
+                                {line.includes('**') ? (
+                                  line.split('**').map((part, partIndex) => (
+                                    partIndex % 2 === 1 ? (
+                                      <strong key={partIndex} className="font-semibold">{part}</strong>
+                                    ) : (
+                                      part
+                                    )
+                                  ))
+                                ) : (
+                                  line
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                           {message.timestamp.toLocaleTimeString()}
