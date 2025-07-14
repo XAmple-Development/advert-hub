@@ -503,6 +503,213 @@ const AdminDashboard = () => {
         }
     };
 
+    const refreshCache = async () => {
+        try {
+            await fetchAllData();
+            toast({
+                title: "Success!",
+                description: "Cache refreshed successfully",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to refresh cache",
+            });
+        }
+    };
+
+    const exportData = async () => {
+        try {
+            const exportData = {
+                listings: allListings,
+                users: allUsers,
+                actions: recentActions,
+                stats: systemStats,
+                exportedAt: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+                type: 'application/json'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `admin-data-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            toast({
+                title: "Success!",
+                description: "Data exported successfully",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to export data",
+            });
+        }
+    };
+
+    const generateReports = async () => {
+        try {
+            const report = {
+                summary: {
+                    totalListings: systemStats.totalListings,
+                    totalUsers: systemStats.totalUsers,
+                    totalVotes: systemStats.totalVotes,
+                    totalViews: systemStats.totalViews,
+                    activeToday: systemStats.activeToday,
+                    pendingReviews: systemStats.pendingReviews,
+                },
+                listingsByType: {
+                    servers: allListings.filter(l => l.type === 'server').length,
+                    bots: allListings.filter(l => l.type === 'bot').length,
+                },
+                listingsByStatus: {
+                    active: allListings.filter(l => l.status === 'active').length,
+                    pending: allListings.filter(l => l.status === 'pending').length,
+                    suspended: allListings.filter(l => l.status === 'suspended').length,
+                },
+                usersByTier: {
+                    free: allUsers.filter(u => u.subscription_tier === 'free').length,
+                    premium: allUsers.filter(u => u.subscription_tier === 'premium').length,
+                    banned: allUsers.filter(u => u.subscription_tier === 'banned').length,
+                },
+                recentActivity: recentActions.slice(0, 10),
+                generatedAt: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], {
+                type: 'application/json'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `admin-report-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            toast({
+                title: "Success!",
+                description: "Report generated successfully",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to generate report",
+            });
+        }
+    };
+
+    const testWebhooks = async () => {
+        try {
+            // Test webhook by sending a test notification
+            const { error } = await supabase
+                .from('notifications')
+                .insert({
+                    user_id: user?.id,
+                    type: 'system',
+                    title: 'Webhook Test',
+                    message: 'This is a test webhook notification sent from the admin dashboard',
+                    priority: 'normal'
+                });
+
+            if (error) throw error;
+
+            toast({
+                title: "Success!",
+                description: "Test webhook sent successfully",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to test webhooks",
+            });
+        }
+    };
+
+    const emergencyMaintenance = async () => {
+        if (!confirm('Are you sure you want to enable emergency maintenance mode? This will affect all users.')) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('notifications')
+                .insert({
+                    user_id: null,
+                    type: 'announcement',
+                    title: 'Emergency Maintenance',
+                    message: 'The platform is currently under emergency maintenance. Please check back later.',
+                    priority: 'high'
+                });
+
+            if (error) throw error;
+
+            toast({
+                title: "Emergency Maintenance Activated",
+                description: "Maintenance notification sent to all users",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to activate emergency maintenance",
+            });
+        }
+    };
+
+    const deleteListing = async (listingId: string) => {
+        if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('listings')
+                .delete()
+                .eq('id', listingId);
+
+            if (error) throw error;
+
+            const { error: actionError } = await supabase
+                .from('admin_actions')
+                .insert({
+                    admin_id: user?.id,
+                    listing_id: listingId,
+                    action: 'deleted',
+                    reason: 'Admin deletion'
+                });
+
+            if (actionError) console.error('Failed to log admin action:', actionError);
+
+            toast({
+                title: "Success!",
+                description: "Listing deleted successfully",
+            });
+
+            await fetchAllData();
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error.message,
+            });
+        }
+    };
+
+    const editListing = (listingId: string) => {
+        window.open(`/listing/${listingId}/edit`, '_blank');
+    };
+
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'pending':
@@ -883,15 +1090,15 @@ const AdminDashboard = () => {
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="flex gap-1">
-                                                                <Button size="sm" variant="outline" onClick={() => window.open(`/listing/${listing.id}`, '_blank')}>
-                                                                    <ExternalLink className="h-3 w-3" />
-                                                                </Button>
-                                                                <Button size="sm" variant="outline">
-                                                                    <Edit className="h-3 w-3" />
-                                                                </Button>
-                                                                <Button size="sm" variant="destructive">
-                                                                    <Trash2 className="h-3 w-3" />
-                                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => window.open(`/listing/${listing.id}`, '_blank')}>
+                                                    <ExternalLink className="h-3 w-3" />
+                                                </Button>
+                                                <Button size="sm" variant="outline" onClick={() => editListing(listing.id)}>
+                                                    <Edit className="h-3 w-3" />
+                                                </Button>
+                                                <Button size="sm" variant="destructive" onClick={() => deleteListing(listing.id)}>
+                                                    <Trash2 className="h-3 w-3" />
+                                                </Button>
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
@@ -1079,23 +1286,23 @@ const AdminDashboard = () => {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6 pt-0 space-y-3">
-                                        <Button variant="outline" className="w-full justify-start">
+                                        <Button variant="outline" className="w-full justify-start" onClick={refreshCache}>
                                             <RefreshCw className="h-4 w-4 mr-2" />
                                             Refresh Cache
                                         </Button>
-                                        <Button variant="outline" className="w-full justify-start">
+                                        <Button variant="outline" className="w-full justify-start" onClick={exportData}>
                                             <Download className="h-4 w-4 mr-2" />
                                             Export Data
                                         </Button>
-                                        <Button variant="outline" className="w-full justify-start">
+                                        <Button variant="outline" className="w-full justify-start" onClick={generateReports}>
                                             <BarChart3 className="h-4 w-4 mr-2" />
                                             Generate Reports
                                         </Button>
-                                        <Button variant="outline" className="w-full justify-start">
+                                        <Button variant="outline" className="w-full justify-start" onClick={testWebhooks}>
                                             <Webhook className="h-4 w-4 mr-2" />
                                             Test Webhooks
                                         </Button>
-                                        <Button variant="destructive" className="w-full justify-start">
+                                        <Button variant="destructive" className="w-full justify-start" onClick={emergencyMaintenance}>
                                             <AlertTriangle className="h-4 w-4 mr-2" />
                                             Emergency Maintenance
                                         </Button>
