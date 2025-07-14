@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import MaintenanceMode from "@/components/MaintenanceMode";
+import MaintenanceMode from "./components/MaintenanceMode";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import BottomNavigation from "@/components/BottomNavigation";
 
