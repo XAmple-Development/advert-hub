@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { useActivityTracker } from '@/hooks/useActivityTracker';
+
 import { Users, UserPlus, UserMinus, Star, Calendar, Trophy } from 'lucide-react';
 import { EnhancedLoadingSpinner } from '@/components/enhanced/EnhancedLoadingStates';
 
@@ -46,7 +46,7 @@ export const UserProfile = ({ userId, showFollowButton = true }: UserProfileProp
   const [followLoading, setFollowLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { trackActivity } = useActivityTracker();
+  
 
   useEffect(() => {
     fetchUserData();
@@ -146,15 +146,6 @@ export const UserProfile = ({ userId, showFollowButton = true }: UserProfileProp
         setIsFollowing(true);
         setStats(prev => ({ ...prev, followers: prev.followers + 1 }));
         
-        // Track the follow activity
-        await trackActivity({
-          activity_type: 'user_followed',
-          target_type: 'user',
-          target_id: userId,
-          metadata: { 
-            followed_username: profile?.username || profile?.discord_username || 'unknown'
-          }
-        });
         
         toast({
           title: 'Following',

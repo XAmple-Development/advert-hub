@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useActivityTracker } from '@/hooks/useActivityTracker';
+
 import { Heart, Clock } from 'lucide-react';
 
 interface VoteButtonProps {
@@ -26,7 +26,7 @@ export const VoteButton = ({
   const [voteCount, setVoteCount] = useState(currentVotes);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { trackActivity } = useActivityTracker();
+  
 
   const handleVote = async () => {
     if (!user) {
@@ -63,13 +63,6 @@ export const VoteButton = ({
         setVoteCount(prev => prev + 1);
         onVoteSuccess?.();
         
-        // Track the vote activity
-        await trackActivity({
-          activity_type: 'vote_cast',
-          target_type: targetType,
-          target_id: targetId,
-          metadata: { vote_count: voteCount + 1 }
-        });
         
         toast({
           title: "Vote Submitted!",

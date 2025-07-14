@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useActivityTracker } from '@/hooks/useActivityTracker';
+
 
 interface CreateListingModalProps {
   open: boolean;
@@ -41,7 +41,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
   const { toast } = useToast();
   const authData = useAuth();
   const { isPremium } = useSubscription();
-  const { trackActivity } = useActivityTracker();
+  
 
   useEffect(() => {
     if (open) {
@@ -135,16 +135,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
 
       if (listingError) throw listingError;
 
-      // Track the listing creation activity
-      await trackActivity({
-        activity_type: 'listing_created',
-        target_type: 'listing',
-        target_id: listing.id,
-        metadata: { 
-          listing_name: listing.name,
-          listing_type: listing.type 
-        }
-      });
 
       // Add category if selected
       if (formData.category_id && listing) {

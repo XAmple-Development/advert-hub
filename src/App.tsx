@@ -19,7 +19,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Profile from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import Gamification from "./pages/Gamification";
-import LiveActivity from "./pages/LiveActivity";
+
 import Moderation from "./pages/Moderation";
 import Events from "./pages/Events";
 import Forum from "./pages/Forum";
@@ -61,7 +61,7 @@ const App = () => (
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/gamification" element={<Gamification />} />
-              <Route path="/activity" element={<LiveActivity />} />
+              
               <Route path="/moderation" element={<Moderation />} />
               <Route path="/events" element={<Events />} />
               <Route path="/forum" element={<Forum />} />
