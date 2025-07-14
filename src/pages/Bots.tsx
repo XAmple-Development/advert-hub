@@ -7,9 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { VoteButton } from '@/components/VoteButton';
-import { Bot, ExternalLink, Github, Star, Users, Code, Crown, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ModernBotCard } from '@/components/cards/ModernBotCard';
+import { Bot, Search } from 'lucide-react';
 
 interface BotListing {
   id: string;
@@ -195,151 +194,15 @@ const Bots = () => {
               </CardContent>
             </Card>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-4">
-            {filteredBots.map((bot) => {
-                const userTier = bot.profiles?.[0]?.subscription_tier || 'free';
-                const getTierBorderColor = (tier: string) => {
-                  switch (tier) {
-                    case 'platinum':
-                    case 'premium':
-                      return 'border-slate-400/70 hover:border-slate-300/80';
-                    case 'gold':
-                      return 'border-yellow-500/70 hover:border-yellow-400/80';
-                    default:
-                      return 'border-gray-700/50 hover:border-purple-500/50';
-                  }
-                };
-                const getTierBadge = (tier: string) => {
-                  switch (tier) {
-                    case 'platinum':
-                    case 'premium':
-                      return { text: 'Platinum', color: 'bg-slate-500/20 text-slate-300 border-slate-500/30' };
-                    case 'gold':
-                      return { text: 'Gold', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' };
-                    default:
-                      return null;
-                  }
-                };
-                const tierBadge = getTierBadge(userTier);
-                
-                return (
-                <Card key={bot.id} className={`group bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border ${getTierBorderColor(userTier)} transition-all duration-500 rounded-3xl overflow-hidden`}>
-                  <CardHeader className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-4">
-                        {bot.avatar_url ? (
-                          <img
-                            src={bot.avatar_url}
-                            alt={bot.name}
-                            className="w-12 h-12 rounded-xl"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                            <Bot className="h-6 w-6 text-white" />
-                          </div>
-                        )}
-                        <div>
-                          <CardTitle className="text-white text-xl font-bold flex items-center gap-2">
-                            {bot.name}
-                            {bot.certified_bot && (
-                              <Crown className="h-4 w-4 text-yellow-500" />
-                            )}
-                          </CardTitle>
-                          <p className="text-gray-400 text-sm">
-                            Discord Bot
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <VoteButton
-                        targetId={bot.id}
-                        targetType="bot"
-                        currentVotes={bot.vote_count}
-                        hasVotedToday={bot.hasVotedToday}
-                        onVoteSuccess={() => handleVoteSuccess(bot.id)}
-                      />
-                    </div>
-
-                    <CardDescription className="text-gray-300 text-base mb-4">
-                      {bot.description}
-                    </CardDescription>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {bot.library && (
-                        <Badge variant="secondary" className="bg-purple-500/20 text-purple-300 border-purple-500/30">
-                          {bot.library}
-                        </Badge>
-                      )}
-                      {tierBadge && (
-                        <Badge 
-                          variant="outline"
-                          className={`text-xs ${tierBadge.color}`}
-                        >
-                          {tierBadge.text}
-                        </Badge>
-                      )}
-                      {bot.certified_bot && (
-                        <Badge className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border-yellow-500/30">
-                          <Crown className="h-3 w-3 mr-1" />
-                          Certified
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-300 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        {bot.guilds_count.toLocaleString()} servers
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Code className="h-4 w-4" />
-                        {bot.commands_count} commands
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="px-6 pb-6">
-                    <div className="flex gap-2">
-                      {bot.invite_url && (
-                        <Button
-                          asChild
-                          className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl"
-                        >
-                          <a href={bot.invite_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Invite Bot
-                          </a>
-                        </Button>
-                      )}
-                      
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="border-gray-600 text-gray-300 hover:bg-gray-700 rounded-xl"
-                      >
-                        <Link to={`/listings/${bot.id}`}>
-                          View Details
-                        </Link>
-                      </Button>
-                      
-                      {bot.github_url && (
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="icon"
-                          className="border-gray-600 text-gray-300 hover:bg-gray-700 rounded-xl"
-                        >
-                          <a href={bot.github_url} target="_blank" rel="noopener noreferrer">
-                            <Github className="h-4 w-4" />
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-                );
-              })}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+            {filteredBots.map((bot) => (
+              <ModernBotCard
+                key={bot.id}
+                bot={bot}
+                onVoteSuccess={handleVoteSuccess}
+              />
+            ))}
+          </div>
           )}
         </div>
       </div>
