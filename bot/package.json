@@ -1,12 +1,13 @@
 
 {
   "name": "discord-server-listing-bot",
-  "version": "1.0.0",
-  "description": "Discord bot for server listing bumps and management",
+  "version": "2.0.0",
+  "description": "Advanced Discord bot for server listing promotions, discovery, and community management",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
@@ -16,7 +17,25 @@
   "devDependencies": {
     "nodemon": "^3.0.2"
   },
-  "keywords": ["discord", "bot", "server", "listing"],
-  "author": "Your Name",
-  "license": "MIT"
+  "keywords": [
+    "discord", 
+    "bot", 
+    "server", 
+    "listing", 
+    "community", 
+    "promotion", 
+    "discovery",
+    "voting",
+    "trending",
+    "analytics"
+  ],
+  "author": "Discord Server Listings Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-repo/discord-server-listing-bot"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
 }

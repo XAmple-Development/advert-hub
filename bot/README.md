@@ -1,12 +1,33 @@
 
 # Discord Server Listing Bot
 
-A Discord bot that allows server owners to bump their listings and manage server promotions.
+A powerful Discord bot that helps server owners promote their communities and discover new servers/bots.
 
-## Features
+## 🌟 Features
 
+### Core Commands
 - `/bump` - Bump your server listing to the top (2-hour cooldown)
-- `/setup` - Configure which channel receives new listing notifications
+- `/bumpstatus` - Check your bump cooldown status
+- `/search <query> [type]` - Search for servers/bots by name with type filtering
+- `/trending [type]` - Show trending servers and bots based on growth metrics
+- `/random [type]` - Discover random servers or bots
+- `/vote <name>` - Vote for servers/bots (daily voting)
+- `/leaderboard [limit] [type]` - Show top listings by bump count
+- `/stats` - Show your server's listing statistics
+- `/featured` - Browse featured listings
+- `/mylistings` - View all your listings
+- `/premium` - Learn about premium features
+
+### Admin Commands
+- `/setup <channel>` - Configure which channel receives new listing notifications
+- `/setbumpchannel <channel>` - Set channel for bump notifications
+- `/setstatuschannel <channel>` - Set channel for system status updates
+
+### Interactive Features
+- Button-based interactions for quick actions
+- Rich embeds with server information
+- Real-time trending analysis
+- Vote tracking and leaderboards
 
 ## Setup Instructions
 
@@ -45,13 +66,29 @@ For development with auto-restart:
 npm run dev
 ```
 
-## Commands
+## 📋 Command Reference
 
-### /bump
-Bumps your server listing to the top of the list. Has a 2-hour cooldown per user per server.
+### 🚀 Promotion Commands
+- **`/bump`** - Bump your server to the top of listings (2hr cooldown)
+- **`/vote <name>`** - Vote for a server/bot (once per day per listing)
 
-### /setup
-Configures the bot to post new listings to a specific channel. Only needs to be run once per server.
+### 🔍 Discovery Commands  
+- **`/search <query> [type]`** - Search listings by name (optional type filter)
+- **`/trending [type]`** - View trending servers/bots based on growth
+- **`/random [type]`** - Get a random server/bot recommendation
+- **`/featured`** - Browse featured listings
+
+### 📊 Statistics & Info
+- **`/leaderboard [limit] [type]`** - Top listings by bump count
+- **`/stats`** - Your server's listing statistics  
+- **`/mylistings`** - View all your listings
+- **`/bumpstatus`** - Check bump cooldown status
+- **`/premium`** - Premium features and upgrade info
+
+### ⚙️ Server Configuration (Admin Only)
+- **`/setup <channel>`** - Set channel for new listing notifications
+- **`/setbumpchannel <channel>`** - Set channel for bump notifications  
+- **`/setstatuschannel <channel>`** - Set channel for system status updates
 
 ## Database Requirements
 
