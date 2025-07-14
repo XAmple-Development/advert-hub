@@ -26,11 +26,69 @@ const commands = [
         type: 3, // STRING
         required: true,
       },
+      {
+        name: 'type',
+        description: 'Filter by listing type',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'Servers', value: 'server' },
+          { name: 'Bots', value: 'bot' }
+        ]
+      },
+    ],
+  },
+  {
+    name: 'trending',
+    description: 'Show trending servers and bots',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'type',
+        description: 'Filter by listing type',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'All', value: 'all' },
+          { name: 'Servers', value: 'server' },
+          { name: 'Bots', value: 'bot' }
+        ]
+      },
+    ],
+  },
+  {
+    name: 'random',
+    description: 'Discover a random server or bot',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'type',
+        description: 'Type of listing to discover',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'Server', value: 'server' },
+          { name: 'Bot', value: 'bot' }
+        ]
+      },
+    ],
+  },
+  {
+    name: 'vote',
+    description: 'Vote for a server or bot',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'name',
+        description: 'Name of the server/bot to vote for',
+        type: 3, // STRING
+        required: true,
+      },
     ],
   },
   {
     name: 'setup',
-    description: 'Setup the Discord bot for posting new listings',
+    description: 'Configure the bot for posting new listings',
     type: 1, // CHAT_INPUT
     options: [
       {
@@ -57,6 +115,20 @@ const commands = [
     ],
   },
   {
+    name: 'setstatuschannel',
+    description: 'Set the channel for system status updates',
+    type: 1, // CHAT_INPUT
+    options: [
+      {
+        name: 'channel',
+        description: 'Channel where system status updates will be posted',
+        type: 7, // CHANNEL
+        required: true,
+        channel_types: [0], // GUILD_TEXT
+      },
+    ],
+  },
+  {
     name: 'leaderboard',
     description: 'Show top servers by bump count',
     type: 1, // CHAT_INPUT
@@ -69,6 +141,17 @@ const commands = [
         min_value: 1,
         max_value: 10,
       },
+      {
+        name: 'type',
+        description: 'Filter by listing type',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'All', value: 'all' },
+          { name: 'Servers', value: 'server' },
+          { name: 'Bots', value: 'bot' }
+        ]
+      },
     ],
   },
   {
@@ -79,6 +162,16 @@ const commands = [
   {
     name: 'featured',
     description: 'Show featured server listings',
+    type: 1, // CHAT_INPUT
+  },
+  {
+    name: 'mylistings',
+    description: 'View your personal listings',
+    type: 1, // CHAT_INPUT
+  },
+  {
+    name: 'premium',
+    description: 'Learn about premium features',
     type: 1, // CHAT_INPUT
   },
   {
