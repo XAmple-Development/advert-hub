@@ -68,121 +68,112 @@ const TrendingSection = () => {
           </Button>
         </div>
         
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {trendingListings?.map((listing, index) => (
-            <ModernCard 
+            <div 
               key={listing.id} 
-              className={`group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-2 rounded-2xl overflow-hidden ${
-                index < 3 
-                  ? 'border-purple-500/50 ring-2 ring-purple-500/30 hover:ring-purple-400/50' 
-                  : 'border-gray-700/50 hover:border-purple-500/30'
-              }`}
-              hover
+              className="group relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
+              {/* Trending Badge */}
               {index < 3 && (
-                <div className="absolute -top-4 left-6 z-20">
-                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-2xl text-sm font-bold flex items-center shadow-2xl">
-                    <Star className="h-4 w-4 mr-2" />
-                    #{index + 1} Trending
+                <div className="absolute top-3 left-3 z-20">
+                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                    #{index + 1}
                   </div>
                 </div>
               )}
+
+              {/* Verified Badge */}
+              {listing.verified_badge && (
+                <div className="absolute top-3 right-3 z-20">
+                  <Badge className="bg-blue-500/90 text-white border-0 shadow-lg text-xs">
+                    ✓
+                  </Badge>
+                </div>
+              )}
+
+              {/* Background Effects */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-secondary/[0.02] group-hover:from-primary/[0.05] group-hover:to-secondary/[0.05] transition-all" />
               
-              <div className="relative z-10 p-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6 flex-1">
-                    {listing.avatar_url && (
-                      <div className="relative">
-                        <img 
-                          src={listing.avatar_url} 
-                          alt={listing.name}
-                          className="w-16 h-16 rounded-2xl object-cover shadow-lg ring-2 ring-white/10 group-hover:scale-110 transition-transform duration-300"
-                        />
-                        {listing.verified_badge && (
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                            ✓
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-2xl font-bold text-white group-hover:text-purple-200 transition-colors">
-                          {listing.name}
-                        </h3>
-                        {listing.verified_badge && (
-                          <Badge className="bg-green-600/20 text-green-300 border-green-500/30">
-                            ✓ Verified
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-gray-300 text-lg line-clamp-2 max-w-3xl leading-relaxed group-hover:text-gray-200 transition-colors">
-                        {listing.description}
-                      </p>
-                      {listing.tags && listing.tags.length > 0 && (
-                        <div className="flex gap-2 mt-4">
-                          {listing.tags.slice(0, 4).map((tag) => (
-                            <span 
-                              key={tag} 
-                              className="text-sm px-3 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full text-purple-200 backdrop-blur-sm"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+              <div className="relative p-5 space-y-4">
+                {/* Header */}
+                <div className="flex items-start gap-3">
+                  <div className="relative flex-shrink-0">
+                    <img 
+                      src={listing.avatar_url || "/placeholder.svg"} 
+                      alt={listing.name}
+                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-border/20 group-hover:ring-primary/30 transition-all"
+                    />
                   </div>
                   
-                  <div className="flex items-center gap-6">
-                    {listing.member_count && (
-                      <div className="text-center">
-                        <div className="flex items-center gap-2 text-lg font-bold text-white">
-                          <Users className="h-5 w-5 text-purple-400" />
-                          {listing.member_count.toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-400">Members</div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                      {listing.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                      {listing.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Users className="h-4 w-4 text-primary" />
                       </div>
-                    )}
-                    <div className="flex gap-3">
-                      <Button 
-                        size="lg" 
-                        variant="outline"
-                        onClick={() => navigate(`/listings/${listing.id}`)}
-                        className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white backdrop-blur-sm"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View Details
-                      </Button>
-                      {listing.invite_url && (
-                        <Button 
-                          size="lg"
-                          onClick={() => window.open(listing.invite_url, '_blank')}
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
-                        >
-                          <ArrowUpRight className="h-4 w-4 mr-2" />
-                          Invite Bot
-                        </Button>
-                      )}
-                      <Button 
-                        size="lg" 
-                        variant="outline"
-                        className="flex items-center gap-2 border-yellow-500/50 text-yellow-300 hover:bg-yellow-500/20 hover:text-yellow-200 backdrop-blur-sm"
-                        onClick={() => {
-                          // TODO: Implement voting functionality
-                          console.log('Vote clicked for listing:', listing.id);
-                        }}
-                      >
-                        <Star className="h-4 w-4" />
-                        {listing.vote_count || 0}
-                      </Button>
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{(listing.member_count || 0).toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">members</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                      <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                        <Star className="h-4 w-4 text-yellow-500" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{(listing.vote_count || 0).toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">votes</div>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Tags */}
+                {listing.tags && listing.tags.length > 0 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {listing.tags.slice(0, 3).map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs h-6 px-2 bg-secondary/50">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    onClick={() => navigate(`/listings/${listing.id}`)}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 h-9"
+                  >
+                    View Details
+                  </Button>
+                  
+                  {listing.invite_url && (
+                    <Button
+                      onClick={() => window.open(listing.invite_url, '_blank')}
+                      size="sm"
+                      className="flex-1 h-9 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                    >
+                      {listing.type === 'bot' ? 'Invite' : 'Join'}
+                    </Button>
+                  )}
+                </div>
               </div>
-            </ModernCard>
+            </div>
           ))}
         </div>
         
