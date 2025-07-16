@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ModernLayout from '@/components/layout/ModernLayout';
+import ModernCard from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -186,43 +187,39 @@ const Events = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+      <ModernLayout>
         <Navbar />
         <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
-          <div className="text-2xl font-bold text-white">Loading events...</div>
+          <ModernCard className="p-8">
+            <div className="text-2xl font-bold">Loading events...</div>
+          </ModernCard>
         </div>
-      </div>
+      </ModernLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+    <ModernLayout>
       <Navbar />
       
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="relative z-10 py-12">
+      <div className="py-12">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full mb-8 backdrop-blur-sm">
-              <Calendar className="h-4 w-4 text-purple-300" />
-              <span className="text-purple-200 font-medium">Community Events</span>
+          <ModernCard className="p-8 mb-12" variant="gradient">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/30 rounded-full mb-8">
+              <Calendar className="h-4 w-4 text-primary" />
+              <span className="text-primary font-medium">Community Events</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-black text-white mb-6">
+            <h1 className="text-4xl md:text-6xl font-black mb-6">
               Upcoming
-              <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-primary via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                 Events
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 max-w-4xl leading-relaxed">
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl leading-relaxed">
               Join exciting community events, gaming sessions, discussions, and contests. Connect with like-minded people and make new friends.
             </p>
-          </div>
+          </ModernCard>
 
           <Tabs defaultValue="upcoming" className="space-y-8">
             <TabsList className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2">
@@ -248,20 +245,202 @@ const Events = () => {
 
             <TabsContent value="upcoming" className="space-y-6">
               {upcomingEvents.length === 0 ? (
-                <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
-                  <CardContent className="py-16 text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full mb-6">
-                      <Calendar className="h-10 w-10 text-purple-400" />
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-2">No upcoming events</div>
-                    <div className="text-gray-300 text-lg">Check back soon for new community events!</div>
-                  </CardContent>
-                </Card>
+                <ModernCard className="p-16 text-center" variant="glass">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-6">
+                    <Calendar className="h-10 w-10 text-primary" />
+                  </div>
+                  <div className="text-2xl font-bold mb-2">No upcoming events</div>
+                  <div className="text-muted-foreground text-lg">Check back soon for new community events!</div>
+                </ModernCard>
               ) : (
                 <div className="grid gap-6">
                   {upcomingEvents.map((event) => (
-                    <Card key={event.id} className="group bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 rounded-3xl overflow-hidden">
-                      <CardHeader className="p-8">
+                    <ModernCard key={event.id} className="p-8" variant="glass" hover>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-6">
+                          {event.listings?.avatar_url ? (
+                            <img
+                              src={event.listings.avatar_url}
+                              alt={event.listings.name}
+                              className="w-16 h-16 rounded-2xl"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gradient-to-r from-primary to-pink-600 rounded-2xl flex items-center justify-center">
+                              <Calendar className="h-8 w-8 text-white" />
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
+                            <div className="flex items-center gap-3 mb-3">
+                              <Badge className={getEventTypeColor(event.event_type || 'community')}>
+                                {event.event_type}
+                              </Badge>
+                              {event.listings && (
+                                <Badge variant="outline" className="text-muted-foreground">
+                                  <MapPin className="h-3 w-3 mr-1" />
+                                  {event.listings.name}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                {new Date(event.start_time).toLocaleDateString()} at {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                {event.current_participants}/{event.max_participants} registered
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          {user ? (
+                            <Button
+                              onClick={() => handleRSVP(event.id, !event.user_registered)}
+                              disabled={rsvpLoading === event.id || (!event.user_registered && event.current_participants >= event.max_participants)}
+                              size="lg"
+                              className={event.user_registered 
+                                ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+                                : "bg-gradient-to-r from-primary to-pink-600 hover:from-primary/80 hover:to-pink-600/80"
+                              }
+                            >
+                              {rsvpLoading === event.id ? 'Processing...' : 
+                               event.user_registered ? 'Cancel RSVP' : 
+                               event.current_participants >= event.max_participants ? 'Event Full' : 'RSVP'}
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => toast({
+                                variant: "destructive",
+                                title: "Authentication Required",
+                                description: "Please sign in to RSVP to events"
+                              })}
+                              size="lg"
+                              className="bg-gradient-to-r from-primary to-pink-600 hover:from-primary/80 hover:to-pink-600/80"
+                            >
+                              Sign In to RSVP
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {event.description && (
+                        <div className="mt-6 pt-6 border-t border-border/30">
+                          <p className="text-muted-foreground text-lg leading-relaxed">{event.description}</p>
+                        </div>
+                      )}
+                    </ModernCard>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="today" className="space-y-6">
+              {todayEvents.length === 0 ? (
+                <ModernCard className="p-16 text-center" variant="glass">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-cyan-500/10 rounded-full mb-6">
+                    <Clock className="h-10 w-10 text-cyan-400" />
+                  </div>
+                  <div className="text-2xl font-bold mb-2">No events today</div>
+                  <div className="text-muted-foreground text-lg">Check out upcoming events instead!</div>
+                </ModernCard>
+              ) : (
+                <div className="grid gap-6">
+                  {todayEvents.map((event) => (
+                    <ModernCard key={event.id} className="p-8" variant="glass" hover>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center space-x-6">
+                          {event.listings?.avatar_url ? (
+                            <img
+                              src={event.listings.avatar_url}
+                              alt={event.listings.name}
+                              className="w-16 h-16 rounded-2xl"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl flex items-center justify-center">
+                              <Calendar className="h-8 w-8 text-white" />
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
+                            <div className="flex items-center gap-3 mb-3">
+                              <Badge className={getEventTypeColor(event.event_type || 'community')}>
+                                {event.event_type}
+                              </Badge>
+                              <Badge className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-500/30">
+                                Today
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-4 w-4" />
+                                {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Users className="h-4 w-4" />
+                                {event.current_participants}/{event.max_participants} registered
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-3">
+                          {user ? (
+                            <Button
+                              onClick={() => handleRSVP(event.id, !event.user_registered)}
+                              disabled={rsvpLoading === event.id || (!event.user_registered && event.current_participants >= event.max_participants)}
+                              size="lg"
+                              className={event.user_registered 
+                                ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+                                : "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                              }
+                            >
+                              {rsvpLoading === event.id ? 'Processing...' : 
+                               event.user_registered ? 'Cancel RSVP' : 
+                               event.current_participants >= event.max_participants ? 'Event Full' : 'RSVP'}
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => toast({
+                                variant: "destructive", 
+                                title: "Authentication Required",
+                                description: "Please sign in to RSVP to events"
+                              })}
+                              size="lg"
+                              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                            >
+                              Sign In to RSVP
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {event.description && (
+                        <div className="mt-6 pt-6 border-t border-border/30">
+                          <p className="text-muted-foreground text-lg leading-relaxed">{event.description}</p>
+                        </div>
+                      )}
+                    </ModernCard>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="all" className="space-y-6">
+              {events.length === 0 ? (
+                <ModernCard className="p-16 text-center" variant="glass">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-muted/10 rounded-full mb-6">
+                    <Calendar className="h-10 w-10 text-muted-foreground" />
+                  </div>
+                  <div className="text-2xl font-bold mb-2">No events found</div>
+                  <div className="text-muted-foreground text-lg">Events will appear here once they're created!</div>
+                </ModernCard>
+              ) : (
+                <div className="grid gap-6">
+                  {events.map((event) => {
+                    const isPastEvent = new Date(event.start_time) <= new Date();
+                    return (
+                      <ModernCard key={event.id} className={`p-8 ${isPastEvent ? 'opacity-75' : ''}`} variant="glass" hover={!isPastEvent}>
                         <div className="flex items-start justify-between">
                           <div className="flex items-center space-x-6">
                             {event.listings?.avatar_url ? (
@@ -271,24 +450,29 @@ const Events = () => {
                                 className="w-16 h-16 rounded-2xl"
                               />
                             ) : (
-                              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center">
+                              <div className={`w-16 h-16 bg-gradient-to-r ${isPastEvent ? 'from-muted/50 to-muted/70' : 'from-primary to-pink-600'} rounded-2xl flex items-center justify-center`}>
                                 <Calendar className="h-8 w-8 text-white" />
                               </div>
                             )}
                             <div>
-                              <CardTitle className="text-white text-2xl font-bold mb-2">{event.title}</CardTitle>
+                              <h3 className="text-2xl font-bold mb-2">{event.title}</h3>
                               <div className="flex items-center gap-3 mb-3">
                                 <Badge className={getEventTypeColor(event.event_type || 'community')}>
                                   {event.event_type}
                                 </Badge>
                                 {event.listings && (
-                                  <Badge variant="outline" className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-gray-600/50 text-gray-300">
+                                  <Badge variant="outline" className="text-muted-foreground">
                                     <MapPin className="h-3 w-3 mr-1" />
                                     {event.listings.name}
                                   </Badge>
                                 )}
+                                {isPastEvent && (
+                                  <Badge className="bg-muted/20 text-muted-foreground border-muted/30">
+                                    Past Event
+                                  </Badge>
+                                )}
                               </div>
-                              <div className="flex items-center gap-4 text-gray-300">
+                              <div className="flex items-center gap-4 text-muted-foreground">
                                 <div className="flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
                                   {new Date(event.start_time).toLocaleDateString()} at {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -301,260 +485,51 @@ const Events = () => {
                             </div>
                           </div>
                           <div className="flex gap-3">
-                            {user ? (
+                            {!isPastEvent && user ? (
                               <Button
                                 onClick={() => handleRSVP(event.id, !event.user_registered)}
                                 disabled={rsvpLoading === event.id || (!event.user_registered && event.current_participants >= event.max_participants)}
                                 size="lg"
                                 className={event.user_registered 
-                                  ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
-                                  : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
+                                  ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+                                  : "bg-gradient-to-r from-primary to-pink-600 hover:from-primary/80 hover:to-pink-600/80"
                                 }
                               >
                                 {rsvpLoading === event.id ? 'Processing...' : 
                                  event.user_registered ? 'Cancel RSVP' : 
                                  event.current_participants >= event.max_participants ? 'Event Full' : 'RSVP'}
                               </Button>
+                            ) : isPastEvent ? (
+                              <Button
+                                disabled
+                                size="lg"
+                                variant="outline"
+                                className="cursor-not-allowed"
+                              >
+                                Event Ended
+                              </Button>
                             ) : (
                               <Button
                                 onClick={() => toast({
                                   variant: "destructive",
-                                  title: "Authentication Required",
+                                  title: "Authentication Required", 
                                   description: "Please sign in to RSVP to events"
                                 })}
                                 size="lg"
-                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
+                                className="bg-gradient-to-r from-primary to-pink-600 hover:from-primary/80 hover:to-pink-600/80"
                               >
                                 Sign In to RSVP
                               </Button>
                             )}
                           </div>
                         </div>
-                      </CardHeader>
-                      
-                      {event.description && (
-                        <CardContent className="px-8 pb-8">
-                          <p className="text-gray-300 text-lg leading-relaxed">{event.description}</p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="today" className="space-y-6">
-              {todayEvents.length === 0 ? (
-                <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
-                  <CardContent className="py-16 text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full mb-6">
-                      <Clock className="h-10 w-10 text-cyan-400" />
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-2">No events today</div>
-                    <div className="text-gray-300 text-lg">Check out upcoming events instead!</div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-6">
-                  {todayEvents.map((event) => (
-                    <Card key={event.id} className="group bg-gradient-to-r from-cyan-800/40 to-blue-900/40 backdrop-blur-xl border border-cyan-700/50 hover:border-cyan-500/50 transition-all duration-500 rounded-3xl overflow-hidden">
-                      {/* Same card content as above, but with cyan theme */}
-                      <CardHeader className="p-8">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-6">
-                            {event.listings?.avatar_url ? (
-                              <img
-                                src={event.listings.avatar_url}
-                                alt={event.listings.name}
-                                className="w-16 h-16 rounded-2xl"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl flex items-center justify-center">
-                                <Calendar className="h-8 w-8 text-white" />
-                              </div>
-                            )}
-                            <div>
-                              <CardTitle className="text-white text-2xl font-bold mb-2">{event.title}</CardTitle>
-                              <div className="flex items-center gap-3 mb-3">
-                                <Badge className={getEventTypeColor(event.event_type || 'community')}>
-                                  {event.event_type}
-                                </Badge>
-                                {event.listings && (
-                                  <Badge variant="outline" className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-gray-600/50 text-gray-300">
-                                    <MapPin className="h-3 w-3 mr-1" />
-                                    {event.listings.name}
-                                  </Badge>
-                                )}
-                                <Badge className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-500/30">
-                                  Today
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-4 text-gray-300">
-                                <div className="flex items-center gap-1">
-                                  <Clock className="h-4 w-4" />
-                                  {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Users className="h-4 w-4" />
-                                  {event.current_participants}/{event.max_participants} registered
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex gap-3">
-                            {user ? (
-                              <Button
-                                onClick={() => handleRSVP(event.id, !event.user_registered)}
-                                disabled={rsvpLoading === event.id || (!event.user_registered && event.current_participants >= event.max_participants)}
-                                size="lg"
-                                className={event.user_registered 
-                                  ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
-                                  : "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-2xl px-6 py-3"
-                                }
-                              >
-                                {rsvpLoading === event.id ? 'Processing...' : 
-                                 event.user_registered ? 'Cancel RSVP' : 
-                                 event.current_participants >= event.max_participants ? 'Event Full' : 'RSVP'}
-                              </Button>
-                            ) : (
-                              <Button
-                                onClick={() => toast({
-                                  variant: "destructive",
-                                  title: "Authentication Required",
-                                  description: "Please sign in to RSVP to events"
-                                })}
-                                size="lg"
-                                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white rounded-2xl px-6 py-3"
-                              >
-                                Sign In to RSVP
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardHeader>
-                      
-                      {event.description && (
-                        <CardContent className="px-8 pb-8">
-                          <p className="text-gray-300 text-lg leading-relaxed">{event.description}</p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="all" className="space-y-6">
-              {events.length === 0 ? (
-                <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
-                  <CardContent className="py-16 text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-gray-500/10 to-gray-600/10 rounded-full mb-6">
-                      <Calendar className="h-10 w-10 text-gray-400" />
-                    </div>
-                    <div className="text-2xl font-bold text-white mb-2">No events found</div>
-                    <div className="text-gray-300 text-lg">Events will appear here once they're created!</div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-6">
-                  {events.map((event) => {
-                    const isPastEvent = new Date(event.start_time) <= new Date();
-                    return (
-                      <Card key={event.id} className={`group backdrop-blur-xl border border-gray-700/50 hover:border-gray-500/50 transition-all duration-500 rounded-3xl overflow-hidden ${
-                        isPastEvent 
-                          ? 'bg-gradient-to-r from-gray-800/20 to-gray-900/20 opacity-75' 
-                          : 'bg-gradient-to-r from-gray-800/40 to-gray-900/40 hover:border-purple-500/50'
-                      }`}>
-                        <CardHeader className="p-8">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center space-x-6">
-                              {event.listings?.avatar_url ? (
-                                <img
-                                  src={event.listings.avatar_url}
-                                  alt={event.listings.name}
-                                  className="w-16 h-16 rounded-2xl"
-                                />
-                              ) : (
-                                <div className={`w-16 h-16 bg-gradient-to-r ${isPastEvent ? 'from-gray-600 to-gray-700' : 'from-purple-600 to-pink-600'} rounded-2xl flex items-center justify-center`}>
-                                  <Calendar className="h-8 w-8 text-white" />
-                                </div>
-                              )}
-                              <div>
-                                <CardTitle className="text-white text-2xl font-bold mb-2">{event.title}</CardTitle>
-                                <div className="flex items-center gap-3 mb-3">
-                                  <Badge className={getEventTypeColor(event.event_type || 'community')}>
-                                    {event.event_type}
-                                  </Badge>
-                                  {event.listings && (
-                                    <Badge variant="outline" className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-gray-600/50 text-gray-300">
-                                      <MapPin className="h-3 w-3 mr-1" />
-                                      {event.listings.name}
-                                    </Badge>
-                                  )}
-                                  {isPastEvent && (
-                                    <Badge className="bg-gradient-to-r from-gray-500/20 to-gray-600/20 text-gray-400 border-gray-500/30">
-                                      Past Event
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-4 text-gray-300">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-4 w-4" />
-                                    {new Date(event.start_time).toLocaleDateString()} at {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Users className="h-4 w-4" />
-                                    {event.current_participants}/{event.max_participants} registered
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex gap-3">
-                              {!isPastEvent && user ? (
-                                <Button
-                                  onClick={() => handleRSVP(event.id, !event.user_registered)}
-                                  disabled={rsvpLoading === event.id || (!event.user_registered && event.current_participants >= event.max_participants)}
-                                  size="lg"
-                                  className={event.user_registered 
-                                    ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
-                                    : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
-                                  }
-                                >
-                                  {rsvpLoading === event.id ? 'Processing...' : 
-                                   event.user_registered ? 'Cancel RSVP' : 
-                                   event.current_participants >= event.max_participants ? 'Event Full' : 'RSVP'}
-                                </Button>
-                              ) : isPastEvent ? (
-                                <Button
-                                  disabled
-                                  size="lg"
-                                  className="bg-gray-600 text-gray-400 rounded-2xl px-6 py-3 cursor-not-allowed"
-                                >
-                                  Event Ended
-                                </Button>
-                              ) : (
-                                <Button
-                                  onClick={() => toast({
-                                    variant: "destructive",
-                                    title: "Authentication Required",
-                                    description: "Please sign in to RSVP to events"
-                                  })}
-                                  size="lg"
-                                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3"
-                                >
-                                  Sign In to RSVP
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </CardHeader>
                         
                         {event.description && (
-                          <CardContent className="px-8 pb-8">
-                            <p className="text-gray-300 text-lg leading-relaxed">{event.description}</p>
-                          </CardContent>
+                          <div className="mt-6 pt-6 border-t border-border/30">
+                            <p className="text-muted-foreground text-lg leading-relaxed">{event.description}</p>
+                          </div>
                         )}
-                      </Card>
+                      </ModernCard>
                     );
                   })}
                 </div>
@@ -563,7 +538,7 @@ const Events = () => {
           </Tabs>
         </div>
       </div>
-    </div>
+    </ModernLayout>
   );
 };
 

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import ModernCard from '@/components/ui/modern-card';
 import { Users, Star, ExternalLink, ArrowUpRight } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
@@ -33,21 +34,25 @@ const TrendingSection = () => {
   }
 
   return (
-    <section className="py-12">
+    <ModernCard className="p-8" variant="glass">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Top Discord Bots & Discord Apps</h2>
-          <p className="text-muted-foreground">Top voted bots and apps on Top.gg</p>
+          <h2 className="text-2xl font-bold mb-2">Top Discord Bots & Discord Apps</h2>
+          <p className="text-muted-foreground">Top voted bots and apps on our platform</p>
         </div>
-        <button className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
+        <Button 
+          variant="outline" 
+          onClick={() => window.open('https://discord.gg/3mNGT2AwNy', '_blank')}
+          className="flex items-center gap-2"
+        >
           Join our Discord
           <ArrowUpRight className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
       
       <div className="space-y-4">
         {trendingListings?.map((listing, index) => (
-          <div key={listing.id} className="bg-card/60 backdrop-blur border border-border/40 rounded-lg p-4 hover:bg-card/80 transition-colors">
+          <ModernCard key={listing.id} className="p-4" hover>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 {listing.avatar_url && (
@@ -59,7 +64,7 @@ const TrendingSection = () => {
                 )}
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-white">{listing.name}</h3>
+                    <h3 className="text-lg font-semibold">{listing.name}</h3>
                     {index < 3 && (
                       <Badge className="bg-primary/20 text-primary border-primary/20">
                         #Promoted
@@ -89,7 +94,7 @@ const TrendingSection = () => {
               <div className="flex items-center gap-3">
                 {listing.member_count && (
                   <div className="text-center">
-                    <div className="text-sm font-medium text-white">{listing.member_count.toLocaleString()}</div>
+                    <div className="text-sm font-medium">{listing.member_count.toLocaleString()}</div>
                     <div className="text-xs text-muted-foreground">Members</div>
                   </div>
                 )}
@@ -97,7 +102,7 @@ const TrendingSection = () => {
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => navigate(`/listing/${listing.id}`)}
+                    onClick={() => navigate(`/listings/${listing.id}`)}
                   >
                     View
                   </Button>
@@ -113,6 +118,10 @@ const TrendingSection = () => {
                     size="sm" 
                     variant="outline"
                     className="flex items-center gap-1"
+                    onClick={() => {
+                      // TODO: Implement voting functionality
+                      console.log('Vote clicked for listing:', listing.id);
+                    }}
                   >
                     <Star className="h-4 w-4" />
                     Vote ({listing.vote_count || 0})
@@ -120,7 +129,7 @@ const TrendingSection = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </ModernCard>
         ))}
       </div>
       
@@ -129,7 +138,7 @@ const TrendingSection = () => {
           <p className="text-muted-foreground">No trending items available at the moment.</p>
         </div>
       )}
-    </section>
+    </ModernCard>
   );
 };
 

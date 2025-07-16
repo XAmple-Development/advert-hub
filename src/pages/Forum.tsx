@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import ModernLayout from '@/components/layout/ModernLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ModernCard from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -201,32 +201,30 @@ const Forum = () => {
                 const IconComponent = getIconComponent(category.icon);
                 
                 return (
-                  <Card key={category.id} className="group bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 rounded-xl overflow-hidden">
-                    <CardHeader className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="p-3 bg-gradient-to-r from-primary to-secondary rounded-xl">
-                            <IconComponent className="h-6 w-6 text-primary-foreground" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-foreground text-xl font-bold">
-                              <Link to={`/forum/category/${category.id}`} className="hover:text-primary transition-colors">
-                                {category.name}
-                              </Link>
-                            </CardTitle>
-                            <CardDescription className="text-muted-foreground text-base">
-                              {category.description}
-                            </CardDescription>
-                          </div>
+                  <ModernCard key={category.id} className="p-6" hover>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3 bg-gradient-to-r from-primary to-secondary rounded-xl">
+                          <IconComponent className="h-6 w-6 text-primary-foreground" />
                         </div>
-                        
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-foreground">{category.topic_count || 0}</div>
-                          <div className="text-sm text-muted-foreground">Topics</div>
+                        <div>
+                          <h3 className="text-xl font-bold">
+                            <Link to={`/forum/category/${category.id}`} className="hover:text-primary transition-colors">
+                              {category.name}
+                            </Link>
+                          </h3>
+                          <p className="text-muted-foreground text-base">
+                            {category.description}
+                          </p>
                         </div>
                       </div>
-                    </CardHeader>
-                  </Card>
+                      
+                      <div className="text-right">
+                        <div className="text-2xl font-bold">{category.topic_count || 0}</div>
+                        <div className="text-sm text-muted-foreground">Topics</div>
+                      </div>
+                    </div>
+                  </ModernCard>
                 );
               })}
             </div>
@@ -236,57 +234,53 @@ const Forum = () => {
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-6">Recent Activity</h2>
             
-            <Card className="bg-card/50 backdrop-blur-sm border-border/50 rounded-xl overflow-hidden">
-              <CardHeader className="p-6">
-                <CardTitle className="text-foreground text-xl font-bold">Latest Topics</CardTitle>
-              </CardHeader>
-              <CardContent className="px-6 pb-6">
-                <div className="space-y-4">
-                  {recentTopics.slice(0, 8).map((topic) => (
-                    <div key={topic.id} className="flex items-start space-x-3 p-3 rounded-xl hover:bg-muted/30 transition-colors">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={topic.profiles?.discord_avatar || undefined} />
-                        <AvatarFallback>
-                          <Users className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
+            <ModernCard className="p-6" variant="glass">
+              <h3 className="text-xl font-bold mb-6">Latest Topics</h3>
+              <div className="space-y-4">
+                {recentTopics.slice(0, 8).map((topic) => (
+                  <div key={topic.id} className="flex items-start space-x-3 p-3 rounded-xl hover:bg-muted/30 transition-colors">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={topic.profiles?.discord_avatar || undefined} />
+                      <AvatarFallback>
+                        <Users className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {topic.pinned && <Pin className="h-3 w-3 text-yellow-500" />}
+                        {topic.locked && <Lock className="h-3 w-3 text-red-500" />}
+                      </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          {topic.pinned && <Pin className="h-3 w-3 text-yellow-500" />}
-                          {topic.locked && <Lock className="h-3 w-3 text-red-500" />}
+                      <Link
+                        to={`/forum/topic/${topic.id}`}
+                        className="text-foreground text-sm font-medium hover:text-primary transition-colors line-clamp-2"
+                      >
+                        {topic.title}
+                      </Link>
+                      
+                      <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                        <span>
+                          by {topic.profiles?.discord_username || topic.profiles?.username || 'Unknown'}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="h-3 w-3" />
+                          {topic.reply_count}
                         </div>
-                        
-                        <Link
-                          to={`/forum/topic/${topic.id}`}
-                          className="text-foreground text-sm font-medium hover:text-primary transition-colors line-clamp-2"
-                        >
-                          {topic.title}
-                        </Link>
-                        
-                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                          <span>
-                            by {topic.profiles?.discord_username || topic.profiles?.username || 'Unknown'}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <MessageCircle className="h-3 w-3" />
-                            {topic.reply_count}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {topic.view_count}
-                          </div>
-                        </div>
-                        
-                        <div className="text-xs text-muted-foreground/70 mt-1">
-                          {formatDistanceToNow(new Date(topic.last_reply_at), { addSuffix: true })}
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          {topic.view_count}
                         </div>
                       </div>
+                      
+                      <div className="text-xs text-muted-foreground/70 mt-1">
+                        {formatDistanceToNow(new Date(topic.last_reply_at), { addSuffix: true })}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                ))}
+              </div>
+            </ModernCard>
           </div>
         </div>
       </div>

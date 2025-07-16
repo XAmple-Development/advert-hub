@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Breadcrumbs from '@/components/Breadcrumbs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ModernLayout from '@/components/layout/ModernLayout';
+import ModernCard from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -103,46 +104,42 @@ const Bots = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+      <ModernLayout>
         <Navbar />
         <Breadcrumbs />
         <div className="flex items-center justify-center min-h-[calc(100vh-128px)]">
-          <div className="text-2xl font-bold text-white">Loading bots...</div>
+          <ModernCard className="p-8">
+            <div className="text-2xl font-bold">Loading bots...</div>
+          </ModernCard>
         </div>
-      </div>
+      </ModernLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+    <ModernLayout>
       <Navbar />
       <Breadcrumbs />
       
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="relative z-10 py-12">
+      <div className="py-12">
         <div className="max-w-7xl mx-auto px-6">
           {/* Header */}
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full mb-8 backdrop-blur-sm">
-              <Bot className="h-4 w-4 text-purple-300" />
-              <span className="text-purple-200 font-medium">Discord Bots</span>
+          <ModernCard className="p-12 mb-12" variant="gradient">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/30 rounded-full mb-8">
+              <Bot className="h-4 w-4 text-primary" />
+              <span className="text-primary font-medium">Discord Bots</span>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 px-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-6">
               Discover
-              <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-primary via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                 Amazing Bots
               </span>
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-4xl leading-relaxed px-4">
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-4xl leading-relaxed">
               Find the perfect Discord bots to enhance your server. Vote for your favorites and discover new functionality.
             </p>
-          </div>
+          </ModernCard>
 
           {/* Search and Filters */}
           <div className="mb-8 flex flex-col md:flex-row gap-4">
@@ -183,17 +180,15 @@ const Bots = () => {
 
           {/* Bots Grid */}
           {filteredBots.length === 0 ? (
-            <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
-              <CardContent className="py-16 text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full mb-6">
-                  <Bot className="h-10 w-10 text-purple-400" />
-                </div>
-                <div className="text-2xl font-bold text-white mb-2">No bots found</div>
-                <div className="text-gray-300 text-lg">Try adjusting your search criteria</div>
-              </CardContent>
-            </Card>
+            <ModernCard className="p-16 text-center" variant="glass">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-6">
+                <Bot className="h-10 w-10 text-primary" />
+              </div>
+              <div className="text-2xl font-bold mb-2">No bots found</div>
+              <div className="text-muted-foreground text-lg">Try adjusting your search criteria</div>
+            </ModernCard>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredBots.map((bot) => (
               <ModernBotCard
                 key={bot.id}
@@ -205,7 +200,7 @@ const Bots = () => {
           )}
         </div>
       </div>
-    </div>
+    </ModernLayout>
   );
 };
 
