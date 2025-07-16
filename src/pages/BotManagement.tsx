@@ -1,20 +1,23 @@
 
 import React from 'react';
 import BotManagement from '@/components/BotManagement';
+import Navbar from '@/components/Navbar';
+import ModernLayout from '@/components/layout/ModernLayout';
 
 const BotManagementPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">Discord Bot Management</h1>
+    <ModernLayout>
+      <Navbar />
+      <div className="container mx-auto px-6 py-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-black bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent mb-2">
+            Discord Bot Management
+          </h1>
+          <p className="text-muted-foreground text-lg">Configure and monitor your Discord bot integrations</p>
         </div>
-      </header>
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <BotManagement />
-      </main>
-    </div>
+      </div>
+    </ModernLayout>
   );
 };
 

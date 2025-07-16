@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Edit } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import ModernLayout from '@/components/layout/ModernLayout';
 
 export default function Profile() {
   const { userId } = useParams<{ userId: string }>();
@@ -12,27 +13,27 @@ export default function Profile() {
 
   if (!userId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+      <ModernLayout>
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-6 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white mb-4">Profile Not Found</h1>
-            <p className="text-gray-300">The profile you're looking for doesn't exist.</p>
+            <h1 className="text-2xl font-bold text-foreground mb-4">Profile Not Found</h1>
+            <p className="text-muted-foreground">The profile you're looking for doesn't exist.</p>
           </div>
         </div>
-      </div>
+      </ModernLayout>
     );
   }
 
   const isOwnProfile = user?.id === userId;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+    <ModernLayout>
       <Navbar />
-      <div className="container mx-auto px-4 py-8 space-y-6">
+      <div className="container mx-auto px-6 py-8 space-y-8">
         {isOwnProfile && (
           <div className="flex justify-end">
-            <Button asChild className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+            <Button asChild className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
               <Link to="/profile/edit">
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Profile
@@ -44,6 +45,6 @@ export default function Profile() {
         <UserProfile userId={userId} showFollowButton={!isOwnProfile} />
         <FollowersFollowingList userId={userId} />
       </div>
-    </div>
+    </ModernLayout>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import ModernCard from '@/components/ui/modern-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -127,11 +128,6 @@ interface SystemStats {
     activeToday: number;
 }
 
-interface BulkAction {
-    action: 'approve' | 'reject' | 'suspend' | 'feature' | 'unfeature' | 'verify' | 'unverify';
-    reason?: string;
-}
-
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [pendingListings, setPendingListings] = useState<Listing[]>([]);
@@ -147,17 +143,12 @@ const AdminDashboard = () => {
         activeToday: 0
     });
     const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-    const [selectedListings, setSelectedListings] = useState<string[]>([]);
-    const [bulkAction, setBulkAction] = useState<BulkAction>({ action: 'approve' });
     const [reason, setReason] = useState('');
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [typeFilter, setTypeFilter] = useState('all');
-    const [showBulkActions, setShowBulkActions] = useState(false);
-    const [announcement, setAnnouncement] = useState('');
-    const [announcementType, setAnnouncementType] = useState<'info' | 'warning' | 'success' | 'error'>('info');
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
 
@@ -365,372 +356,16 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleBulkAction = async () => {
-        if (!user || selectedListings.length === 0) return;
-
-        try {
-            const updates = selectedListings.map(async (listingId) => {
-                let updateData: any = {};
-                
-                switch (bulkAction.action) {
-                    case 'approve':
-                        updateData.status = 'active';
-                        break;
-                    case 'reject':
-                    case 'suspend':
-                        updateData.status = 'suspended';
-                        break;
-                    case 'feature':
-                        updateData.featured = true;
-                        break;
-                    case 'unfeature':
-                        updateData.featured = false;
-                        break;
-                    case 'verify':
-                        updateData.verified_badge = true;
-                        break;
-                    case 'unverify':
-                        updateData.verified_badge = false;
-                        break;
-                }
-
-                const { error: updateError } = await supabase
-                    .from('listings')
-                    .update(updateData)
-                    .eq('id', listingId);
-
-                if (updateError) throw updateError;
-
-                return supabase
-                    .from('admin_actions')
-                    .insert({
-                        admin_id: user.id,
-                        listing_id: listingId,
-                        action: bulkAction.action,
-                        reason: bulkAction.reason || null
-                    });
-            });
-
-            await Promise.all(updates);
-
-            toast({
-                title: "Success!",
-                description: `Bulk action completed on ${selectedListings.length} listings`,
-            });
-
-            setSelectedListings([]);
-            setShowBulkActions(false);
-            setBulkAction({ action: 'approve' });
-            await fetchAllData();
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: error.message,
-            });
-        }
+    const editListing = (listingId: string) => {
+        navigate(`/listings/${listingId}`);
     };
 
-    const handleUserAction = async (userId: string, action: 'ban' | 'unban' | 'promote' | 'demote') => {
-        try {
-            let updateData: any = {};
-            
-            switch (action) {
-                case 'ban':
-                    updateData.subscription_tier = 'banned';
-                    break;
-                case 'unban':
-                    updateData.subscription_tier = 'free';
-                    break;
-                case 'promote':
-                    updateData.is_admin = true;
-                    break;
-                case 'demote':
-                    updateData.is_admin = false;
-                    break;
-            }
-
-            const { error } = await supabase
-                .from('profiles')
-                .update(updateData)
-                .eq('id', userId);
-
-            if (error) throw error;
-
-            toast({
-                title: "Success!",
-                description: `User ${action} action completed`,
-            });
-
-            await fetchAllUsers();
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: error.message,
-            });
-        }
-    };
-
-    const sendGlobalAnnouncement = async () => {
-        if (!announcement.trim()) return;
-
-        try {
-            // Get all users to send individual notifications
-            const { data: users, error: usersError } = await supabase
-                .from('profiles')
-                .select('id');
-
-            if (usersError) throw usersError;
-
-            // Send notification to each user
-            const notifications = users.map(user => ({
-                user_id: user.id,
-                type: 'announcement',
-                title: 'System Announcement',
-                message: announcement,
-                priority: announcementType === 'error' ? 'high' : 'normal'
-            }));
-
-            const { error } = await supabase
-                .from('notifications')
-                .insert(notifications);
-
-            if (error) throw error;
-
-            toast({
-                title: "Success!",
-                description: `Global announcement sent to ${users.length} users`,
-            });
-
-            setAnnouncement('');
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: error.message,
-            });
-        }
-    };
-
-    const refreshCache = async () => {
-        try {
-            await fetchAllData();
-            toast({
-                title: "Success!",
-                description: "Cache refreshed successfully",
-            });
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to refresh cache",
-            });
-        }
-    };
-
-    const exportData = async () => {
-        try {
-            const exportData = {
-                listings: allListings,
-                users: allUsers,
-                actions: recentActions,
-                stats: systemStats,
-                exportedAt: new Date().toISOString()
-            };
-
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-                type: 'application/json'
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `admin-data-export-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            toast({
-                title: "Success!",
-                description: "Data exported successfully",
-            });
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to export data",
-            });
-        }
-    };
-
-    const generateReports = async () => {
-        try {
-            const report = {
-                summary: {
-                    totalListings: systemStats.totalListings,
-                    totalUsers: systemStats.totalUsers,
-                    totalVotes: systemStats.totalVotes,
-                    totalViews: systemStats.totalViews,
-                    activeToday: systemStats.activeToday,
-                    pendingReviews: systemStats.pendingReviews,
-                },
-                listingsByType: {
-                    servers: allListings.filter(l => l.type === 'server').length,
-                    bots: allListings.filter(l => l.type === 'bot').length,
-                },
-                listingsByStatus: {
-                    active: allListings.filter(l => l.status === 'active').length,
-                    pending: allListings.filter(l => l.status === 'pending').length,
-                    suspended: allListings.filter(l => l.status === 'suspended').length,
-                },
-                usersByTier: {
-                    free: allUsers.filter(u => u.subscription_tier === 'free').length,
-                    premium: allUsers.filter(u => u.subscription_tier === 'premium').length,
-                    banned: allUsers.filter(u => u.subscription_tier === 'banned').length,
-                },
-                recentActivity: recentActions.slice(0, 10),
-                generatedAt: new Date().toISOString()
-            };
-
-            const blob = new Blob([JSON.stringify(report, null, 2)], {
-                type: 'application/json'
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `admin-report-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            toast({
-                title: "Success!",
-                description: "Report generated successfully",
-            });
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to generate report",
-            });
-        }
-    };
-
-    const testWebhooks = async () => {
-        try {
-            // Test webhook by sending a test notification
-            const { error } = await supabase
-                .from('notifications')
-                .insert({
-                    user_id: user?.id,
-                    type: 'system',
-                    title: 'Webhook Test',
-                    message: 'This is a test webhook notification sent from the admin dashboard',
-                    priority: 'normal'
-                });
-
-            if (error) throw error;
-
-            toast({
-                title: "Success!",
-                description: "Test webhook sent successfully",
-            });
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to test webhooks",
-            });
-        }
-    };
-
-    const emergencyMaintenance = async () => {
-        if (!confirm('Are you sure you want to enable emergency maintenance mode? This will affect all users.')) {
-            return;
-        }
-
-        try {
-            // Enable maintenance mode
-            const { error: maintenanceError } = await supabase
-                .from('site_maintenance')
-                .insert({
-                    is_maintenance_mode: true,
-                    maintenance_message: 'The platform is currently under emergency maintenance. Please check back later.',
-                    created_by: user?.id
-                });
-
-            if (maintenanceError) throw maintenanceError;
-
-            // Get all users to send individual notifications
-            const { data: users, error: usersError } = await supabase
-                .from('profiles')
-                .select('id');
-
-            if (usersError) throw usersError;
-
-            // Send emergency maintenance notification to each user
-            const notifications = users.map(user => ({
-                user_id: user.id,
-                type: 'announcement',
-                title: 'Emergency Maintenance',
-                message: 'The platform is currently under emergency maintenance. Please check back later.',
-                priority: 'high'
-            }));
-
-            const { error } = await supabase
-                .from('notifications')
-                .insert(notifications);
-
-            if (error) throw error;
-
-            toast({
-                title: "Emergency Maintenance Activated",
-                description: `Maintenance mode enabled and notification sent to ${users.length} users`,
-            });
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to activate emergency maintenance",
-            });
-        }
-    };
-
-    const disableMaintenanceMode = async () => {
-        if (!confirm('Are you sure you want to disable maintenance mode?')) {
-            return;
-        }
-
-        try {
-            const { error } = await supabase
-                .from('site_maintenance')
-                .insert({
-                    is_maintenance_mode: false,
-                    maintenance_message: 'Maintenance mode has been disabled',
-                    created_by: user?.id
-                });
-
-            if (error) throw error;
-
-            toast({
-                title: "Maintenance Mode Disabled",
-                description: "The platform is now accessible to all users",
-            });
-        } catch (error: any) {
-            toast({
-                variant: "destructive",
-                title: "Error", 
-                description: "Failed to disable maintenance mode",
-            });
-        }
+    const viewListing = (listingId: string) => {
+        navigate(`/listings/${listingId}`);
     };
 
     const deleteListing = async (listingId: string) => {
-        if (!confirm('Are you sure you want to delete this listing? This action cannot be undone.')) {
-            return;
-        }
+        if (!confirm('Are you sure you want to delete this listing?')) return;
 
         try {
             const { error } = await supabase
@@ -739,17 +374,6 @@ const AdminDashboard = () => {
                 .eq('id', listingId);
 
             if (error) throw error;
-
-            const { error: actionError } = await supabase
-                .from('admin_actions')
-                .insert({
-                    admin_id: user?.id,
-                    listing_id: listingId,
-                    action: 'deleted',
-                    reason: 'Admin deletion'
-                });
-
-            if (actionError) console.error('Failed to log admin action:', actionError);
 
             toast({
                 title: "Success!",
@@ -766,10 +390,6 @@ const AdminDashboard = () => {
         }
     };
 
-    const editListing = (listingId: string) => {
-        navigate(`/listings/${listingId}`);
-    };
-
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'pending':
@@ -783,599 +403,338 @@ const AdminDashboard = () => {
         }
     };
 
-    const getActionBadge = (action: string) => {
-        switch (action) {
-            case 'approved':
-                return <Badge variant="default" className="bg-green-500/20 text-green-300 border-green-500/30"><Check className="h-3 w-3 mr-1" />Approved</Badge>;
-            case 'rejected':
-                return <Badge variant="destructive" className="bg-red-500/20 text-red-300 border-red-500/30"><X className="h-3 w-3 mr-1" />Rejected</Badge>;
-            case 'suspended':
-                return <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30"><Shield className="h-3 w-3 mr-1" />Suspended</Badge>;
-            default:
-                return <Badge variant="outline">{action}</Badge>;
-        }
-    };
-
-    const filteredListings = allListings.filter(listing => {
-        const matchesSearch = listing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            listing.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || listing.status === statusFilter;
-        const matchesType = typeFilter === 'all' || listing.type === typeFilter;
-        
-        return matchesSearch && matchesStatus && matchesType;
-    });
-
-    if (authLoading || loading) {
+    if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
-                <div className="flex items-center justify-center min-h-screen relative">
-                    <div className="absolute inset-0 overflow-hidden">
-                        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
-                        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
-                    </div>
-                    <div className="relative z-10 text-center">
-                        <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                            Loading Admin Dashboard...
-                        </div>
-                        <div className="text-gray-300">Verifying permissions...</div>
-                    </div>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-foreground text-xl">Loading admin dashboard...</div>
+            </div>
+        );
+    }
+
+    if (!isAdmin) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
+                    <p className="text-muted-foreground">You don't have admin privileges.</p>
                 </div>
             </div>
         );
     }
 
-    if (!user || !isAdmin) {
-        return null;
-    }
-
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 overflow-hidden">            
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
-            </div>
-
-            <div className="relative z-10 py-8">
-                <div className="max-w-7xl mx-auto px-6">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/30 rounded-full mb-6 backdrop-blur-sm">
-                            <Shield className="h-4 w-4 text-red-300" />
-                            <span className="text-red-200 font-medium">Admin Access</span>
-                        </div>
-                        
-                        <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
-                            Admin
-                            <span className="block bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
-                                Dashboard
-                            </span>
+        <div className="min-h-screen bg-background text-foreground">
+            <div className="container mx-auto px-6 py-8 max-w-7xl space-y-8">
+                {/* Header */}
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-4xl font-black bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent mb-2">
+                            Admin Dashboard
                         </h1>
-                        <p className="text-lg text-gray-300 max-w-3xl">
-                            Comprehensive platform management with advanced controls, analytics, and moderation tools.
-                        </p>
+                        <p className="text-muted-foreground text-lg">Manage platform content and users</p>
                     </div>
-
-                    {/* Stats Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-                        <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-blue-200 text-sm font-medium">Total Listings</p>
-                                        <p className="text-2xl font-bold text-white">{systemStats.totalListings}</p>
-                                    </div>
-                                    <Server className="h-8 w-8 text-blue-400" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-green-200 text-sm font-medium">Total Users</p>
-                                        <p className="text-2xl font-bold text-white">{systemStats.totalUsers}</p>
-                                    </div>
-                                    <Users className="h-8 w-8 text-green-400" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-yellow-200 text-sm font-medium">Pending Reviews</p>
-                                        <p className="text-2xl font-bold text-white">{systemStats.pendingReviews}</p>
-                                    </div>
-                                    <AlertTriangle className="h-8 w-8 text-yellow-400" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-purple-200 text-sm font-medium">Total Votes</p>
-                                        <p className="text-2xl font-bold text-white">{systemStats.totalVotes}</p>
-                                    </div>
-                                    <Star className="h-8 w-8 text-purple-400" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border-cyan-500/20">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-cyan-200 text-sm font-medium">Total Views</p>
-                                        <p className="text-2xl font-bold text-white">{systemStats.totalViews}</p>
-                                    </div>
-                                    <Eye className="h-8 w-8 text-cyan-400" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20">
-                            <CardContent className="p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-red-200 text-sm font-medium">Active Today</p>
-                                        <p className="text-2xl font-bold text-white">{systemStats.activeToday}</p>
-                                    </div>
-                                    <Activity className="h-8 w-8 text-red-400" />
-                                </div>
-                            </CardContent>
-                        </Card>
+                    <div className="flex gap-3">
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate('/analytics')}
+                            className="flex items-center gap-2 border-border/50 hover:border-primary/50"
+                        >
+                            <BarChart3 className="h-4 w-4" />
+                            Analytics
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => navigate('/moderation')}
+                            className="flex items-center gap-2 border-border/50 hover:border-primary/50"
+                        >
+                            <Shield className="h-4 w-4" />
+                            Moderation
+                        </Button>
                     </div>
+                </div>
 
-                    <Tabs defaultValue="pending" className="space-y-6">
-                        <TabsList className="bg-gradient-to-r from-gray-800/50 to-gray-900/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2">
-                            <TabsTrigger value="pending" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-4 py-2 font-medium">
-                                <AlertTriangle className="h-4 w-4 mr-2" />
-                                Pending ({pendingListings.length})
-                            </TabsTrigger>
-                            <TabsTrigger value="listings" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-4 py-2 font-medium">
-                                <Server className="h-4 w-4 mr-2" />
-                                All Listings
-                            </TabsTrigger>
-                            <TabsTrigger value="users" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-4 py-2 font-medium">
-                                <Users className="h-4 w-4 mr-2" />
-                                User Management
-                            </TabsTrigger>
-                            <TabsTrigger value="verification" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-4 py-2 font-medium">
-                                <Shield className="h-4 w-4 mr-2" />
-                                Verification
-                            </TabsTrigger>
-                            <TabsTrigger value="actions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-4 py-2 font-medium">
-                                <Eye className="h-4 w-4 mr-2" />
-                                Actions Log
-                            </TabsTrigger>
-                            <TabsTrigger value="events" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-4 py-2 font-medium">
-                                <Calendar className="h-4 w-4 mr-2" />
-                                Events
-                            </TabsTrigger>
-                            <TabsTrigger value="system" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white rounded-xl px-4 py-2 font-medium">
-                                <Settings className="h-4 w-4 mr-2" />
-                                System
-                            </TabsTrigger>
-                        </TabsList>
+                {/* System Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                    <ModernCard variant="glass" className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Total Listings</p>
+                                <p className="text-2xl font-bold text-foreground">{systemStats.totalListings}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                                <Server className="h-6 w-6 text-primary" />
+                            </div>
+                        </div>
+                    </ModernCard>
 
-                        {/* Pending Reviews Tab */}
-                        <TabsContent value="pending" className="space-y-6">
+                    <ModernCard variant="glass" className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Total Users</p>
+                                <p className="text-2xl font-bold text-foreground">{systemStats.totalUsers}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                                <Users className="h-6 w-6 text-secondary" />
+                            </div>
+                        </div>
+                    </ModernCard>
+
+                    <ModernCard variant="glass" className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Pending Reviews</p>
+                                <p className="text-2xl font-bold text-foreground">{systemStats.pendingReviews}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                                <AlertTriangle className="h-6 w-6 text-accent" />
+                            </div>
+                        </div>
+                    </ModernCard>
+
+                    <ModernCard variant="glass" className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Total Views</p>
+                                <p className="text-2xl font-bold text-foreground">{systemStats.totalViews}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                                <Eye className="h-6 w-6 text-primary" />
+                            </div>
+                        </div>
+                    </ModernCard>
+
+                    <ModernCard variant="glass" className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Total Votes</p>
+                                <p className="text-2xl font-bold text-foreground">{systemStats.totalVotes}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                                <TrendingUp className="h-6 w-6 text-secondary" />
+                            </div>
+                        </div>
+                    </ModernCard>
+
+                    <ModernCard variant="glass" className="p-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">Active Today</p>
+                                <p className="text-2xl font-bold text-foreground">{systemStats.activeToday}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-accent/10 rounded-xl flex items-center justify-center">
+                                <Activity className="h-6 w-6 text-accent" />
+                            </div>
+                        </div>
+                    </ModernCard>
+                </div>
+
+                {/* Tabs */}
+                <Tabs defaultValue="pending" className="space-y-6">
+                    <TabsList className="bg-card/50 border-border/50">
+                        <TabsTrigger value="pending" className="text-muted-foreground data-[state=active]:text-foreground">
+                            Pending Reviews ({pendingListings.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="all-listings" className="text-muted-foreground data-[state=active]:text-foreground">
+                            All Listings ({allListings.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="users" className="text-muted-foreground data-[state=active]:text-foreground">
+                            Users ({allUsers.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="events" className="text-muted-foreground data-[state=active]:text-foreground">
+                            Events
+                        </TabsTrigger>
+                        <TabsTrigger value="verification" className="text-muted-foreground data-[state=active]:text-foreground">
+                            Verification
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="pending" className="space-y-6">
+                        <ModernCard variant="glass" className="p-6">
+                            <div className="mb-6">
+                                <h2 className="text-xl font-bold text-foreground mb-2">Pending Listings</h2>
+                                <p className="text-muted-foreground">Review and moderate pending submissions</p>
+                            </div>
+                            
                             {pendingListings.length === 0 ? (
-                                <Card className="bg-gradient-to-br from-gray-800/30 to-gray-900/30 backdrop-blur-xl border border-gray-700/50 rounded-3xl">
-                                    <CardContent className="py-16 text-center">
-                                        <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
-                                        <div className="text-2xl font-bold text-white mb-2">All caught up!</div>
-                                        <div className="text-gray-300">No pending submissions to review</div>
-                                    </CardContent>
-                                </Card>
+                                <div className="text-center py-8">
+                                    <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                    <p className="text-muted-foreground">No pending listings to review</p>
+                                </div>
                             ) : (
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                     {pendingListings.map((listing) => (
-                                        <Card key={listing.id} className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300 rounded-2xl">
-                                            <CardHeader className="p-6">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex items-center space-x-4">
-                                                        {listing.avatar_url ? (
-                                                            <img src={listing.avatar_url} alt={listing.name} className="w-12 h-12 rounded-xl" />
-                                                        ) : (
-                                                            <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                                                                {listing.type === 'server' ? <Server className="h-6 w-6 text-white" /> : <Bot className="h-6 w-6 text-white" />}
-                                                            </div>
-                                                        )}
-                                                        <div>
-                                                            <CardTitle className="text-white text-xl font-bold">{listing.name}</CardTitle>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <Badge variant="outline" className="text-xs">
-                                                                    {listing.type === 'server' ? 'Server' : 'Bot'}
-                                                                </Badge>
-                                                                {getStatusBadge(listing.status)}
-                                                            </div>
-                                                        </div>
+                                        <div key={listing.id} className="flex items-center justify-between p-4 bg-card/30 border border-border/20 rounded-xl">
+                                            <div className="flex items-center gap-4">
+                                                {listing.avatar_url ? (
+                                                    <img src={listing.avatar_url} alt={listing.name} className="w-12 h-12 rounded-xl" />
+                                                ) : (
+                                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                                                        {listing.type === 'server' ? <Server className="h-6 w-6 text-primary" /> : <Bot className="h-6 w-6 text-primary" />}
                                                     </div>
-                                                    <div className="flex gap-2">
-                                                        <Button onClick={() => handleSingleAction(listing.id, 'approved')} className="bg-green-600 hover:bg-green-700">
-                                                            <Check className="h-4 w-4 mr-1" />
-                                                            Approve
-                                                        </Button>
-                                                        <Button onClick={() => handleSingleAction(listing.id, 'rejected')} variant="destructive">
-                                                            <X className="h-4 w-4 mr-1" />
-                                                            Reject
-                                                        </Button>
+                                                )}
+                                                <div>
+                                                    <h3 className="font-semibold text-foreground">{listing.name}</h3>
+                                                    <p className="text-sm text-muted-foreground line-clamp-1">{listing.description}</p>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge variant="outline" className="text-xs">
+                                                            {listing.type}
+                                                        </Badge>
+                                                        {getStatusBadge(listing.status)}
                                                     </div>
                                                 </div>
-                                                <CardDescription className="text-gray-300 mt-4">
-                                                    {listing.description}
-                                                </CardDescription>
-                                            </CardHeader>
-                                        </Card>
-                                    ))}
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        {/* All Listings Tab */}
-                        <TabsContent value="listings" className="space-y-6">
-                            <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl">
-                                <CardHeader className="p-6">
-                                    <CardTitle className="text-white flex items-center gap-2">
-                                        <Database className="h-5 w-5" />
-                                        Listings Management
-                                    </CardTitle>
-                                    <div className="flex flex-wrap gap-4 mt-4">
-                                        <div className="flex-1 min-w-[200px]">
-                                            <Input
-                                                placeholder="Search listings..."
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="bg-gray-700/50 border-gray-600"
-                                            />
-                                        </div>
-                                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                            <SelectTrigger className="w-[140px] bg-gray-700/50 border-gray-600">
-                                                <SelectValue placeholder="Status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">All Status</SelectItem>
-                                                <SelectItem value="active">Active</SelectItem>
-                                                <SelectItem value="pending">Pending</SelectItem>
-                                                <SelectItem value="suspended">Suspended</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                            <SelectTrigger className="w-[120px] bg-gray-700/50 border-gray-600">
-                                                <SelectValue placeholder="Type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">All Types</SelectItem>
-                                                <SelectItem value="server">Servers</SelectItem>
-                                                <SelectItem value="bot">Bots</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <Button onClick={() => setShowBulkActions(!showBulkActions)} variant="outline">
-                                            <Settings className="h-4 w-4 mr-2" />
-                                            Bulk Actions
-                                        </Button>
-                                    </div>
-                                    
-                                    {showBulkActions && (
-                                        <div className="mt-4 p-4 bg-gray-700/30 rounded-xl border border-gray-600/50">
-                                            <div className="flex items-center gap-4">
-                                                <Select value={bulkAction.action} onValueChange={(value: any) => setBulkAction({...bulkAction, action: value})}>
-                                                    <SelectTrigger className="w-[150px]">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="approve">Approve</SelectItem>
-                                                        <SelectItem value="reject">Reject</SelectItem>
-                                                        <SelectItem value="suspend">Suspend</SelectItem>
-                                                        <SelectItem value="feature">Feature</SelectItem>
-                                                        <SelectItem value="unfeature">Unfeature</SelectItem>
-                                                        <SelectItem value="verify">Verify</SelectItem>
-                                                        <SelectItem value="unverify">Unverify</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <Input
-                                                    placeholder="Reason (optional)"
-                                                    value={bulkAction.reason || ''}
-                                                    onChange={(e) => setBulkAction({...bulkAction, reason: e.target.value})}
-                                                    className="flex-1"
-                                                />
-                                                <Button onClick={handleBulkAction} disabled={selectedListings.length === 0}>
-                                                    Apply to {selectedListings.length} listings
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => viewListing(listing.id)}
+                                                    className="border-border/50 hover:border-primary/50"
+                                                >
+                                                    <Eye className="h-4 w-4 mr-1" />
+                                                    View
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => editListing(listing.id)}
+                                                    className="border-border/50 hover:border-primary/50"
+                                                >
+                                                    <Edit className="h-4 w-4 mr-1" />
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="default"
+                                                    size="sm"
+                                                    onClick={() => handleSingleAction(listing.id, 'approved')}
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                >
+                                                    <Check className="h-4 w-4 mr-1" />
+                                                    Approve
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => handleSingleAction(listing.id, 'rejected')}
+                                                >
+                                                    <X className="h-4 w-4 mr-1" />
+                                                    Reject
                                                 </Button>
                                             </div>
                                         </div>
-                                    )}
-                                </CardHeader>
-                                <CardContent className="p-6 pt-0">
-                                    <ScrollArea className="h-[600px]">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    {showBulkActions && <TableHead className="w-12">Select</TableHead>}
-                                                    <TableHead>Name</TableHead>
-                                                    <TableHead>Type</TableHead>
-                                                    <TableHead>Status</TableHead>
-                                                    <TableHead>Stats</TableHead>
-                                                    <TableHead>Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {filteredListings.map((listing) => (
-                                                    <TableRow key={listing.id}>
-                                                        {showBulkActions && (
-                                                            <TableCell>
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={selectedListings.includes(listing.id)}
-                                                                    onChange={(e) => {
-                                                                        if (e.target.checked) {
-                                                                            setSelectedListings([...selectedListings, listing.id]);
-                                                                        } else {
-                                                                            setSelectedListings(selectedListings.filter(id => id !== listing.id));
-                                                                        }
-                                                                    }}
-                                                                    className="rounded"
-                                                                />
-                                                            </TableCell>
-                                                        )}
-                                                        <TableCell>
-                                                            <div className="flex items-center gap-3">
-                                                                {listing.avatar_url ? (
-                                                                    <img src={listing.avatar_url} alt={listing.name} className="w-8 h-8 rounded-lg" />
-                                                                ) : (
-                                                                    <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                                                                        {listing.type === 'server' ? <Server className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                                                                    </div>
-                                                                )}
-                                                                <div>
-                                                                    <div className="font-medium text-white">{listing.name}</div>
-                                                                    <div className="text-xs text-gray-400 truncate max-w-[200px]">{listing.description}</div>
-                                                                </div>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="outline">{listing.type}</Badge>
-                                                        </TableCell>
-                                                        <TableCell>{getStatusBadge(listing.status)}</TableCell>
-                                                        <TableCell>
-                                                            <div className="text-xs text-gray-400">
-                                                                <div>Views: {listing.view_count || 0}</div>
-                                                                <div>Votes: {listing.vote_count || 0}</div>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex gap-1">
-                                                <Button size="sm" variant="outline" onClick={() => window.open(`/listings/${listing.id}`, '_blank')}>
-                                                    <ExternalLink className="h-3 w-3" />
-                                                </Button>
-                                                <Button size="sm" variant="outline" onClick={() => editListing(listing.id)}>
-                                                    <Edit className="h-3 w-3" />
-                                                </Button>
-                                                <Button size="sm" variant="destructive" onClick={() => deleteListing(listing.id)}>
-                                                    <Trash2 className="h-3 w-3" />
-                                                </Button>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </ScrollArea>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
+                                    ))}
+                                </div>
+                            )}
+                        </ModernCard>
+                    </TabsContent>
 
-                        {/* User Management Tab */}
-                        <TabsContent value="users" className="space-y-6">
-                            <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl">
-                                <CardHeader className="p-6">
-                                    <CardTitle className="text-white flex items-center gap-2">
-                                        <Users className="h-5 w-5" />
-                                        User Management
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-6 pt-0">
-                                    <ScrollArea className="h-[600px]">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>User</TableHead>
-                                                    <TableHead>Subscription</TableHead>
-                                                    <TableHead>Admin</TableHead>
-                                                    <TableHead>Joined</TableHead>
-                                                    <TableHead>Actions</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {allUsers.map((user) => (
-                                                    <TableRow key={user.id}>
-                                                        <TableCell>
-                                                            <div>
-                                                                <div className="font-medium text-white">{user.username || user.discord_username || 'Unknown'}</div>
-                                                                <div className="text-xs text-gray-400">{user.id.slice(0, 8)}...</div>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge variant={user.subscription_tier === 'premium' ? 'default' : 'outline'}>
-                                                                {user.subscription_tier}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {user.is_admin ? (
-                                                                <Badge variant="default" className="bg-red-500/20 text-red-300">
-                                                                    <Crown className="h-3 w-3 mr-1" />
-                                                                    Admin
-                                                                </Badge>
-                                                            ) : (
-                                                                <Badge variant="outline">User</Badge>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="text-sm text-gray-400">
-                                                                {new Date(user.created_at).toLocaleDateString()}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <div className="flex gap-1">
-                                                                {user.subscription_tier !== 'banned' ? (
-                                                                    <Button size="sm" variant="destructive" onClick={() => handleUserAction(user.id, 'ban')}>
-                                                                        <Ban className="h-3 w-3 mr-1" />
-                                                                        Ban
-                                                                    </Button>
-                                                                ) : (
-                                                                    <Button size="sm" variant="outline" onClick={() => handleUserAction(user.id, 'unban')}>
-                                                                        <UserCheck className="h-3 w-3 mr-1" />
-                                                                        Unban
-                                                                    </Button>
-                                                                )}
-                                                                {!user.is_admin ? (
-                                                                    <Button size="sm" variant="outline" onClick={() => handleUserAction(user.id, 'promote')}>
-                                                                        <ArrowUp className="h-3 w-3 mr-1" />
-                                                                        Promote
-                                                                    </Button>
-                                                                ) : (
-                                                                    <Button size="sm" variant="outline" onClick={() => handleUserAction(user.id, 'demote')}>
-                                                                        <ArrowDown className="h-3 w-3 mr-1" />
-                                                                        Demote
-                                                                    </Button>
-                                                                )}
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </ScrollArea>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* Verification Management Tab */}
-                        <TabsContent value="verification" className="space-y-6">
-                            <VerificationManagement />
-                        </TabsContent>
-
-                        {/* Actions Log Tab */}
-                        <TabsContent value="actions" className="space-y-6">
-                            <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl">
-                                <CardHeader className="p-6">
-                                    <CardTitle className="text-white flex items-center gap-2">
-                                        <Activity className="h-5 w-5" />
-                                        Recent Admin Actions
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-6 pt-0">
-                                    <ScrollArea className="h-[500px]">
-                                        <div className="space-y-4">
-                                            {recentActions.map((action) => (
-                                                <div key={action.id} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                                                        <div>
-                                                            <div className="text-white font-medium">
-                                                                {getActionBadge(action.action)} {action.listing?.name}
-                                                            </div>
-                                                            <div className="text-sm text-gray-400">
-                                                                {action.reason && `Reason: ${action.reason}`}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-xs text-gray-400">
-                                                        {new Date(action.created_at).toLocaleString()}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        {/* Events Management Tab */}
-                        <TabsContent value="events" className="space-y-6">
-                            <AdminEventsManagement />
-                        </TabsContent>
-
-                        {/* System Management Tab */}
-                        <TabsContent value="system" className="space-y-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Global Announcements */}
-                                <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl">
-                                    <CardHeader className="p-6">
-                                        <CardTitle className="text-white flex items-center gap-2">
-                                            <Megaphone className="h-5 w-5" />
-                                            Global Announcements
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-6 pt-0 space-y-4">
-                                        <Select value={announcementType} onValueChange={(value: any) => setAnnouncementType(value)}>
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="info">Info</SelectItem>
-                                                <SelectItem value="warning">Warning</SelectItem>
-                                                <SelectItem value="success">Success</SelectItem>
-                                                <SelectItem value="error">Error</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <Textarea
-                                            placeholder="Enter announcement message..."
-                                            value={announcement}
-                                            onChange={(e) => setAnnouncement(e.target.value)}
-                                            rows={4}
-                                        />
-                                        <Button onClick={sendGlobalAnnouncement} disabled={!announcement.trim()}>
-                                            <Bell className="h-4 w-4 mr-2" />
-                                            Send to All Users
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-
-                                {/* System Actions */}
-                                <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-2xl">
-                                    <CardHeader className="p-6">
-                                        <CardTitle className="text-white flex items-center gap-2">
-                                            <Terminal className="h-5 w-5" />
-                                            System Actions
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="p-6 pt-0 space-y-3">
-                                        <Button variant="outline" className="w-full justify-start" onClick={refreshCache}>
-                                            <RefreshCw className="h-4 w-4 mr-2" />
-                                            Refresh Cache
-                                        </Button>
-                                        <Button variant="outline" className="w-full justify-start" onClick={exportData}>
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Export Data
-                                        </Button>
-                                        <Button variant="outline" className="w-full justify-start" onClick={generateReports}>
-                                            <BarChart3 className="h-4 w-4 mr-2" />
-                                            Generate Reports
-                                        </Button>
-                                        <Button variant="outline" className="w-full justify-start" onClick={testWebhooks}>
-                                            <Webhook className="h-4 w-4 mr-2" />
-                                            Test Webhooks
-                                        </Button>
-                                         <Button variant="destructive" className="w-full justify-start" onClick={emergencyMaintenance}>
-                                             <AlertTriangle className="h-4 w-4 mr-2" />
-                                             Emergency Maintenance
-                                         </Button>
-                                         <Button variant="outline" className="w-full justify-start" onClick={disableMaintenanceMode}>
-                                             <CheckCircle className="h-4 w-4 mr-2" />
-                                             Disable Maintenance
-                                         </Button>
-                                    </CardContent>
-                                </Card>
+                    <TabsContent value="all-listings" className="space-y-6">
+                        <ModernCard variant="glass" className="p-6">
+                            <div className="mb-6">
+                                <h2 className="text-xl font-bold text-foreground mb-2">All Listings</h2>
+                                <p className="text-muted-foreground">Manage all platform listings</p>
                             </div>
-                        </TabsContent>
-                    </Tabs>
-                </div>
+                            
+                            <div className="space-y-4">
+                                {allListings.slice(0, 10).map((listing) => (
+                                    <div key={listing.id} className="flex items-center justify-between p-4 bg-card/30 border border-border/20 rounded-xl">
+                                        <div className="flex items-center gap-4">
+                                            {listing.avatar_url ? (
+                                                <img src={listing.avatar_url} alt={listing.name} className="w-12 h-12 rounded-xl" />
+                                            ) : (
+                                                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                                                    {listing.type === 'server' ? <Server className="h-6 w-6 text-primary" /> : <Bot className="h-6 w-6 text-primary" />}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <h3 className="font-semibold text-foreground">{listing.name}</h3>
+                                                <p className="text-sm text-muted-foreground line-clamp-1">{listing.description}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {listing.type}
+                                                    </Badge>
+                                                    {getStatusBadge(listing.status)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => viewListing(listing.id)}
+                                                className="border-border/50 hover:border-primary/50"
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => editListing(listing.id)}
+                                                className="border-border/50 hover:border-primary/50"
+                                            >
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={() => deleteListing(listing.id)}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </ModernCard>
+                    </TabsContent>
+
+                    <TabsContent value="users" className="space-y-6">
+                        <ModernCard variant="glass" className="p-6">
+                            <div className="mb-6">
+                                <h2 className="text-xl font-bold text-foreground mb-2">User Management</h2>
+                                <p className="text-muted-foreground">Manage platform users and permissions</p>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                {allUsers.slice(0, 10).map((user) => (
+                                    <div key={user.id} className="flex items-center justify-between p-4 bg-card/30 border border-border/20 rounded-xl">
+                                        <div>
+                                            <h3 className="font-semibold text-foreground">
+                                                {user.discord_username || user.username || 'Unknown User'}
+                                            </h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Badge variant="outline" className="text-xs">
+                                                    {user.subscription_tier}
+                                                </Badge>
+                                                {user.is_admin && (
+                                                    <Badge variant="default" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                                        Admin
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="border-border/50 hover:border-primary/50"
+                                            >
+                                                <Settings className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </ModernCard>
+                    </TabsContent>
+
+                    <TabsContent value="events" className="space-y-6">
+                        <AdminEventsManagement />
+                    </TabsContent>
+
+                    <TabsContent value="verification" className="space-y-6">
+                        <VerificationManagement />
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );
