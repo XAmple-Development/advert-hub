@@ -9,6 +9,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import MaintenanceMode from "./components/MaintenanceMode";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 import BottomNavigation from "@/components/BottomNavigation";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -62,7 +63,11 @@ const App = () => (
                 <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/profile/edit" element={<ProfileEdit />} />
                 <Route path="/analytics" element={<Analytics />} />
-                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin" element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="/gamification" element={<Gamification />} />
                 
                 <Route path="/moderation" element={<Moderation />} />
@@ -73,7 +78,11 @@ const App = () => (
                 <Route path="/forum/create" element={<CreateForumTopic />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-                <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+                <Route path="/admin/subscriptions" element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminSubscriptions />
+                  </ProtectedRoute>
+                } />
                 <Route path="/api" element={<API />} />
                 <Route path="/chat" element={<Chat />} />
                 <Route path="*" element={<NotFound />} />

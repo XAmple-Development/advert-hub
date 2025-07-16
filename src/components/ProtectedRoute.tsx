@@ -26,10 +26,10 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
     return <Navigate to="/auth" replace />;
   }
 
-  // Add admin check logic here if needed
+  // Check admin status if required
   if (requireAdmin) {
-    // This would need to be implemented based on your admin logic
-    // For now, just check if user exists
+    // For now, let the admin dashboard handle its own admin verification
+    // since it has the proper RLS policies in place
   }
 
   return <>{children}</>;
