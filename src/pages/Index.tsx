@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Home, Globe } from 'lucide-react';
 import { testRecommendations } from '@/utils/testRecommendations';
 import DebugPanel from '@/components/DebugPanel';
+import Pricing from '@/components/Pricing';
 
 const Index = () => {
   // Test the recommendations on page load in development
@@ -129,6 +130,7 @@ const Index = () => {
                 <div className="max-w-7xl mx-auto px-6 py-12">
                   <TrendingSection />
                 </div>
+                <Pricing />
                 {!user && <DebugPanel />}
               </>
             )}
