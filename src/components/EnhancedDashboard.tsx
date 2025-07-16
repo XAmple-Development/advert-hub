@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import StatsCards from './StatsCards';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ModernCard from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
@@ -142,17 +142,17 @@ const EnhancedDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black py-8">
+    <div className="py-8">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+        <ModernCard className="p-8 mb-8" variant="gradient">
+          <h1 className="text-4xl font-black bg-gradient-to-r from-primary via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
             Welcome to your Dashboard, {user?.user_metadata?.full_name || user?.email}!
           </h1>
-          <p className="text-gray-300 text-lg">
+          <p className="text-muted-foreground text-lg">
             Here's your overview.
           </p>
-        </div>
+        </ModernCard>
 
         {/* Stats Cards */}
         <StatsCards
@@ -167,77 +167,77 @@ const EnhancedDashboard = () => {
 
         {/* User's Listings */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white text-xl font-bold flex items-center gap-2">
-                <Server className="h-5 w-5 text-purple-400" />
+          <ModernCard className="p-6" variant="glass">
+            <div className="flex flex-row items-center justify-between mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Server className="h-5 w-5 text-primary" />
                 Your Communities
-              </CardTitle>
+              </h2>
               <Button
                 onClick={() => navigate('/listings')}
                 variant="outline"
                 size="sm"
-                className="border-purple-500/50 text-purple-300 hover:bg-purple-600 hover:text-white rounded-xl"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Add New
               </Button>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div>
               {stats.userListings.length > 0 ? (
                 <div className="space-y-4">
                   {stats.userListings.slice(0, 5).map((listing) => (
-                    <div key={listing.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-2xl border border-gray-700/30">
-                      <div className="flex items-center gap-3">
-                        {listing.avatar_url ? (
-                          <img src={listing.avatar_url} alt={listing.name} className="w-10 h-10 rounded-xl" />
-                        ) : (
-                          <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                            {listing.type === 'server' ? <Server className="h-5 w-5 text-white" /> : <Bot className="h-5 w-5 text-white" />}
-                          </div>
-                        )}
-                        <div>
-                          <div className="text-white font-semibold">{listing.name}</div>
-                          <div className="flex items-center gap-2 text-sm text-gray-400">
-                            <Badge variant="outline" className="text-xs">{listing.type}</Badge>
-                            <span className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {listing.view_count || 0}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <TrendingUp className="h-3 w-3" />
-                              {listing.bump_count || 0}
-                            </span>
+                    <ModernCard key={listing.id} className="p-4" hover>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {listing.avatar_url ? (
+                            <img src={listing.avatar_url} alt={listing.name} className="w-10 h-10 rounded-xl" />
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-r from-primary to-pink-600 rounded-xl flex items-center justify-center">
+                              {listing.type === 'server' ? <Server className="h-5 w-5 text-white" /> : <Bot className="h-5 w-5 text-white" />}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-semibold">{listing.name}</div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Badge variant="outline" className="text-xs">{listing.type}</Badge>
+                              <span className="flex items-center gap-1">
+                                <Eye className="h-3 w-3" />
+                                {listing.view_count || 0}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3" />
+                                {listing.bump_count || 0}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                          {canBumpListing(listing.last_bumped_at) ? (
+                            <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+                              Can Bump
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-orange-300 border-orange-500/30">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {getTimeUntilNextBump(listing.last_bumped_at)}
+                            </Badge>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/listings/${listing.id}`)}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {canBumpListing(listing.last_bumped_at) ? (
-                          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
-                            Can Bump
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-orange-300 border-orange-500/30">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {getTimeUntilNextBump(listing.last_bumped_at)}
-                          </Badge>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/listings/${listing.id}`)}
-                          className="text-gray-400 hover:text-white"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    </ModernCard>
                   ))}
                   {stats.userListings.length > 5 && (
                     <Button
                       variant="ghost"
                       onClick={() => navigate('/listings')}
-                      className="w-full text-purple-300 hover:text-white hover:bg-purple-600/20"
+                      className="w-full"
                     >
                       View All {stats.userListings.length} Communities
                     </Button>
@@ -245,29 +245,27 @@ const EnhancedDashboard = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Server className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-                  <div className="text-gray-400 mb-4">You haven't created any listings yet</div>
+                  <Server className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <div className="text-muted-foreground mb-4">You haven't created any listings yet</div>
                   <Button
                     onClick={() => navigate('/listings')}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl"
+                    className="bg-gradient-to-r from-primary to-pink-600 hover:from-primary/80 hover:to-pink-600/80"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Create Your First Listing
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </ModernCard>
 
           {/* Quick Actions */}
-          <Card className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl">
-            <CardHeader>
-              <CardTitle className="text-white text-xl font-bold">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <ModernCard className="p-6" variant="glass">
+            <h2 className="text-xl font-bold mb-6">Quick Actions</h2>
+            <div className="space-y-4">
               <Button
                 onClick={() => navigate('/listings')}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-6 rounded-2xl text-lg"
+                className="w-full bg-gradient-to-r from-primary to-pink-600 hover:from-primary/80 hover:to-pink-600/80 font-semibold py-6 text-lg"
               >
                 <Server className="h-5 w-5 mr-2" />
                 Browse All Communities
@@ -275,7 +273,7 @@ const EnhancedDashboard = () => {
               <Button
                 variant="outline"
                 onClick={() => window.open('https://discord.gg/3mNGT2AwNy', '_blank')}
-                className="w-full border-2 border-gray-700/50 bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 hover:text-white py-6 rounded-2xl text-lg"
+                className="w-full py-6 text-lg"
               >
                 <Users className="h-5 w-5 mr-2" />
                 Join Support Server
@@ -285,14 +283,13 @@ const EnhancedDashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => navigate('/listings')}
-                  className="border-blue-500/50 text-blue-300 hover:bg-blue-600/20 rounded-xl"
                 >
                   <TrendingUp className="h-4 w-4 mr-1" />
                   Advert Listings
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </ModernCard>
         </div>
 
         {/* Cross-Promotion Network for Premium Users */}

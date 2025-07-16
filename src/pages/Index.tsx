@@ -9,6 +9,8 @@ import Dashboard from '@/components/Dashboard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AdminUpgrade from '@/components/AdminUpgrade';
 import TrendingSection from '@/components/discovery/TrendingSection';
+import ModernLayout from '@/components/layout/ModernLayout';
+import ModernCard from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
 import { Home, Globe } from 'lucide-react';
 import { testRecommendations } from '@/utils/testRecommendations';
@@ -75,16 +77,16 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <ModernLayout>
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
-          <div className="flex flex-col items-center space-y-6">
+          <ModernCard className="p-8 text-center">
             <LoadingSpinner size="lg" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-2">Loading...</div>
+            <div className="mt-6">
+              <div className="text-2xl font-bold mb-2">Loading...</div>
               <div className="text-muted-foreground">Preparing your experience</div>
             </div>
-          </div>
+          </ModernCard>
         </div>
       ) : (
         <>
@@ -92,24 +94,26 @@ const Index = () => {
           
           {user && (
             <div className="max-w-7xl mx-auto px-6 py-6">
-              <div className="flex justify-center space-x-4">
-                <Button
-                  onClick={() => handleViewChange('dashboard')}
-                  variant={view === 'dashboard' ? 'default' : 'outline'}
-                  className="flex items-center space-x-2"
-                >
-                  <Home className="h-4 w-4" />
-                  <span>Dashboard</span>
-                </Button>
-                <Button
-                  onClick={() => handleViewChange('home')}
-                  variant={view === 'home' ? 'default' : 'outline'}
-                  className="flex items-center space-x-2"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>Website</span>
-                </Button>
-              </div>
+              <ModernCard className="p-6">
+                <div className="flex justify-center space-x-4">
+                  <Button
+                    onClick={() => handleViewChange('dashboard')}
+                    variant={view === 'dashboard' ? 'default' : 'outline'}
+                    className="flex items-center space-x-2"
+                  >
+                    <Home className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Button>
+                  <Button
+                    onClick={() => handleViewChange('home')}
+                    variant={view === 'home' ? 'default' : 'outline'}
+                    className="flex items-center space-x-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span>Website</span>
+                  </Button>
+                </div>
+              </ModernCard>
             </div>
           )}
 
@@ -131,7 +135,7 @@ const Index = () => {
           </div>
         </>
       )}
-    </div>
+    </ModernLayout>
   );
 };
 
