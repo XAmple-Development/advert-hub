@@ -107,138 +107,118 @@ const Pricing = () => {
   };
 
   return (
-    <section className="relative py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
+    <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 rounded-full blur-3xl"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto">
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full mb-8 backdrop-blur-sm">
-            <Crown className="h-4 w-4 text-purple-300" />
-            <span className="text-purple-200 font-medium">Flexible Pricing</span>
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-full mb-6 backdrop-blur-sm">
+            <Crown className="h-4 w-4 text-purple-400" />
+            <span className="text-purple-300 font-medium text-sm">Premium Plans</span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 px-4">
-            Simple, 
+          <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+            Choose Your 
             <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
-              {" "}Transparent Pricing
+              {" "}Perfect Plan
             </span>
           </h2>
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed px-4">
-            Choose the perfect plan for your Discord empire. Scale your community with confidence 
-            and unlock premium growth features that deliver real results.
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Unlock powerful features to grow your Discord community faster than ever
           </p>
-          
-          {user && (
-            <div className="mt-8 flex items-center justify-center gap-4">
-              <div className="text-gray-300">
-                Current Plan: <span className="font-bold text-white">{subscription_tier === 'platinum' ? 'Platinum' : subscription_tier === 'gold' ? 'Gold' : 'Free'}</span>
-              </div>
-              <Button
-                onClick={checkSubscription}
-                variant="ghost"
-                size="sm"
-                disabled={loading}
-                className="text-purple-300 hover:text-purple-200"
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Refresh Status
-              </Button>
-            </div>
-          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {plans.map((plan, index) => (
             <Card 
               key={index} 
-              className={`group relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl border transition-all duration-500 transform hover:scale-105 hover:-translate-y-4 rounded-3xl overflow-hidden ${
+              className={`group relative backdrop-blur-xl border transition-all duration-300 transform hover:scale-105 rounded-xl overflow-hidden ${
                 plan.popular 
-                  ? 'border-purple-500/50 ring-2 ring-purple-500/30 hover:ring-purple-400/50' 
-                  : 'border-gray-700/50 hover:border-purple-500/30'
-              } ${plan.current ? 'ring-2 ring-green-500/50 border-green-500/50' : ''}`}
+                  ? 'border-purple-500/50 ring-1 ring-purple-500/20 bg-gradient-to-br from-purple-900/20 to-pink-900/20' 
+                  : plan.current
+                    ? 'border-green-500/50 ring-1 ring-green-500/20 bg-gradient-to-br from-green-900/20 to-emerald-900/20'
+                    : 'border-gray-700/50 hover:border-purple-500/30 bg-gradient-to-br from-gray-800/50 to-gray-900/50'
+              }`}
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${plan.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-              
               {plan.popular && (
-                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20">
-                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-2xl text-sm font-bold flex items-center shadow-2xl">
-                    <Star className="h-4 w-4 mr-2" />
-                    Most Popular Choice
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-20">
+                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-lg">
+                    <Star className="h-3 w-3 mr-1" />
+                    Popular
                   </div>
                 </div>
               )}
 
               {plan.current && (
-                <div className="absolute -top-6 right-4 z-20">
-                  <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-2xl text-sm font-bold flex items-center shadow-2xl">
-                    <Check className="h-4 w-4 mr-2" />
-                    Active
+                <div className="absolute -top-3 right-3 z-20">
+                  <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-lg">
+                    <Check className="h-3 w-3 mr-1" />
+                    Current
                   </div>
                 </div>
               )}
               
-              <CardHeader className="relative z-10 text-center pb-8 pt-12">
-                <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r ${plan.gradient} rounded-2xl mb-6 mx-auto group-hover:scale-110 transition-transform duration-300`}>
-                  <plan.icon className="h-8 w-8 text-white" />
+              <CardHeader className="relative z-10 text-center pb-4 pt-8">
+                <div className={`inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r ${plan.gradient} rounded-xl mb-4 mx-auto group-hover:scale-110 transition-transform duration-300`}>
+                  <plan.icon className="h-6 w-6 text-white" />
                 </div>
-                <CardTitle className="text-3xl font-black text-white mb-4">{plan.name}</CardTitle>
-                <div className="mb-4">
-                  <span className="text-5xl font-black text-white">{plan.price}</span>
-                  {plan.period && <span className="text-gray-400 text-2xl font-medium">{plan.period}</span>}
+                <CardTitle className="text-xl font-bold text-white mb-2">{plan.name}</CardTitle>
+                <div className="mb-3">
+                  <span className="text-3xl font-black text-white">{plan.price}</span>
+                  {plan.period && <span className="text-gray-400 text-lg">{plan.period}</span>}
                 </div>
-                <p className="text-gray-300 text-lg">{plan.description}</p>
+                <p className="text-gray-300 text-sm">{plan.description}</p>
               </CardHeader>
               
-              <CardContent className="relative z-10 space-y-8">
-                <ul className="space-y-4">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start group/item">
-                      <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-4 mt-0.5 group-hover/item:scale-110 transition-transform duration-200">
-                        <Check className="h-3 w-3 text-white font-bold" />
+              <CardContent className="relative z-10 px-6 pb-6">
+                <ul className="space-y-2 mb-6">
+                  {plan.features.slice(0, 5).map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start text-sm">
+                      <div className="flex-shrink-0 w-4 h-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <Check className="h-2 w-2 text-white font-bold" />
                       </div>
-                      <span className="text-gray-300 text-lg leading-relaxed group-hover:text-gray-200 transition-colors">
+                      <span className="text-gray-300 leading-relaxed">
                         {feature}
                       </span>
                     </li>
                   ))}
+                  {plan.features.length > 5 && (
+                    <li className="text-xs text-gray-400 pl-7">
+                      +{plan.features.length - 5} more features
+                    </li>
+                  )}
                 </ul>
                 
                 {user ? (
                   <Button 
                     onClick={() => handlePlanAction(plan)}
                     disabled={loading || (plan.current && plan.name === "Starter")}
-                    className={`w-full py-6 text-xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl ${
+                    className={`w-full py-3 font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 ${
                       plan.current && plan.name === "Starter"
                         ? 'bg-gray-600 hover:bg-gray-600 text-gray-300 cursor-not-allowed'
                         : plan.buttonVariant === 'default' 
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:shadow-purple-500/25' 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg' 
                           : 'border-2 border-purple-500/50 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 hover:text-white hover:border-transparent backdrop-blur-sm'
                     }`}
                     variant={plan.current && plan.name === "Starter" ? "secondary" : plan.buttonVariant}
                   >
-                    <span className="flex items-center justify-center">
-                      {plan.buttonText}
-                      <Sparkles className="ml-2 h-5 w-5" />
-                    </span>
+                    {plan.buttonText}
                   </Button>
                 ) : (
                   <Link to="/auth" className="block">
                     <Button 
-                      className={`w-full py-6 text-xl font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl ${
+                      className={`w-full py-3 font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 ${
                         plan.buttonVariant === 'default' 
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white hover:shadow-purple-500/25' 
+                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg' 
                           : 'border-2 border-purple-500/50 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 hover:text-white hover:border-transparent backdrop-blur-sm'
                       }`}
                       variant={plan.buttonVariant}
                     >
-                      <span className="flex items-center justify-center">
-                        {plan.buttonText}
-                        <Sparkles className="ml-2 h-5 w-5" />
-                      </span>
+                      {plan.buttonText}
                     </Button>
                   </Link>
                 )}
@@ -247,16 +227,16 @@ const Pricing = () => {
           ))}
         </div>
 
-        {/* Trust Indicators */}
-        <div className="text-center mt-16">
-          <p className="text-gray-400 mb-4">Trusted by thousands of Discord communities worldwide</p>
-          <div className="flex justify-center items-center space-x-8 opacity-60">
-            <div className="text-2xl font-bold text-gray-500">1M+ Servers</div>
-            <div className="w-px h-8 bg-gray-600"></div>
-            <div className="text-2xl font-bold text-gray-500">50M+ Members</div>
-            <div className="w-px h-8 bg-gray-600"></div>
-            <div className="text-2xl font-bold text-gray-500">24/7 Support</div>
-          </div>
+        {/* Bottom CTA */}
+        <div className="text-center mt-12">
+          <p className="text-gray-400 mb-4 text-sm">Need help choosing the right plan?</p>
+          <Button 
+            variant="outline" 
+            className="border-gray-600 text-gray-300 hover:bg-gray-700/50 backdrop-blur-sm"
+            onClick={() => window.open('https://discord.gg/3mNGT2AwNy', '_blank')}
+          >
+            Contact Support
+          </Button>
         </div>
       </div>
     </section>
