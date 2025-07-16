@@ -6,45 +6,45 @@
 
 @layer base {
   :root {
-    /* Premium Gradient Color System */
-    --background: 222 84% 3%;
-    --foreground: 210 40% 98%;
-    --card: 230 15% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 230 15% 8%;
-    --popover-foreground: 210 40% 98%;
+    /* Top.gg inspired dark theme */
+    --background: 240 8% 6%;
+    --foreground: 0 0% 98%;
+    --card: 240 8% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 8% 8%;
+    --popover-foreground: 0 0% 98%;
     
-    /* Enhanced Primary Colors */
-    --primary: 271 91% 65%;
-    --primary-foreground: 210 40% 98%;
-    --primary-glow: 280 100% 70%;
-    --primary-dark: 271 81% 45%;
+    /* Pink/Red primary like top.gg */
+    --primary: 346 77% 49%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 346 87% 60%;
+    --primary-dark: 346 67% 40%;
     
-    /* Vibrant Secondary Palette */
-    --secondary: 317 100% 70%;
-    --secondary-foreground: 210 40% 98%;
-    --secondary-glow: 320 100% 75%;
+    /* Secondary colors */
+    --secondary: 240 8% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-glow: 240 8% 15%;
     
     /* Accent Colors */
-    --accent: 193 100% 65%;
-    --accent-foreground: 210 40% 98%;
-    --accent-glow: 195 100% 70%;
+    --accent: 240 8% 12%;
+    --accent-foreground: 0 0% 98%;
+    --accent-glow: 240 8% 15%;
     
     /* Supporting Colors */
-    --muted: 230 15% 15%;
-    --muted-foreground: 215 20% 70%;
-    --border: 230 15% 18%;
-    --input: 230 15% 18%;
-    --ring: 271 91% 65%;
+    --muted: 240 8% 12%;
+    --muted-foreground: 240 5% 64.9%;
+    --border: 240 8% 15%;
+    --input: 240 8% 12%;
+    --ring: 346 77% 49%;
     
     /* Status Colors */
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
     --success: 142 76% 36%;
     --warning: 38 92% 50%;
     
     /* Chart Colors */
-    --chart-1: 271 91% 65%;
+    --chart-1: 346 77% 49%;
     --chart-2: 317 100% 70%;
     --chart-3: 193 100% 65%;
     --chart-4: 38 92% 50%;
@@ -75,27 +75,27 @@
   }
 
   .dark {
-    /* Same enhanced color system for dark mode */
-    --background: 222 84% 3%;
-    --foreground: 210 40% 98%;
-    --card: 230 15% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 230 15% 8%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 271 91% 65%;
-    --primary-foreground: 210 40% 98%;
-    --primary-glow: 280 100% 70%;
-    --secondary: 317 100% 70%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 193 100% 65%;
-    --accent-foreground: 210 40% 98%;
-    --muted: 230 15% 15%;
-    --muted-foreground: 215 20% 70%;
-    --border: 230 15% 18%;
-    --input: 230 15% 18%;
-    --ring: 271 91% 65%;
+    /* Same dark theme colors */
+    --background: 240 8% 6%;
+    --foreground: 0 0% 98%;
+    --card: 240 8% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 8% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 346 77% 49%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 346 87% 60%;
+    --secondary: 240 8% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 240 8% 12%;
+    --accent-foreground: 0 0% 98%;
+    --muted: 240 8% 12%;
+    --muted-foreground: 240 5% 64.9%;
+    --border: 240 8% 15%;
+    --input: 240 8% 12%;
+    --ring: 346 77% 49%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
   }
 }
 

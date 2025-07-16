@@ -144,13 +144,9 @@ const Navbar = () => {
           {/* Center Logo */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="p-3 rounded-2xl group-hover:scale-110 transition-all duration-300 animate-glow-pulse" 
-                   style={{background: 'var(--gradient-primary)'}}>
-                <Bot className="h-7 w-7 text-white" />
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">T</span>
               </div>
-              <span className="text-white text-xl md:text-2xl font-black group-hover:gradient-text transition-all duration-300">
-                AdvertHub
-              </span>
             </Link>
           </div>
 
@@ -225,9 +221,8 @@ const Navbar = () => {
               </>
             ) : (
               <Link to="/auth">
-                <Button className="btn-cosmic px-8 py-3 text-lg rounded-2xl shadow-2xl hover:shadow-glow transform hover:scale-105">
-                  <Crown className="h-5 w-5 mr-2" />
-                  Get Started
+                <Button className="bg-primary hover:bg-primary/90 text-white px-6 rounded-lg">
+                  Login
                 </Button>
               </Link>
             )}

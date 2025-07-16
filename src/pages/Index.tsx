@@ -3,20 +3,12 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import ModernLayout from '@/components/layout/ModernLayout';
 import Navbar from '@/components/Navbar';
-import Breadcrumbs from '@/components/Breadcrumbs';
 import Hero from '@/components/Hero';
-import Features from '@/components/Features';
-import HowItWorks from '@/components/HowItWorks';
-import PremiumFeatures from '@/components/PremiumFeatures';
-import Pricing from '@/components/Pricing';
-import Footer from '@/components/Footer';
 import Dashboard from '@/components/Dashboard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AdminUpgrade from '@/components/AdminUpgrade';
 import TrendingSection from '@/components/discovery/TrendingSection';
-import SmartRecommendations from '@/components/discovery/SmartRecommendations';
 import { Button } from '@/components/ui/button';
 import { Home, Globe } from 'lucide-react';
 import { testRecommendations } from '@/utils/testRecommendations';
@@ -83,13 +75,13 @@ const Index = () => {
   };
 
   return (
-    <ModernLayout>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center space-y-6">
             <LoadingSpinner size="lg" />
             <div className="text-center">
-              <div className="text-2xl font-bold gradient-text mb-2">Loading...</div>
+              <div className="text-2xl font-bold text-white mb-2">Loading...</div>
               <div className="text-muted-foreground">Preparing your experience</div>
             </div>
           </div>
@@ -104,7 +96,7 @@ const Index = () => {
                 <Button
                   onClick={() => handleViewChange('dashboard')}
                   variant={view === 'dashboard' ? 'default' : 'outline'}
-                  className="flex items-center space-x-2 hover-glow"
+                  className="flex items-center space-x-2"
                 >
                   <Home className="h-4 w-4" />
                   <span>Dashboard</span>
@@ -112,7 +104,7 @@ const Index = () => {
                 <Button
                   onClick={() => handleViewChange('home')}
                   variant={view === 'home' ? 'default' : 'outline'}
-                  className="flex items-center space-x-2 hover-glow"
+                  className="flex items-center space-x-2"
                 >
                   <Globe className="h-4 w-4" />
                   <span>Website</span>
@@ -132,22 +124,14 @@ const Index = () => {
                 <Hero />
                 <div className="max-w-7xl mx-auto px-6 py-12">
                   <TrendingSection />
-                  <div className="mt-12">
-                    <SmartRecommendations />
-                  </div>
                 </div>
-                <Features />
-                <HowItWorks />
-                <PremiumFeatures />
-                <Pricing />
-                <Footer />
                 {!user && <DebugPanel />}
               </>
             )}
           </div>
         </>
       )}
-    </ModernLayout>
+    </div>
   );
 };
 
