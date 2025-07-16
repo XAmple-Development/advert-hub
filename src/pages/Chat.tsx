@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
+import ModernLayout from '@/components/layout/ModernLayout';
 
 interface Message {
   id: string;
@@ -118,17 +119,17 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <ModernLayout>
       <Navbar />
       
       {/* Hero Section */}
-      <div className="container mx-auto px-4 pt-8 pb-4">
+      <div className="container mx-auto px-6 pt-8 pb-4">
         <div className="max-w-4xl mx-auto text-center space-y-4">
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
             <Sparkles className="h-4 w-4" />
             AI-Powered Discord Advisor
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-black bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
             Discord Promotion Expert
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -138,7 +139,7 @@ const Chat = () => {
       </div>
 
       {/* Chat Interface */}
-      <div className="container mx-auto px-4 pb-8">
+      <div className="container mx-auto px-6 pb-8">
         <div className="max-w-4xl mx-auto">
           <Card className="shadow-2xl border-0 bg-card/50 backdrop-blur-sm">
             <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-primary/10 rounded-t-lg">
@@ -257,7 +258,7 @@ const Chat = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </ModernLayout>
   );
 };
 

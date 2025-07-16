@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import Breadcrumbs from '@/components/Breadcrumbs';
+import ModernLayout from '@/components/layout/ModernLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -158,149 +159,138 @@ const Forum = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900">
+    <ModernLayout>
       <Navbar />
       <Breadcrumbs />
       
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
-      </div>
-
-      <div className="relative z-10 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Header */}
-          <div className="mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-full mb-8 backdrop-blur-sm">
-              <MessageCircle className="h-4 w-4 text-purple-300" />
-              <span className="text-purple-200 font-medium">Community Forum</span>
+      <div className="container mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full mb-6">
+            <MessageCircle className="h-4 w-4 text-primary" />
+            <span className="text-primary font-medium">Community Forum</span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-black bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent mb-4">
+                Community Discussions
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl">
+                Connect with the community, share your servers and bots, get help, and discuss everything Discord.
+              </p>
             </div>
             
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl md:text-6xl font-black text-white mb-6">
-                  Community
-                  <span className="block bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-                    Discussions
-                  </span>
-                </h1>
-                <p className="text-xl md:text-2xl text-gray-300 max-w-4xl leading-relaxed">
-                  Connect with the community, share your servers and bots, get help, and discuss everything Discord.
-                </p>
-              </div>
-              
-              <Button
-                onClick={handleCreateTopic}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-2xl px-6 py-3 text-lg font-bold"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                New Topic
-              </Button>
+            <Button
+              onClick={handleCreateTopic}
+              className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 rounded-xl px-6 py-3"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              New Topic
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Categories */}
+          <div className="lg:col-span-2">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Forum Categories</h2>
+            
+            <div className="space-y-4">
+              {categories.map((category) => {
+                const IconComponent = getIconComponent(category.icon);
+                
+                return (
+                  <Card key={category.id} className="group bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all duration-300 rounded-xl overflow-hidden">
+                    <CardHeader className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="p-3 bg-gradient-to-r from-primary to-secondary rounded-xl">
+                            <IconComponent className="h-6 w-6 text-primary-foreground" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-foreground text-xl font-bold">
+                              <Link to={`/forum/category/${category.id}`} className="hover:text-primary transition-colors">
+                                {category.name}
+                              </Link>
+                            </CardTitle>
+                            <CardDescription className="text-muted-foreground text-base">
+                              {category.description}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-foreground">{category.topic_count || 0}</div>
+                          <div className="text-sm text-muted-foreground">Topics</div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                );
+              })}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Categories */}
-            <div className="lg:col-span-2">
-              <h2 className="text-2xl font-bold text-white mb-6">Forum Categories</h2>
-              
-              <div className="space-y-4">
-                {categories.map((category) => {
-                  const IconComponent = getIconComponent(category.icon);
-                  
-                  return (
-                    <Card key={category.id} className="group bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 hover:border-purple-500/50 transition-all duration-500 rounded-3xl overflow-hidden">
-                      <CardHeader className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="p-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl">
-                              <IconComponent className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                              <CardTitle className="text-white text-xl font-bold">
-                                <Link to={`/forum/category/${category.id}`} className="hover:text-purple-400 transition-colors">
-                                  {category.name}
-                                </Link>
-                              </CardTitle>
-                              <CardDescription className="text-gray-300 text-base">
-                                {category.description}
-                              </CardDescription>
-                            </div>
+          {/* Recent Activity */}
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Recent Activity</h2>
+            
+            <Card className="bg-card/50 backdrop-blur-sm border-border/50 rounded-xl overflow-hidden">
+              <CardHeader className="p-6">
+                <CardTitle className="text-foreground text-xl font-bold">Latest Topics</CardTitle>
+              </CardHeader>
+              <CardContent className="px-6 pb-6">
+                <div className="space-y-4">
+                  {recentTopics.slice(0, 8).map((topic) => (
+                    <div key={topic.id} className="flex items-start space-x-3 p-3 rounded-xl hover:bg-muted/30 transition-colors">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={topic.profiles?.discord_avatar || undefined} />
+                        <AvatarFallback>
+                          <Users className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {topic.pinned && <Pin className="h-3 w-3 text-yellow-500" />}
+                          {topic.locked && <Lock className="h-3 w-3 text-red-500" />}
+                        </div>
+                        
+                        <Link
+                          to={`/forum/topic/${topic.id}`}
+                          className="text-foreground text-sm font-medium hover:text-primary transition-colors line-clamp-2"
+                        >
+                          {topic.title}
+                        </Link>
+                        
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                          <span>
+                            by {topic.profiles?.discord_username || topic.profiles?.username || 'Unknown'}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="h-3 w-3" />
+                            {topic.reply_count}
                           </div>
-                          
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-white">{category.topic_count || 0}</div>
-                            <div className="text-sm text-gray-400">Topics</div>
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {topic.view_count}
                           </div>
                         </div>
-                      </CardHeader>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div>
-              <h2 className="text-2xl font-bold text-white mb-6">Recent Activity</h2>
-              
-              <Card className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 backdrop-blur-xl border border-gray-700/50 rounded-3xl overflow-hidden">
-                <CardHeader className="p-6">
-                  <CardTitle className="text-white text-xl font-bold">Latest Topics</CardTitle>
-                </CardHeader>
-                <CardContent className="px-6 pb-6">
-                  <div className="space-y-4">
-                    {recentTopics.slice(0, 8).map((topic) => (
-                      <div key={topic.id} className="flex items-start space-x-3 p-3 rounded-xl hover:bg-gray-800/30 transition-colors">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={topic.profiles?.discord_avatar || undefined} />
-                          <AvatarFallback>
-                            <Users className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
                         
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            {topic.pinned && <Pin className="h-3 w-3 text-yellow-500" />}
-                            {topic.locked && <Lock className="h-3 w-3 text-red-500" />}
-                          </div>
-                          
-                          <Link
-                            to={`/forum/topic/${topic.id}`}
-                            className="text-white text-sm font-medium hover:text-purple-400 transition-colors line-clamp-2"
-                          >
-                            {topic.title}
-                          </Link>
-                          
-                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
-                            <span>
-                              by {topic.profiles?.discord_username || topic.profiles?.username || 'Unknown'}
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <MessageCircle className="h-3 w-3" />
-                              {topic.reply_count}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Eye className="h-3 w-3" />
-                              {topic.view_count}
-                            </div>
-                          </div>
-                          
-                          <div className="text-xs text-gray-500 mt-1">
-                            {formatDistanceToNow(new Date(topic.last_reply_at), { addSuffix: true })}
-                          </div>
+                        <div className="text-xs text-muted-foreground/70 mt-1">
+                          {formatDistanceToNow(new Date(topic.last_reply_at), { addSuffix: true })}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-    </div>
+    </ModernLayout>
   );
 };
 
