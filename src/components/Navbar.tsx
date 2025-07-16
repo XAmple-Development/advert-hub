@@ -61,7 +61,7 @@ const Navbar = () => {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/10 backdrop-blur-md border-b border-border/20 transition-all duration-300">
+    <nav className="sticky top-0 z-50 glass-effect border-b border-border/30 transition-all duration-300 hover:bg-card/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-4">
         <div className="hidden md:flex md:items-center md:justify-between md:w-full">
           {/* Left Side Navigation */}

@@ -8,6 +8,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
+import ModernLayout from '@/components/layout/ModernLayout';
+import ModernCard from '@/components/ui/modern-card';
 
 const Pricing = () => {
   const [loading, setLoading] = useState<string | null>(null);
@@ -109,10 +111,10 @@ const Pricing = () => {
   const currentPlan = getCurrentPlan();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <ModernLayout>
       <Navbar />
       <div className="py-12 px-4">
-      <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">
@@ -253,9 +255,9 @@ const Pricing = () => {
             </CardContent>
           </Card>
         </div>
+        </div>
       </div>
-      </div>
-    </div>
+    </ModernLayout>
   );
 };
 

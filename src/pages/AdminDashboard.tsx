@@ -1,13 +1,14 @@
 
 import AdminDashboard from '@/components/AdminDashboard';
 import Navbar from '@/components/Navbar';
+import ModernLayout from '@/components/layout/ModernLayout';
 
 const AdminDashboardPage = () => {
   return (
-    <div className="min-h-screen bg-[#2C2F33]">
+    <ModernLayout>
       <Navbar />
       <AdminDashboard />
-    </div>
+    </ModernLayout>
   );
 };
 

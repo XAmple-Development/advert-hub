@@ -767,7 +767,7 @@ const AdminDashboard = () => {
     };
 
     const editListing = (listingId: string) => {
-        window.open(`/listing/${listingId}/edit`, '_blank');
+        navigate(`/listings/${listingId}`);
     };
 
     const getStatusBadge = (status: string) => {
@@ -1150,7 +1150,7 @@ const AdminDashboard = () => {
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="flex gap-1">
-                                                <Button size="sm" variant="outline" onClick={() => window.open(`/listing/${listing.id}`, '_blank')}>
+                                                <Button size="sm" variant="outline" onClick={() => window.open(`/listings/${listing.id}`, '_blank')}>
                                                     <ExternalLink className="h-3 w-3" />
                                                 </Button>
                                                 <Button size="sm" variant="outline" onClick={() => editListing(listing.id)}>

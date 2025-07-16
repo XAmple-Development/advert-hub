@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import ListingsPage from '@/components/ListingsPage';
 import PullToRefresh from '@/components/PullToRefresh';
+import ModernLayout from '@/components/layout/ModernLayout';
 import { useState } from 'react';
 
 const Listings = () => {
@@ -16,13 +17,13 @@ const Listings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#2C2F33]">
+    <ModernLayout>
       <Navbar />
       <Breadcrumbs />
       <PullToRefresh onRefresh={handleRefresh}>
         <ListingsPage key={refreshKey} />
       </PullToRefresh>
-    </div>
+    </ModernLayout>
   );
 };
 

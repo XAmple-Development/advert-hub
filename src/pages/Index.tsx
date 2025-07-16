@@ -3,6 +3,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import ModernLayout from '@/components/layout/ModernLayout';
 import Navbar from '@/components/Navbar';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Hero from '@/components/Hero';
@@ -81,14 +82,16 @@ const Index = () => {
     setSearchParams({ view: newView });
   };
 
-  // ONE BIG BACKGROUND WRAPPER FOR EVERYTHING
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <ModernLayout>
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center space-y-6">
             <LoadingSpinner size="lg" />
-            <div className="text-white text-xl font-medium">Loading...</div>
+            <div className="text-center">
+              <div className="text-2xl font-bold gradient-text mb-2">Loading...</div>
+              <div className="text-muted-foreground">Preparing your experience</div>
+            </div>
           </div>
         </div>
       ) : (
@@ -96,12 +99,12 @@ const Index = () => {
           <Navbar />
           
           {user && (
-            <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="max-w-7xl mx-auto px-6 py-6">
               <div className="flex justify-center space-x-4">
                 <Button
                   onClick={() => handleViewChange('dashboard')}
                   variant={view === 'dashboard' ? 'default' : 'outline'}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 hover-glow"
                 >
                   <Home className="h-4 w-4" />
                   <span>Dashboard</span>
@@ -109,7 +112,7 @@ const Index = () => {
                 <Button
                   onClick={() => handleViewChange('home')}
                   variant={view === 'home' ? 'default' : 'outline'}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 hover-glow"
                 >
                   <Globe className="h-4 w-4" />
                   <span>Website</span>
@@ -144,7 +147,7 @@ const Index = () => {
           </div>
         </>
       )}
-    </div>
+    </ModernLayout>
   );
 };
 
