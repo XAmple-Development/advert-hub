@@ -450,6 +450,94 @@ const AdminDashboard = () => {
                             <Shield className="h-4 w-4" />
                             Moderation
                         </Button>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 border-border/50 hover:border-primary/50"
+                                >
+                                    <Megaphone className="h-4 w-4" />
+                                    Announcements
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl">
+                                <DialogHeader>
+                                    <DialogTitle>Site Announcements</DialogTitle>
+                                    <DialogDescription>
+                                        Create and manage site-wide announcements
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                    <div>
+                                        <Label htmlFor="announcement-title">Title</Label>
+                                        <Input id="announcement-title" placeholder="Enter announcement title..." />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="announcement-message">Message</Label>
+                                        <Textarea id="announcement-message" placeholder="Enter announcement message..." rows={4} />
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center space-x-2">
+                                            <Switch id="announcement-active" />
+                                            <Label htmlFor="announcement-active">Active</Label>
+                                        </div>
+                                        <Select defaultValue="info">
+                                            <SelectTrigger className="w-32">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="info">Info</SelectItem>
+                                                <SelectItem value="warning">Warning</SelectItem>
+                                                <SelectItem value="error">Error</SelectItem>
+                                                <SelectItem value="success">Success</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <Button className="w-full">
+                                        <Bell className="h-4 w-4 mr-2" />
+                                        Create Announcement
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="flex items-center gap-2 border-border/50 hover:border-primary/50"
+                                >
+                                    <Lock className="h-4 w-4" />
+                                    Maintenance Mode
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Maintenance Mode</DialogTitle>
+                                    <DialogDescription>
+                                        Control site maintenance mode and messaging
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="maintenance-toggle">Enable Maintenance Mode</Label>
+                                        <Switch id="maintenance-toggle" />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="maintenance-message">Maintenance Message</Label>
+                                        <Textarea 
+                                            id="maintenance-message" 
+                                            placeholder="Enter maintenance message for users..." 
+                                            defaultValue="System maintenance in progress. Please check back soon!"
+                                            rows={3}
+                                        />
+                                    </div>
+                                    <Button className="w-full">
+                                        <Settings className="h-4 w-4 mr-2" />
+                                        Update Maintenance Settings
+                                    </Button>
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
 
