@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertTriangle, Settings, Clock } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 interface MaintenanceStatus {
   id: string;
@@ -16,6 +17,10 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
+  const location = useLocation();
+  
+  // Check for admin bypass in URL
+  const hasAdminBypass = location.search.includes('admin=true') || location.pathname.includes('/admin');
 
   useEffect(() => {
     checkMaintenanceStatus();
@@ -30,7 +35,15 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
           schema: 'public', 
           table: 'site_maintenance'
         }, 
-        () => {
+        (payload) => {
+          console.log('Maintenance status changed:', payload);
+          
+          // If maintenance mode was just enabled and user is not admin, force refresh
+          if ((payload.new as any)?.is_maintenance_mode && !isAdmin && !hasAdminBypass) {
+            window.location.reload();
+            return;
+          }
+          
           checkMaintenanceStatus();
         }
       )
@@ -84,8 +97,8 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
   }
 
-  // If maintenance mode is active and user is not admin, show maintenance page
-  if (maintenanceStatus?.is_maintenance_mode && !isAdmin) {
+  // If maintenance mode is active and user is not admin (and no admin bypass), show maintenance page
+  if (maintenanceStatus?.is_maintenance_mode && !isAdmin && !hasAdminBypass) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900 flex items-center justify-center p-4">
         <div className="absolute inset-0 overflow-hidden">
