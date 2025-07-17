@@ -82,6 +82,7 @@ const Navbar = () => {
                     Listings
                   </Link>
                 </DropdownMenuItem>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -170,12 +171,6 @@ const Navbar = () => {
                       <Link to="/pricing" className="flex items-center w-full text-gray-300 hover:text-white">
                         <Crown className="h-4 w-4 mr-2" />
                         Pricing
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                      <Link to="/api" className="flex items-center w-full text-gray-300 hover:text-white">
-                        <Code className="h-4 w-4 mr-2" />
-                        API Docs
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
