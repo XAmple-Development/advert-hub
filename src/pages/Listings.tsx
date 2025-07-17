@@ -282,7 +282,7 @@ const Listings = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <Link to={`/listing/${listing.id}`} className="flex-1">
+            <Link to={`/listings/${listing.id}`} className="flex-1">
               <Button variant="outline" className="w-full hover:border-primary/50">
                 View Details
               </Button>

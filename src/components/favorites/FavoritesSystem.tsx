@@ -456,7 +456,7 @@ export const FavoritesPage = () => {
                   review_count: 12 // Mock review count for now
                 }}
                 variant={viewMode}
-                onView={(id) => window.location.href = `/listing/${id}`}
+                onView={(id) => window.location.href = `/listings/${id}`}
                 onFavorite={() => handleRemoveFromFavorites(item.listing_id)}
                 onShare={(id) => {
                   navigator.clipboard.writeText(`${window.location.origin}/listing/${id}`);
