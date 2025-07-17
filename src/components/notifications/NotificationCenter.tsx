@@ -17,6 +17,7 @@ interface Notification {
   priority: string;
   is_read: boolean;
   created_at: string;
+  user_id: string | null;
 }
 
 const NotificationCenter = () => {
@@ -30,8 +31,8 @@ const NotificationCenter = () => {
     if (user) {
       fetchNotifications();
       // Set up real-time subscription for new notifications
-      const subscription = supabase
-        .channel('notifications')
+      const userSubscription = supabase
+        .channel('user_notifications')
         .on('postgres_changes', 
           { 
             event: 'INSERT', 
@@ -56,8 +57,34 @@ const NotificationCenter = () => {
         )
         .subscribe();
 
+      // Set up subscription for site-wide announcements
+      const announcementSubscription = supabase
+        .channel('site_announcements')
+        .on('postgres_changes', 
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'notifications',
+            filter: 'user_id=is.null'
+          }, 
+          (payload) => {
+            const newNotification = payload.new as Notification;
+            setNotifications(prev => [newNotification, ...prev]);
+            setUnreadCount(prev => prev + 1);
+            
+            // Show toast for all site-wide announcements
+            toast({
+              title: newNotification.title,
+              description: newNotification.message,
+              variant: newNotification.type === 'error' ? 'destructive' : 'default',
+            });
+          }
+        )
+        .subscribe();
+
       return () => {
-        subscription.unsubscribe();
+        userSubscription.unsubscribe();
+        announcementSubscription.unsubscribe();
       };
     }
   }, [user]);
@@ -69,7 +96,7 @@ const NotificationCenter = () => {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .or(`user_id.eq.${user.id},user_id.is.null`)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -84,14 +111,23 @@ const NotificationCenter = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notificationId)
-        .eq('user_id', user?.id);
+      // Find the notification to check if it's site-wide
+      const notification = notifications.find(n => n.id === notificationId);
+      if (!notification) return;
 
-      if (error) throw error;
+      // Only mark user-specific notifications as read in the database
+      // Site-wide announcements can't be marked as read permanently
+      if (notification.user_id) {
+        const { error } = await supabase
+          .from('notifications')
+          .update({ is_read: true })
+          .eq('id', notificationId)
+          .eq('user_id', user?.id);
 
+        if (error) throw error;
+      }
+
+      // Update UI state for both types
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
@@ -103,6 +139,7 @@ const NotificationCenter = () => {
 
   const markAllAsRead = async () => {
     try {
+      // Only mark user-specific notifications as read in the database
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -111,6 +148,7 @@ const NotificationCenter = () => {
 
       if (error) throw error;
 
+      // Update UI state for all notifications (including site-wide ones)
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
       
@@ -204,6 +242,10 @@ const NotificationCenter = () => {
                     notification.is_read 
                       ? 'bg-gray-800/30 border-gray-700/30' 
                       : 'bg-gray-700/50 border-gray-600/50'
+                  } ${
+                    notification.user_id === null 
+                      ? 'ring-1 ring-blue-500/30 border-blue-500/30' 
+                      : ''
                   } cursor-pointer transition-all hover:bg-gray-700/70`}
                   onClick={() => !notification.is_read && markAsRead(notification.id)}
                 >
@@ -212,9 +254,19 @@ const NotificationCenter = () => {
                       {getNotificationIcon(notification.type, notification.priority)}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
-                          <h4 className="text-sm font-medium text-white truncate">
-                            {notification.title}
-                          </h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-medium text-white truncate">
+                              {notification.title}
+                            </h4>
+                            {notification.user_id === null && (
+                              <Badge 
+                                variant="outline" 
+                                className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs px-1.5 py-0.5"
+                              >
+                                Site-wide
+                              </Badge>
+                            )}
+                          </div>
                           {!notification.is_read && (
                             <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0" />
                           )}
