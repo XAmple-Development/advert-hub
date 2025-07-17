@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import EditListingModal from '@/components/EditListingModal';
+import { ReviewSystem } from '@/components/enhanced/ReviewSystem';
 import { 
   ExternalLink, 
   Users, 
@@ -27,7 +29,8 @@ import {
   MessageCircle,
   Award,
   Zap,
-  Shield
+  Shield,
+  Edit
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -67,6 +70,7 @@ const ListingDetailPage = () => {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -358,6 +362,11 @@ const ListingDetailPage = () => {
                   <Button variant="outline" onClick={handleShare}>
                     <Share2 className="h-4 w-4" />
                   </Button>
+                  {user && user.id === listing.user_id && (
+                    <Button variant="outline" onClick={() => setShowEditModal(true)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button variant="outline" size="icon">
                     <Flag className="h-4 w-4" />
                   </Button>
@@ -569,14 +578,7 @@ const ListingDetailPage = () => {
           </TabsContent>
 
           <TabsContent value="reviews">
-            <ModernCard className="p-6">
-              <h3 className="text-xl font-bold mb-4">Reviews & Ratings</h3>
-              <div className="text-center py-12">
-                <Star className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h4 className="text-lg font-semibold mb-2">No reviews yet</h4>
-                <p className="text-muted-foreground">Be the first to review this {listing.type}!</p>
-              </div>
-            </ModernCard>
+            <ReviewSystem listingId={listing.id} />
           </TabsContent>
 
           <TabsContent value="similar">
@@ -592,6 +594,20 @@ const ListingDetailPage = () => {
             </ModernCard>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Modal */}
+        <EditListingModal
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+          listing={listing}
+          onSuccess={() => {
+            fetchListing();
+            toast({
+              title: "Success!",
+              description: "Your listing has been updated successfully.",
+            });
+          }}
+        />
       </div>
     </ModernLayout>
   );

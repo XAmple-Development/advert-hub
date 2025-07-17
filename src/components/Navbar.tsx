@@ -144,12 +144,12 @@ const Navbar = () => {
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-elevation-md group-hover:shadow-primary/30 transition-all duration-300 group-hover:scale-110">
-                  <span className="text-white font-black text-xl">D</span>
+                  <span className="text-white font-black text-xl">A</span>
                 </div>
                 <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
               </div>
               <span className="hidden lg:block text-xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                DiscoverHub
+                AdvertHUB
               </span>
             </Link>
           </div>
@@ -233,10 +233,10 @@ const Navbar = () => {
         <div className="md:hidden flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-3 group" onClick={closeMobileMenu}>
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white font-black text-lg">D</span>
+              <span className="text-white font-black text-lg">A</span>
             </div>
             <span className="text-foreground text-xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              DiscoverHub
+              AdvertHUB
             </span>
           </Link>
           
