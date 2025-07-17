@@ -61,24 +61,24 @@ const Navbar = () => {
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
   return (
-    <nav className="sticky top-0 z-50 glass-effect border-b border-border/30 transition-all duration-300 hover:bg-card/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 md:py-4">
+    <nav className="sticky top-0 z-50 backdrop-blur-2xl bg-background/80 border-b border-border shadow-elevation-sm transition-all duration-500">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div className="hidden md:flex md:items-center md:justify-between md:w-full">
           {/* Left Side Navigation */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             {/* Browse Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-card/50 font-medium px-4 py-2 rounded-xl transition-all duration-300 hover-glow">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent/50 font-medium px-5 py-2.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5">
                   <Search className="h-4 w-4 mr-2" />
                   Browse
                   <ChevronDown className="h-3 w-3 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="glass-effect-strong border-border rounded-xl p-2 shadow-2xl z-50">
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/listings" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <Users className="h-4 w-4 mr-2" />
+              <DropdownMenuContent className="bg-card/95 backdrop-blur-2xl border-border rounded-xl p-3 shadow-elevation-lg z-50">
+                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                  <Link to="/listings" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                    <Users className="h-4 w-4 mr-3" />
                     Listings
                   </Link>
                 </DropdownMenuItem>
@@ -88,46 +88,46 @@ const Navbar = () => {
             {/* Community Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 font-medium px-4 py-2 rounded-xl transition-all duration-300">
+                <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent/50 font-medium px-5 py-2.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Community
                   <ChevronDown className="h-3 w-3 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-gray-800/95 backdrop-blur-xl border-gray-700 rounded-xl p-2 shadow-2xl z-50">
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/forum" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <MessageCircle className="h-4 w-4 mr-2" />
+              <DropdownMenuContent className="bg-card/95 backdrop-blur-2xl border-border rounded-xl p-3 shadow-elevation-lg z-50">
+                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                  <Link to="/forum" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                    <MessageCircle className="h-4 w-4 mr-3" />
                     Forum
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/chat" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <MessageSquare className="h-4 w-4 mr-2" />
+                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                  <Link to="/chat" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                    <MessageSquare className="h-4 w-4 mr-3" />
                     AI Chat Advisor
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/events" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <Calendar className="h-4 w-4 mr-2" />
+                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                  <Link to="/events" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                    <Calendar className="h-4 w-4 mr-3" />
                     Events
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/gamification" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <Gamepad2 className="h-4 w-4 mr-2" />
+                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                  <Link to="/gamification" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                    <Gamepad2 className="h-4 w-4 mr-3" />
                     Gamification
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <Home className="h-4 w-4 mr-2" />
+                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                  <Link to="/" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                    <Home className="h-4 w-4 mr-3" />
                     Dashboard
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/analytics" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <BarChart3 className="h-4 w-4 mr-2" />
+                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                  <Link to="/analytics" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                    <BarChart3 className="h-4 w-4 mr-3" />
                     Analytics
                   </Link>
                 </DropdownMenuItem>
@@ -138,14 +138,20 @@ const Navbar = () => {
           {/* Center Logo */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-elevation-md group-hover:shadow-primary/30 transition-all duration-300 group-hover:scale-110">
+                  <span className="text-white font-black text-xl">D</span>
+                </div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
               </div>
+              <span className="hidden lg:block text-xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                DiscoverHub
+              </span>
             </Link>
           </div>
 
           {/* Right Side Navigation */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {user ? (
               <>
                 <NotificationCenter />
@@ -153,35 +159,35 @@ const Navbar = () => {
                 {/* More Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium px-6 py-2 rounded-xl transition-all duration-300">
-                      <User className="h-5 w-5 mr-2" />
-                      More
-                      <ChevronDown className="h-4 w-4 ml-2" />
+                    <Button variant="ghost" className="text-muted-foreground hover:text-foreground hover:bg-accent/50 font-medium px-5 py-2.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5">
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                      <ChevronDown className="h-3 w-3 ml-2" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-gray-800 border-gray-700 rounded-xl p-2 shadow-2xl">
-                    <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                      <Link to={`/profile/${user.id}`} className="flex items-center w-full text-gray-300 hover:text-white">
-                        <User className="h-4 w-4 mr-2" />
-                        Profile
+                  <DropdownMenuContent className="bg-card/95 backdrop-blur-2xl border-border rounded-xl p-3 shadow-elevation-lg z-50">
+                    <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                      <Link to={`/profile/${user.id}`} className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                        <User className="h-4 w-4 mr-3" />
+                        My Profile
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                      <Link to="/pricing" className="flex items-center w-full text-gray-300 hover:text-white">
-                        <Crown className="h-4 w-4 mr-2" />
-                        Pricing
+                    <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                      <Link to="/pricing" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                        <Crown className="h-4 w-4 mr-3" />
+                        Premium
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                      <a href="https://status.x-ampledevelopment.co.uk/" className="flex items-center w-full text-gray-300 hover:text-white" target="_blank" rel="noopener noreferrer">
-                        <Trophy className="h-4 w-4 mr-2" />
-                        Live Status
+                    <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                      <a href="https://status.x-ampledevelopment.co.uk/" className="flex items-center w-full text-foreground hover:text-primary font-medium" target="_blank" rel="noopener noreferrer">
+                        <Activity className="h-4 w-4 mr-3" />
+                        Status
                       </a>
                     </DropdownMenuItem>
                     {isAdmin && (
-                      <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                        <Link to="/moderation" className="flex items-center w-full text-gray-300 hover:text-white">
-                          <Flag className="h-4 w-4 mr-2" />
+                      <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                        <Link to="/moderation" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                          <Flag className="h-4 w-4 mr-3" />
                           Moderation
                         </Link>
                       </DropdownMenuItem>
@@ -191,8 +197,8 @@ const Navbar = () => {
 
                 {isAdmin && (
                   <Link to="/admin">
-                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold px-6 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                      <Shield className="h-5 w-5 mr-2" />
+                    <Button variant="premium" size="default" className="font-semibold">
+                      <Shield className="h-4 w-4 mr-2" />
                       Admin
                     </Button>
                   </Link>
@@ -201,16 +207,18 @@ const Navbar = () => {
                 <Button
                   onClick={handleSignOut}
                   variant="outline"
-                  className="border-2 border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 font-medium px-6 py-2 rounded-xl transition-all duration-300"
+                  size="default"
+                  className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground font-medium"
                 >
-                  <LogOut className="h-5 w-5 mr-2" />
+                  <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
               </>
             ) : (
               <Link to="/auth">
-                <Button className="bg-primary hover:bg-primary/90 text-white px-6 rounded-lg">
-                  Login
+                <Button variant="cosmic" size="default" className="font-semibold">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Get Started
                 </Button>
               </Link>
             )}
@@ -220,11 +228,11 @@ const Navbar = () => {
         {/* Mobile Layout */}
         <div className="md:hidden flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-3 group" onClick={closeMobileMenu}>
-            <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl group-hover:scale-110 transition-transform duration-300">
-              <Bot className="h-6 w-6 text-white" />
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <span className="text-white font-black text-lg">D</span>
             </div>
-            <span className="text-white text-xl md:text-2xl font-black group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
-              AdvertHub
+            <span className="text-foreground text-xl font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              DiscoverHub
             </span>
           </Link>
           

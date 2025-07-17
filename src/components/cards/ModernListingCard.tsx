@@ -75,9 +75,10 @@ export const ModernListingCard = ({
 
   return (
     <Card className={cn(
-      "group relative overflow-hidden border-border/40 hover:border-border/60 transition-all duration-300",
-      "h-[140px] bg-card/80 backdrop-blur-sm",
-      listing.premium_featured && "ring-1 ring-primary/30 border-primary/40",
+      "group relative overflow-hidden border-border transition-all duration-500 hover-lift",
+      "h-[140px] bg-card/95 backdrop-blur-xl shadow-elevation-sm",
+      "hover:shadow-elevation-lg hover:border-primary/50",
+      listing.premium_featured && "ring-2 ring-primary/40 border-primary/30 shadow-primary/10",
       className
     )}>
       {/* Featured Badge */}
