@@ -62,26 +62,23 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
       const { data, error } = await supabase
         .from('reviews')
         .select(`
-          *,
-          profiles!user_id (username, discord_username, discord_avatar)
+          id,
+          user_id,
+          listing_id,
+          rating,
+          comment,
+          helpful_count,
+          verified_purchase,
+          created_at,
+          profiles(username, discord_username, discord_avatar)
         `)
         .eq('listing_id', listingId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Transform data to handle potential errors in relations
-      const transformedData = (data || []).map(review => ({
-        ...review,
-        profiles: review.profiles && 
-                  typeof review.profiles === 'object' && 
-                  !Array.isArray(review.profiles) &&
-                  !('error' in review.profiles) 
-          ? review.profiles 
-          : null
-      }));
-      
-      setReviews(transformedData);
+      console.log('Fetched reviews:', data); // Debug log
+      setReviews(data || []);
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {
