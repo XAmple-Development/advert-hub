@@ -39,6 +39,35 @@ import {
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
+// Helper function to extract YouTube video ID from various URL formats
+const getYouTubeVideoId = (url: string): string => {
+  if (!url) return '';
+  
+  // Regular expression to match YouTube video ID patterns
+  const regExp = /^.*(youtu.be\/|v\/|e\/|u\/\w+\/|embed\/|v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  
+  if (match && match[2].length === 11) {
+    return match[2];
+  }
+  
+  // If no match with regex, try common URL patterns
+  if (url.includes('youtube.com/watch?v=')) {
+    return url.split('v=')[1]?.split('&')[0] || '';
+  }
+  
+  if (url.includes('youtu.be/')) {
+    return url.split('youtu.be/')[1]?.split('?')[0] || '';
+  }
+  
+  if (url.includes('youtube.com/embed/')) {
+    return url.split('embed/')[1]?.split('?')[0] || '';
+  }
+  
+  // If all else fails, just return the URL as is
+  return url;
+};
+
 interface Listing {
   id: string;
   name: string;
@@ -646,12 +675,13 @@ const ListingDetailPage = () => {
                       <Play className="h-5 w-5 text-red-500" />
                       Trailer
                     </h3>
-                    <div className="aspect-video rounded-lg overflow-hidden">
+                    <div className="aspect-video rounded-lg overflow-hidden bg-muted">
                       <iframe
-                        src={`https://www.youtube.com/embed/${listing.youtube_trailer.split('watch?v=')[1] || listing.youtube_trailer.split('/').pop()}`}
+                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(listing.youtube_trailer)}`}
                         title={`${listing.name} Trailer`}
-                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
+                        className="w-full h-full border-0"
                       />
                     </div>
                   </ModernCard>
