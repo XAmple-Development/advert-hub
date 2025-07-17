@@ -128,8 +128,8 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
             <div className="mt-8 p-4 bg-gray-800/30 rounded-xl border border-gray-700/30">
               <p className="text-sm text-gray-400">
                 For urgent support, please contact us at{' '}
-                <a href="mailto:support@adverthub.com" className="text-orange-400 hover:text-orange-300">
-                  support@adverthub.com
+                <a href="mailto:info@x-ampledevelopment.co.uk" className="text-orange-400 hover:text-orange-300">
+                  info@x-ampledevelopment.co.uk
                 </a>
               </p>
             </div>
