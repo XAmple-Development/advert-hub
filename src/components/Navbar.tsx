@@ -79,14 +79,9 @@ const Navbar = () => {
                 <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
                   <Link to="/listings" className="flex items-center w-full text-gray-300 hover:text-white">
                     <Users className="h-4 w-4 mr-2" />
-                    Discord Servers
+                    Listings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/listings?type=bot" className="flex items-center w-full text-gray-300 hover:text-white">
-                    <Bot className="h-4 w-4 mr-2" />
-                    Discord Bots
-                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -257,14 +252,7 @@ const Navbar = () => {
               <Link to="/listings" onClick={closeMobileMenu}>
                 <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                   <Users className="h-5 w-5 mr-3" />
-                  Discord Servers
-                </Button>
-              </Link>
-              
-              <Link to="/listings?type=bot" onClick={closeMobileMenu}>
-                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
-                  <Bot className="h-5 w-5 mr-3" />
-                  Discord Bots
+                  Listings
                 </Button>
               </Link>
               
