@@ -83,7 +83,7 @@ const Navbar = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="focus:bg-gray-700 rounded-lg">
-                  <Link to="/bots" className="flex items-center w-full text-gray-300 hover:text-white">
+                  <Link to="/listings?type=bot" className="flex items-center w-full text-gray-300 hover:text-white">
                     <Bot className="h-4 w-4 mr-2" />
                     Discord Bots
                   </Link>
@@ -261,7 +261,7 @@ const Navbar = () => {
                 </Button>
               </Link>
               
-              <Link to="/bots" onClick={closeMobileMenu}>
+              <Link to="/listings?type=bot" onClick={closeMobileMenu}>
                 <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                   <Bot className="h-5 w-5 mr-3" />
                   Discord Bots

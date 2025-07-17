@@ -14,7 +14,6 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Listings from "./pages/Listings";
-import Bots from "./pages/Bots";
 import ListingDetail from "./pages/ListingDetail";
 import Analytics from "./pages/Analytics";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -58,7 +57,6 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/listings" element={<Listings />} />
-                <Route path="/bots" element={<Bots />} />
                 <Route path="/listings/:id" element={<ListingDetail />} />
                 <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/profile/edit" element={<ProfileEdit />} />

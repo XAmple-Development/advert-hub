@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -50,6 +50,7 @@ const ITEMS_PER_PAGE = 12;
 
 const EnhancedListingsPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -68,6 +69,14 @@ const EnhancedListingsPage = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const { favorites, toggleFavorite } = useFavorites();
 
+  // Initialize filters from URL params
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    if (typeParam && (typeParam === 'server' || typeParam === 'bot')) {
+      setFilters(prev => ({ ...prev, type: typeParam }));
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     fetchListings();
   }, []);
@@ -79,7 +88,6 @@ const EnhancedListingsPage = () => {
         .from('listings')
         .select('*')
         .eq('status', 'active')
-        .eq('type', 'server')
         .order('premium_featured', { ascending: false })
         .order('last_bumped_at', { ascending: false })
         .order('created_at', { ascending: false });
@@ -275,10 +283,10 @@ const EnhancedListingsPage = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                Discord Communities
+                Discord Hub
               </h1>
               <p className="text-gray-300 text-base sm:text-lg">
-                Discover amazing Discord servers and bots. Join the best communities today!
+                Discover amazing Discord servers and bots. Join the best communities and enhance your server today!
               </p>
             </div>
             {user && (
@@ -296,7 +304,7 @@ const EnhancedListingsPage = () => {
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Bot Listing
+                  Add Listing
                 </Button>
               </div>
             )}
@@ -318,10 +326,10 @@ const EnhancedListingsPage = () => {
           <div className="text-gray-300">
             {sortedListings.length > 0 ? (
               <span>
-                {sortedListings.length} {sortedListings.length === 1 ? 'community' : 'communities'} found
+                {sortedListings.length} {sortedListings.length === 1 ? 'listing' : 'listings'} found
               </span>
             ) : (
-              <span>No communities found</span>
+              <span>No listings found</span>
             )}
           </div>
         </div>
@@ -360,13 +368,13 @@ const EnhancedListingsPage = () => {
           /* Empty State */
           <EmptyState
             type={searchQuery || filters.type !== 'all' || filters.memberCount !== 'all' || filters.featured ? 'no-results' : 'no-listings'}
-            title={searchQuery ? 'No Results Found' : 'No Communities Yet'}
+            title={searchQuery ? 'No Results Found' : 'No Listings Yet'}
             description={
               searchQuery 
-                ? `We couldn't find any communities matching "${searchQuery}". Try adjusting your search or filters.`
-                : 'Be the first to add your Discord community to our platform!'
+                ? `We couldn't find any listings matching "${searchQuery}". Try adjusting your search or filters.`
+                : 'Be the first to add your Discord server or bot to our platform!'
             }
-            actionText={searchQuery ? 'Clear Search' : 'Add Your Community'}
+            actionText={searchQuery ? 'Clear Search' : 'Add Your Listing'}
             onAction={() => {
               if (searchQuery) {
                 setSearchQuery('');
