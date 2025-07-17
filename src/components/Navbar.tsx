@@ -113,24 +113,28 @@ const Navbar = () => {
                     Events
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
-                  <Link to="/gamification" className="flex items-center w-full text-foreground hover:text-primary font-medium">
-                    <Gamepad2 className="h-4 w-4 mr-3" />
-                    Gamification
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
-                  <Link to="/" className="flex items-center w-full text-foreground hover:text-primary font-medium">
-                    <Home className="h-4 w-4 mr-3" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
-                  <Link to="/analytics" className="flex items-center w-full text-foreground hover:text-primary font-medium">
-                    <BarChart3 className="h-4 w-4 mr-3" />
-                    Analytics
-                  </Link>
-                </DropdownMenuItem>
+                {user && (
+                  <>
+                    <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                      <Link to="/gamification" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                        <Gamepad2 className="h-4 w-4 mr-3" />
+                        Gamification
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                      <Link to="/" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                        <Home className="h-4 w-4 mr-3" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                      <Link to="/analytics" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                        <BarChart3 className="h-4 w-4 mr-3" />
+                        Analytics
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -278,12 +282,14 @@ const Navbar = () => {
                 </Button>
               </Link>
 
-              <Link to="/gamification" onClick={closeMobileMenu}>
-                <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
-                  <Gamepad2 className="h-5 w-5 mr-3" />
-                  Gamification
-                </Button>
-              </Link>
+              {user && (
+                <Link to="/gamification" onClick={closeMobileMenu}>
+                  <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                    <Gamepad2 className="h-5 w-5 mr-3" />
+                    Gamification
+                  </Button>
+                </Link>
+              )}
 
               {user ? (
                 <>
