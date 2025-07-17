@@ -63,7 +63,7 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
         .from('reviews')
         .select(`
           *,
-          profiles:user_id (username, discord_username, discord_avatar)
+          profiles!user_id (username, discord_username, discord_avatar)
         `)
         .eq('listing_id', listingId)
         .order('created_at', { ascending: false });
