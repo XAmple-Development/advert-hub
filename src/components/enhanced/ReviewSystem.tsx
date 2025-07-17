@@ -210,18 +210,24 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
 
     try {
       const { error } = await supabase
-        .from('reports')
+        .from('content_flags')
         .insert({
           reporter_id: user.id,
           target_type: 'review',
           target_id: reviewId,
-          reason: 'Inappropriate content'
+          flag_type: 'inappropriate',
+          reason: 'Inappropriate content reported by user'
         });
 
       if (error) throw error;
       toast({ title: 'Review reported successfully' });
     } catch (error) {
       console.error('Error reporting review:', error);
+      toast({
+        title: 'Error reporting review',
+        description: 'Please try again later.',
+        variant: 'destructive'
+      });
     }
   };
 

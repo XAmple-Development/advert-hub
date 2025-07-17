@@ -115,10 +115,7 @@ const ModerationDashboard = () => {
       // Fetch content flags
       const { data: flagsData, error: flagsError } = await supabase
         .from('content_flags')
-        .select(`
-          *,
-          reporter:profiles!content_flags_reporter_id_fkey(username, discord_avatar)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -127,10 +124,7 @@ const ModerationDashboard = () => {
       // Fetch moderation actions
       const { data: actionsData, error: actionsError } = await supabase
         .from('moderation_actions')
-        .select(`
-          *,
-          moderator:profiles!moderation_actions_moderator_id_fkey(username, discord_avatar)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -139,19 +133,63 @@ const ModerationDashboard = () => {
       // Fetch user warnings
       const { data: warningsData, error: warningsError } = await supabase
         .from('user_warnings')
-        .select(`
-          *,
-          user:profiles!user_warnings_user_id_fkey(username, discord_avatar),
-          moderator:profiles!user_warnings_moderator_id_fkey(username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (warningsError) throw warningsError;
 
-      setContentFlags(flagsData || []);
-      setModerationActions(actionsData || []);
-      setUserWarnings(warningsData || []);
+      // Now fetch related profiles separately
+      const allUserIds = new Set<string>();
+      
+      flagsData?.forEach(flag => {
+        if (flag.reporter_id) allUserIds.add(flag.reporter_id);
+        if (flag.reviewed_by) allUserIds.add(flag.reviewed_by);
+      });
+      
+      actionsData?.forEach(action => {
+        if (action.moderator_id) allUserIds.add(action.moderator_id);
+      });
+      
+      warningsData?.forEach(warning => {
+        if (warning.user_id) allUserIds.add(warning.user_id);
+        if (warning.moderator_id) allUserIds.add(warning.moderator_id);
+      });
+
+      let profilesData: any[] = [];
+      if (allUserIds.size > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, discord_username, discord_avatar')
+          .in('id', Array.from(allUserIds));
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        } else {
+          profilesData = profiles || [];
+        }
+      }
+
+      // Combine data with profiles
+      const flagsWithProfiles = flagsData?.map(flag => ({
+        ...flag,
+        reporter: flag.reporter_id ? profilesData.find(p => p.id === flag.reporter_id) : null
+      })) || [];
+
+      const actionsWithProfiles = actionsData?.map(action => ({
+        ...action,
+        moderator: action.moderator_id ? profilesData.find(p => p.id === action.moderator_id) : null
+      })) || [];
+
+      const warningsWithProfiles = warningsData?.map(warning => ({
+        ...warning,
+        user: warning.user_id ? profilesData.find(p => p.id === warning.user_id) : null,
+        moderator: warning.moderator_id ? profilesData.find(p => p.id === warning.moderator_id) : null
+      })) || [];
+
+      setContentFlags(flagsWithProfiles);
+      setModerationActions(actionsWithProfiles);
+      setUserWarnings(warningsWithProfiles);
     } catch (error) {
       console.error('Error fetching moderation data:', error);
     } finally {
