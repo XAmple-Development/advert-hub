@@ -107,13 +107,13 @@ export const ModernListingCard = ({
         </div>
       )}
 
-      <CardContent className="relative p-8 space-y-6">
+      <CardContent className="relative p-4 space-y-4">
         {/* Enhanced Header Section */}
-        <div className="flex items-start gap-5">
+        <div className="flex items-start gap-3">
           <div className="relative">
-            <Avatar className="h-16 w-16 ring-2 ring-primary/30 hover:ring-primary/50 transition-all duration-300 hover-glow">
+            <Avatar className="h-12 w-12 ring-2 ring-primary/30 hover:ring-primary/50 transition-all duration-300 hover-glow">
               <AvatarImage src={listing.avatar_url} alt={listing.name} />
-              <AvatarFallback className="text-primary font-bold text-lg" 
+              <AvatarFallback className="text-primary font-bold text-sm" 
                              style={{background: 'var(--gradient-primary)', opacity: 0.2}}>
                 {listing.name.slice(0, 2).toUpperCase()}
               </AvatarFallback>
@@ -123,27 +123,27 @@ export const ModernListingCard = ({
             )}
           </div>
 
-          <div className="flex-1 min-w-0 space-y-3">
-            <div className="flex items-center gap-3">
-              <h3 className="font-black text-xl leading-tight truncate group-hover:gradient-text transition-all duration-300">
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-base leading-tight truncate group-hover:gradient-text transition-all duration-300">
                 {listing.name}
               </h3>
               <ListingVerificationBadge listingId={listing.id} size="sm" />
             </div>
             
-            <div className="flex items-center gap-3 flex-wrap">
-              <Badge className="text-sm h-7 px-3 font-semibold rounded-lg" 
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge className="text-xs h-5 px-2 font-semibold rounded-md" 
                      style={{background: 'var(--gradient-primary)', color: 'white'}}>
                 {listing.type === 'server' ? 'Server' : 'Bot'}
               </Badge>
               {listing.tags?.slice(0, 2).map(tag => (
-                <Badge key={tag} variant="outline" className="text-sm h-7 px-3 rounded-lg hover-glow">
+                <Badge key={tag} variant="outline" className="text-xs h-5 px-2 rounded-md hover-glow">
                   {tag}
                 </Badge>
               ))}
               {listing.tags && listing.tags.length > 2 && (
-                <span className="text-sm text-muted-foreground font-medium">
-                  +{listing.tags.length - 2} more
+                <span className="text-xs text-muted-foreground font-medium">
+                  +{listing.tags.length - 2}
                 </span>
               )}
             </div>
@@ -163,7 +163,7 @@ export const ModernListingCard = ({
         </div>
 
         {/* Enhanced Description */}
-        <p className="text-base text-muted-foreground line-clamp-3 leading-relaxed">
+        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
           {listing.description}
         </p>
 
@@ -209,35 +209,23 @@ export const ModernListingCard = ({
         </div>
 
         {/* Enhanced Action Buttons */}
-        <div className="flex gap-3 pt-4">
+        <div className="flex gap-2">
           <Button
             onClick={() => onView?.(listing.id)}
             variant="outline"
             size="sm"
-            className="flex-1 h-11 hover-glow font-medium"
+            className="flex-1 h-8 hover-glow font-medium text-xs"
           >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            View Details
+            View
           </Button>
           
           {listing.invite_url && (
             <Button
               onClick={() => onJoin?.(listing)}
               size="sm"
-              className="btn-glow flex-1 h-11 font-bold"
+              className="btn-glow flex-1 h-8 font-bold text-xs"
             >
-              Join {listing.type === 'server' ? 'Server' : 'Bot'}
-            </Button>
-          )}
-          
-          {listing.website_url && (
-            <Button
-              onClick={() => onWebsite?.(listing)}
-              variant="ghost"
-              size="icon"
-              className="h-11 w-11 hover-glow"
-            >
-              <Globe className="h-5 w-5" />
+              {listing.type === 'server' ? 'Join' : 'Add'}
             </Button>
           )}
           
@@ -245,9 +233,9 @@ export const ModernListingCard = ({
             onClick={() => onShare?.(listing.id)}
             variant="ghost"
             size="icon"
-            className="h-11 w-11 hover-glow"
+            className="h-8 w-8 hover-glow"
           >
-            <Share2 className="h-5 w-5" />
+            <Share2 className="h-4 w-4" />
           </Button>
         </div>
       </CardContent>

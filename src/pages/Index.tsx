@@ -9,6 +9,7 @@ import Dashboard from '@/components/Dashboard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AdminUpgrade from '@/components/AdminUpgrade';
 import TrendingSection from '@/components/discovery/TrendingSection';
+import SmartRecommendations from '@/components/discovery/SmartRecommendations';
 import ModernLayout from '@/components/layout/ModernLayout';
 import ModernCard from '@/components/ui/modern-card';
 import { Button } from '@/components/ui/button';
@@ -127,7 +128,8 @@ const Index = () => {
             ) : (
               <>
                 <Hero />
-                <div className="max-w-7xl mx-auto px-6 py-12">
+                <div className="max-w-7xl mx-auto px-6 py-12 space-y-16">
+                  {user && <SmartRecommendations />}
                   <TrendingSection />
                 </div>
                 <Pricing />

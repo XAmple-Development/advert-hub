@@ -68,11 +68,11 @@ const TrendingSection = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {trendingListings?.map((listing, index) => (
             <div 
               key={listing.id} 
-              className="group relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40"
+              className="group relative bg-card/90 backdrop-blur-sm rounded-xl border border-border/50 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40"
             >
               {/* Trending Badge */}
               {index < 3 && (
@@ -95,22 +95,22 @@ const TrendingSection = () => {
               {/* Background Effects */}
               <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-secondary/[0.02] group-hover:from-primary/[0.05] group-hover:to-secondary/[0.05] transition-all" />
               
-              <div className="relative p-5 space-y-4">
+              <div className="relative p-4 space-y-3">
                 {/* Header */}
                 <div className="flex items-start gap-3">
                   <div className="relative flex-shrink-0">
                     <img 
                       src={listing.avatar_url || "/placeholder.svg"} 
                       alt={listing.name}
-                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-border/20 group-hover:ring-primary/30 transition-all"
+                      className="w-10 h-10 rounded-lg object-cover ring-2 ring-border/20 group-hover:ring-primary/30 transition-all"
                     />
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                    <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors truncate">
                       {listing.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
                       {listing.description}
                     </p>
                   </div>
@@ -118,24 +118,14 @@ const TrendingSection = () => {
 
                 {/* Stats */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Users className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-foreground">{(listing.member_count || 0).toLocaleString()}</div>
-                        <div className="text-xs text-muted-foreground">members</div>
-                      </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Users className="h-3 w-3 text-primary" />
+                      <span className="text-xs font-medium">{(listing.member_count || 0).toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-semibold text-foreground">{(listing.vote_count || 0).toLocaleString()}</div>
-                        <div className="text-xs text-muted-foreground">votes</div>
-                      </div>
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <Star className="h-3 w-3 text-yellow-500" />
+                      <span className="text-xs font-medium">{(listing.vote_count || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -143,8 +133,8 @@ const TrendingSection = () => {
                 {/* Tags */}
                 {listing.tags && listing.tags.length > 0 && (
                   <div className="flex gap-1 flex-wrap">
-                    {listing.tags.slice(0, 3).map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs h-6 px-2 bg-secondary/50">
+                    {listing.tags.slice(0, 2).map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-xs h-5 px-2 bg-secondary/50">
                         {tag}
                       </Badge>
                     ))}
@@ -152,23 +142,23 @@ const TrendingSection = () => {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex gap-2 pt-1">
+                <div className="flex gap-2">
                   <Button
                     onClick={() => navigate(`/listings/${listing.id}`)}
                     variant="outline"
                     size="sm"
-                    className="flex-1 h-9"
+                    className="flex-1 h-8 text-xs"
                   >
-                    View Details
+                    View
                   </Button>
                   
                   {listing.invite_url && (
                     <Button
                       onClick={() => window.open(listing.invite_url, '_blank')}
                       size="sm"
-                      className="flex-1 h-9 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
+                      className="flex-1 h-8 text-xs bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0"
                     >
-                      {listing.type === 'bot' ? 'Invite' : 'Join'}
+                      {listing.type === 'bot' ? 'Add' : 'Join'}
                     </Button>
                   )}
                 </div>
