@@ -194,17 +194,17 @@ const Pricing = () => {
                 </ul>
                 
                 {user ? (
-                  <Button 
-                    onClick={() => handlePlanAction(plan)}
-                    disabled={loading || (plan.current && plan.name === "Starter")}
-                    className={`w-full py-3 font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 ${
-                      plan.current && plan.name === "Starter"
-                        ? 'bg-gray-600 hover:bg-gray-600 text-gray-300 cursor-not-allowed'
-                        : plan.buttonVariant === 'default' 
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg' 
-                          : 'border-2 border-purple-500/50 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 hover:text-white hover:border-transparent backdrop-blur-sm'
-                    }`}
-                    variant={plan.current && plan.name === "Starter" ? "secondary" : plan.buttonVariant}
+                <Button 
+                  onClick={() => handlePlanAction(plan)}
+                  disabled={loading}
+                  className={`w-full py-3 font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                    plan.current 
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg' 
+                      : plan.buttonVariant === 'default' 
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg' 
+                        : 'border-2 border-purple-500/50 text-purple-300 hover:bg-gradient-to-r hover:from-purple-600 hover:to-pink-600 hover:text-white hover:border-transparent backdrop-blur-sm'
+                  }`}
+                  variant={plan.current ? "default" : plan.buttonVariant}
                   >
                     {plan.buttonText}
                   </Button>
