@@ -148,10 +148,12 @@ export const ModernListingCard = ({
         <div className="mt-auto space-y-2">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-muted-foreground" />
-                <span className="font-medium">{formatCount(listing.member_count)}</span>
-              </div>
+              {listing.view_count && (
+                <div className="flex items-center gap-1">
+                  <Eye className="h-3 w-3 text-muted-foreground" />
+                  <span className="font-medium">{formatCount(listing.view_count)}</span>
+                </div>
+              )}
               
               {listing.online_count && (
                 <div className="flex items-center gap-1">

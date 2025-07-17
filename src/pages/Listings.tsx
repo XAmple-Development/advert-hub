@@ -110,13 +110,13 @@ const Listings = () => {
           query = query.order('created_at', { ascending: false });
           break;
         case 'popular':
-          query = query.order('member_count', { ascending: false });
+          query = query.order('view_count', { ascending: false });
           break;
         case 'trending':
           query = query.order('last_bumped_at', { ascending: false });
           break;
         default:
-          query = query.order('featured', { ascending: false }).order('member_count', { ascending: false });
+          query = query.order('featured', { ascending: false }).order('view_count', { ascending: false });
       }
 
       query = query.limit(50);
@@ -263,10 +263,10 @@ const Listings = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-4">
-              {listing.member_count && (
+              {listing.view_count && (
                 <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{formatCount(listing.member_count)}</span>
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{formatCount(listing.view_count)}</span>
                 </div>
               )}
               

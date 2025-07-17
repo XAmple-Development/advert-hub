@@ -35,7 +35,8 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
     invite_url: '',
     website_url: '',
     support_server_url: '',
-    member_count: '',
+    avatar_url: '',
+    banner_url: '',
     category_id: ''
   });
   const { toast } = useToast();
@@ -123,7 +124,8 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
           invite_url: formData.invite_url.trim() || null,
           website_url: formData.website_url.trim() || null,
           support_server_url: formData.support_server_url.trim() || null,
-          member_count: parseInt(formData.member_count) || 0,
+          avatar_url: formData.avatar_url.trim() || null,
+          banner_url: formData.banner_url.trim() || null,
           status: 'pending',
           premium_featured: isPremium,
           priority_ranking: isPremium ? 100 : 0,
@@ -151,16 +153,6 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         }
       }
 
-      // Send Discord notification for new listing (background task)
-      try {
-        await supabase.functions.invoke('discord-listing-notification', {
-          body: { listingId: listing.id }
-        });
-      } catch (notificationError) {
-        console.error('Discord notification error:', notificationError);
-        // Don't fail the listing creation if Discord notification fails
-      }
-
       toast({
         title: "Listing created!",
         description: "Your listing has been submitted for review.",
@@ -176,7 +168,8 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         invite_url: '',
         website_url: '',
         support_server_url: '',
-        member_count: '',
+        avatar_url: '',
+        banner_url: '',
         category_id: ''
       });
 
@@ -299,17 +292,28 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
             </div>
 
             <div>
-              <Label htmlFor="member_count">Member Count</Label>
+              <Label htmlFor="avatar_url">Avatar/Icon URL</Label>
               <Input
-                id="member_count"
-                type="number"
-                value={formData.member_count}
-                onChange={(e) => setFormData({ ...formData, member_count: e.target.value })}
+                id="avatar_url"
+                type="url"
+                value={formData.avatar_url}
+                onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
                 className="bg-[#2C2F33] border-[#40444B]"
-                placeholder="0"
-                min="0"
+                placeholder="https://example.com/avatar.png"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="banner_url">Banner Image URL</Label>
+            <Input
+              id="banner_url"
+              type="url"
+              value={formData.banner_url}
+              onChange={(e) => setFormData({ ...formData, banner_url: e.target.value })}
+              className="bg-[#2C2F33] border-[#40444B]"
+              placeholder="https://example.com/banner.png"
+            />
           </div>
 
           <div>

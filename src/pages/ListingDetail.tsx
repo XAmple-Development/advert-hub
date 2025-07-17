@@ -376,13 +376,6 @@ const ListingDetailPage = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-              {listing.member_count && (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-foreground">{formatCount(listing.member_count)}</div>
-                  <div className="text-sm text-muted-foreground">Members</div>
-                </div>
-              )}
-              
               {listing.online_count && (
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-400">{formatCount(listing.online_count)}</div>
