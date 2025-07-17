@@ -21,6 +21,7 @@ interface Listing {
   invite_url?: string;
   website_url?: string;
   support_server_url?: string;
+  youtube_trailer?: string;
 }
 
 interface EditListingModalProps {
@@ -37,6 +38,7 @@ const editListingSchema = z.object({
   invite_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   website_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   support_server_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  youtube_trailer: z.string().url('Must be a valid YouTube URL').optional().or(z.literal('')),
 });
 
 type EditListingFormData = z.infer<typeof editListingSchema>;
@@ -59,6 +61,7 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
       invite_url: listing.invite_url || '',
       website_url: listing.website_url || '',
       support_server_url: listing.support_server_url || '',
+      youtube_trailer: listing.youtube_trailer || '',
     },
   });
 
@@ -72,6 +75,7 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
         invite_url: listing.invite_url || '',
         website_url: listing.website_url || '',
         support_server_url: listing.support_server_url || '',
+        youtube_trailer: listing.youtube_trailer || '',
       });
     }
   }, [listing, form]);
@@ -89,6 +93,7 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
         invite_url: data.invite_url?.trim() || null,
         website_url: data.website_url?.trim() || null,
         support_server_url: data.support_server_url?.trim() || null,
+        youtube_trailer: data.youtube_trailer?.trim() || null,
         updated_at: new Date().toISOString(),
       };
 
@@ -236,6 +241,24 @@ const EditListingModal = ({ open, onOpenChange, listing, onSuccess }: EditListin
                       {...field}
                       className="bg-[#40444B] border-[#565A5E] text-white placeholder-gray-400"
                       placeholder="https://discord.gg/support"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="youtube_trailer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">YouTube Trailer URL (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      className="bg-[#40444B] border-[#565A5E] text-white placeholder-gray-400"
+                      placeholder="https://youtube.com/watch?v=..."
                     />
                   </FormControl>
                   <FormMessage />

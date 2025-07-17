@@ -129,8 +129,9 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
           support_server_url: formData.support_server_url.trim() || null,
           avatar_url: formData.avatar_url.trim() || null,
           banner_url: formData.banner_url.trim() || null,
-          tags: canAddYoutubeTrailer && formData.youtube_trailer.trim() ? 
-            ['youtube:' + formData.youtube_trailer.trim()] : null,
+          tags: null,
+          youtube_trailer: canAddYoutubeTrailer && formData.youtube_trailer.trim() ? 
+            formData.youtube_trailer.trim() : null,
           status: 'pending',
           premium_featured: isPremium,
           priority_ranking: listingPriority * 100, // Convert to actual ranking values
