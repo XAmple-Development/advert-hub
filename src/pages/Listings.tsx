@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import ModernLayout from '@/components/layout/ModernLayout';
 import ModernCard from '@/components/ui/modern-card';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import CreateListingModal from '@/components/CreateListingModal';
 import { 
   Search, 
   Filter, 
@@ -23,7 +25,8 @@ import {
   List,
   SlidersHorizontal,
   Calendar,
-  Crown
+  Crown,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
@@ -57,10 +60,20 @@ const Listings = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('popular');
   const [filterType, setFilterType] = useState<'all' | 'server' | 'bot'>('all');
+  const [showCreateModal, setShowCreateModal] = useState(searchParams.get('create') === 'true');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchListings();
+    // Check if create parameter is in URL
+    if (searchParams.get('create') === 'true') {
+      setShowCreateModal(true);
+      // Remove the create parameter from URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('create');
+      setSearchParams(newParams);
+    }
   }, [searchParams]);
 
   const fetchListings = async () => {
@@ -455,6 +468,19 @@ const Listings = () => {
             </p>
           </ModernCard>
         )}
+
+        {/* Create Listing Modal */}
+        <CreateListingModal
+          open={showCreateModal}
+          onOpenChange={setShowCreateModal}
+          onSuccess={() => {
+            fetchListings();
+            toast({
+              title: "Success!",
+              description: "Your listing has been created and is pending review.",
+            });
+          }}
+        />
       </div>
     </ModernLayout>
   );

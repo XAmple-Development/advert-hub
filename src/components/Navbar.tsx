@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar, MessageCircle, Code, ChevronDown, Search, Users, Settings, Gamepad2, MessageSquare } from 'lucide-react';
+import { LogOut, Shield, Home, Menu, X, Bot, Crown, Sparkles, BarChart3, User, Trophy, Activity, Flag, Calendar, MessageCircle, Code, ChevronDown, Search, Users, Settings, Gamepad2, MessageSquare, Plus } from 'lucide-react';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 
 const Navbar = () => {
@@ -79,9 +79,17 @@ const Navbar = () => {
                 <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
                   <Link to="/listings" className="flex items-center w-full text-foreground hover:text-primary font-medium">
                     <Users className="h-4 w-4 mr-3" />
-                    Listings
+                    Browse Listings
                   </Link>
                 </DropdownMenuItem>
+                {user && (
+                  <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                    <button className="flex items-center w-full text-foreground hover:text-primary font-medium" onClick={() => window.location.href = '/listings?create=true'}>
+                      <Plus className="h-4 w-4 mr-3" />
+                      Create Listing
+                    </button>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 

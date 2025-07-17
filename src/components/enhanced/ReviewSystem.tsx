@@ -26,20 +26,15 @@ interface Review {
   user_id: string;
   listing_id: string;
   rating: number;
-  review_text: string;
+  comment: string;
   helpful_count: number;
-  reported_count: number;
-  is_verified: boolean;
+  verified_purchase: boolean;
   created_at: string;
-  updated_at: string;
   profiles?: {
     username: string;
     discord_username: string;
     discord_avatar: string;
   } | null;
-  user_vote?: {
-    is_helpful: boolean;
-  }[];
 }
 
 interface ReviewSystemProps {
@@ -65,11 +60,10 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
   const fetchReviews = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_reviews')
+        .from('reviews')
         .select(`
           *,
-          profiles:user_id (username, discord_username, discord_avatar),
-          user_vote:review_votes!review_id (is_helpful)
+          profiles:user_id (username, discord_username, discord_avatar)
         `)
         .eq('listing_id', listingId)
         .order('created_at', { ascending: false });
@@ -105,12 +99,12 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
         user_id: user.id,
         listing_id: listingId,
         rating,
-        review_text: reviewText.trim() || null
+        comment: reviewText.trim() || null
       };
 
       if (editingId) {
         const { error } = await supabase
-          .from('user_reviews')
+          .from('reviews')
           .update(reviewData)
           .eq('id', editingId);
         
@@ -118,7 +112,7 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
         toast({ title: 'Review updated successfully!' });
       } else {
         const { error } = await supabase
-          .from('user_reviews')
+          .from('reviews')
           .insert(reviewData);
         
         if (error) throw error;
@@ -154,11 +148,11 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
 
     try {
       const { error } = await supabase
-        .from('review_votes')
+        .from('review_helpfulness')
         .upsert({
           user_id: user.id,
           review_id: reviewId,
-          is_helpful: isHelpful
+          helpful: isHelpful
         });
 
       if (error) throw error;
@@ -168,7 +162,7 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
       if (review) {
         const increment = isHelpful ? 1 : -1;
         await supabase
-          .from('user_reviews')
+          .from('reviews')
           .update({ helpful_count: Math.max(0, review.helpful_count + increment) })
           .eq('id', reviewId);
       }
@@ -184,7 +178,7 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
 
     try {
       const { error } = await supabase
-        .from('user_reviews')
+        .from('reviews')
         .delete()
         .eq('id', reviewId)
         .eq('user_id', user.id);
@@ -225,7 +219,7 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
   const startEdit = (review: Review) => {
     setEditingId(review.id);
     setRating(review.rating);
-    setReviewText(review.review_text || '');
+    setReviewText(review.comment || '');
     setShowForm(true);
   };
 
@@ -409,14 +403,14 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
                   <div>
                      <div className="flex items-center gap-2">
                        <span className="text-white font-medium">
-                         {review.profiles ? (review.profiles.username || review.profiles.discord_username || 'Anonymous') : 'Anonymous'}
+                          {review.profiles ? (review.profiles.username || review.profiles.discord_username || 'Anonymous') : 'Anonymous'}
                        </span>
-                      {review.is_verified && (
-                        <Badge className="bg-green-600 text-white text-xs">
-                          <Check className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
-                      )}
+                       {review.verified_purchase && (
+                         <Badge className="bg-green-600 text-white text-xs">
+                           <Check className="h-3 w-3 mr-1" />
+                           Verified
+                         </Badge>
+                       )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                       <Calendar className="h-3 w-3" />
@@ -441,8 +435,8 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
               </div>
 
               {/* Review Text */}
-              {review.review_text && (
-                <p className="text-gray-300 mb-4">{review.review_text}</p>
+              {review.comment && (
+                <p className="text-gray-300 mb-4">{review.comment}</p>
               )}
 
               {/* Actions */}
