@@ -18,6 +18,8 @@ import {
   Dot
 } from 'lucide-react';
 import ListingVerificationBadge from '@/components/verification/ListingVerificationBadge';
+import { ListingAccent } from '@/components/ListingAccent';
+import { PremiumBadge } from '@/components/PremiumBadge';
 
 interface ModernListingCardProps {
   listing: {
@@ -39,6 +41,8 @@ interface ModernListingCardProps {
     created_at: string;
     last_bumped_at?: string;
     premium_featured?: boolean;
+    user_id?: string;
+    priority_ranking?: number;
   };
   onView?: (id: string) => void;
   onFavorite?: (id: string) => void;
@@ -73,14 +77,23 @@ export const ModernListingCard = ({
     });
   };
 
+  // Determine premium tier based on priority ranking
+  const getTier = () => {
+    if (listing.priority_ranking && listing.priority_ranking >= 200) return 'platinum';
+    if (listing.priority_ranking && listing.priority_ranking >= 100) return 'gold';
+    return 'free';
+  };
+
+  const tier = getTier();
+
   return (
-    <Card className={cn(
-      "group relative overflow-hidden border-border transition-all duration-500 hover-lift",
-      "h-[140px] bg-card/95 backdrop-blur-xl shadow-elevation-sm",
-      "hover:shadow-elevation-lg hover:border-primary/50",
-      listing.premium_featured && "ring-2 ring-primary/40 border-primary/30 shadow-primary/10",
-      className
-    )}>
+    <ListingAccent tier={tier} className={className}>
+      <Card className={cn(
+        "group relative overflow-hidden border-border transition-all duration-500 hover-lift",
+        "h-[140px] bg-card/95 backdrop-blur-xl shadow-elevation-sm",
+        "hover:shadow-elevation-lg hover:border-primary/50",
+        listing.premium_featured && "ring-2 ring-primary/40 border-primary/30 shadow-primary/10"
+      )}>
       {/* Featured Badge */}
       {(listing.featured || listing.premium_featured) && (
         <div className="absolute top-2 right-2 z-20">
@@ -107,6 +120,7 @@ export const ModernListingCard = ({
                 {listing.name}
               </h3>
               <ListingVerificationBadge listingId={listing.id} size="sm" />
+              {tier !== 'free' && <PremiumBadge tier={tier} className="text-xs" />}
             </div>
             
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -203,5 +217,6 @@ export const ModernListingCard = ({
         </div>
       </CardContent>
     </Card>
+    </ListingAccent>
   );
 };

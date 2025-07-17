@@ -24,7 +24,7 @@ export const usePremiumFeatures = () => {
     listingPriority: isPlatinum ? 1 : isGold ? 2 : 3,
     
     // UI enhancements
-    botAccent: isPlatinum ? 'white' : isGold ? 'gold' : 'none',
+    botAccent: isPlatinum ? 'platinum' : isGold ? 'gold' : 'none',
     premiumBadge: subscription_tier !== 'free',
   };
 

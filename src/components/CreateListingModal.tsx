@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 
 
 interface CreateListingModalProps {
@@ -37,11 +38,13 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
     support_server_url: '',
     avatar_url: '',
     banner_url: '',
+    youtube_trailer: '',
     category_id: ''
   });
   const { toast } = useToast();
   const authData = useAuth();
   const { isPremium } = useSubscription();
+  const { canAddYoutubeTrailer, canHaveLargeBanners, listingPriority } = usePremiumFeatures();
   
 
   useEffect(() => {
@@ -126,9 +129,11 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
           support_server_url: formData.support_server_url.trim() || null,
           avatar_url: formData.avatar_url.trim() || null,
           banner_url: formData.banner_url.trim() || null,
+          tags: canAddYoutubeTrailer && formData.youtube_trailer.trim() ? 
+            ['youtube:' + formData.youtube_trailer.trim()] : null,
           status: 'pending',
           premium_featured: isPremium,
-          priority_ranking: isPremium ? 100 : 0,
+          priority_ranking: listingPriority * 100, // Convert to actual ranking values
           analytics_enabled: isPremium,
           verified_badge: isPremium
         })
@@ -170,6 +175,7 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
         support_server_url: '',
         avatar_url: '',
         banner_url: '',
+        youtube_trailer: '',
         category_id: ''
       });
 
@@ -305,7 +311,9 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
           </div>
 
           <div>
-            <Label htmlFor="banner_url">Banner Image URL</Label>
+            <Label htmlFor="banner_url">
+              Banner Image URL {canHaveLargeBanners && <span className="text-amber-400">(Large Banner Support)</span>}
+            </Label>
             <Input
               id="banner_url"
               type="url"
@@ -315,6 +323,22 @@ const CreateListingModal = ({ open, onOpenChange, onSuccess }: CreateListingModa
               placeholder="https://example.com/banner.png"
             />
           </div>
+
+          {canAddYoutubeTrailer && (
+            <div>
+              <Label htmlFor="youtube_trailer">
+                YouTube Trailer URL <span className="text-amber-400">(Premium Feature)</span>
+              </Label>
+              <Input
+                id="youtube_trailer"
+                type="url"
+                value={formData.youtube_trailer}
+                onChange={(e) => setFormData({ ...formData, youtube_trailer: e.target.value })}
+                className="bg-[#2C2F33] border-[#40444B]"
+                placeholder="https://youtube.com/watch?v=..."
+              />
+            </div>
+          )}
 
           <div>
             <Label htmlFor="website_url">Website URL</Label>
