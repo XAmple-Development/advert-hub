@@ -149,6 +149,12 @@ const AdminDashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [typeFilter, setTypeFilter] = useState('all');
+    const [announcementTitle, setAnnouncementTitle] = useState('');
+    const [announcementMessage, setAnnouncementMessage] = useState('');
+    const [announcementActive, setAnnouncementActive] = useState(false);
+    const [announcementType, setAnnouncementType] = useState('info');
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const [maintenanceMessage, setMaintenanceMessage] = useState('System maintenance in progress. Please check back soon!');
     const { user, loading: authLoading } = useAuth();
     const { toast } = useToast();
 
@@ -169,8 +175,97 @@ const AdminDashboard = () => {
     useEffect(() => {
         if (isAdmin) {
             fetchAllData();
+            fetchMaintenanceStatus();
         }
     }, [isAdmin]);
+
+    const fetchMaintenanceStatus = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('site_maintenance')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            if (data) {
+                setMaintenanceMode(data.is_maintenance_mode);
+                setMaintenanceMessage(data.maintenance_message || 'System maintenance in progress. Please check back soon!');
+            }
+        } catch (error) {
+            console.error('Failed to fetch maintenance status:', error);
+        }
+    };
+
+    const handleCreateAnnouncement = async () => {
+        if (!announcementTitle.trim() || !announcementMessage.trim()) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Please fill in both title and message",
+            });
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('notifications')
+                .insert({
+                    title: announcementTitle,
+                    message: announcementMessage,
+                    type: 'announcement',
+                    priority: announcementType === 'error' ? 'high' : 'normal',
+                    data: { announcement_type: announcementType },
+                    user_id: null, // Site-wide announcement
+                });
+
+            if (error) throw error;
+
+            toast({
+                title: "Success!",
+                description: "Announcement created successfully",
+            });
+
+            setAnnouncementTitle('');
+            setAnnouncementMessage('');
+            setAnnouncementActive(false);
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to create announcement",
+            });
+        }
+    };
+
+    const handleUpdateMaintenanceMode = async () => {
+        try {
+            const { error } = await supabase
+                .from('site_maintenance')
+                .upsert({
+                    is_maintenance_mode: maintenanceMode,
+                    maintenance_message: maintenanceMessage,
+                    created_by: user?.id,
+                }, {
+                    onConflict: 'id'
+                });
+
+            if (error) throw error;
+
+            toast({
+                title: "Success!",
+                description: `Maintenance mode ${maintenanceMode ? 'enabled' : 'disabled'}`,
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to update maintenance mode",
+            });
+        }
+    };
 
     const checkAdminStatus = async () => {
         if (!user) {
@@ -470,18 +565,33 @@ const AdminDashboard = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <Label htmlFor="announcement-title">Title</Label>
-                                        <Input id="announcement-title" placeholder="Enter announcement title..." />
+                                        <Input 
+                                            id="announcement-title" 
+                                            placeholder="Enter announcement title..." 
+                                            value={announcementTitle}
+                                            onChange={(e) => setAnnouncementTitle(e.target.value)}
+                                        />
                                     </div>
                                     <div>
                                         <Label htmlFor="announcement-message">Message</Label>
-                                        <Textarea id="announcement-message" placeholder="Enter announcement message..." rows={4} />
+                                        <Textarea 
+                                            id="announcement-message" 
+                                            placeholder="Enter announcement message..." 
+                                            rows={4} 
+                                            value={announcementMessage}
+                                            onChange={(e) => setAnnouncementMessage(e.target.value)}
+                                        />
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center space-x-2">
-                                            <Switch id="announcement-active" />
+                                            <Switch 
+                                                id="announcement-active" 
+                                                checked={announcementActive}
+                                                onCheckedChange={setAnnouncementActive}
+                                            />
                                             <Label htmlFor="announcement-active">Active</Label>
                                         </div>
-                                        <Select defaultValue="info">
+                                        <Select value={announcementType} onValueChange={setAnnouncementType}>
                                             <SelectTrigger className="w-32">
                                                 <SelectValue />
                                             </SelectTrigger>
@@ -493,7 +603,7 @@ const AdminDashboard = () => {
                                             </SelectContent>
                                         </Select>
                                     </div>
-                                    <Button className="w-full">
+                                    <Button className="w-full" onClick={handleCreateAnnouncement}>
                                         <Bell className="h-4 w-4 mr-2" />
                                         Create Announcement
                                     </Button>
@@ -520,18 +630,23 @@ const AdminDashboard = () => {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="maintenance-toggle">Enable Maintenance Mode</Label>
-                                        <Switch id="maintenance-toggle" />
+                                        <Switch 
+                                            id="maintenance-toggle" 
+                                            checked={maintenanceMode}
+                                            onCheckedChange={setMaintenanceMode}
+                                        />
                                     </div>
                                     <div>
                                         <Label htmlFor="maintenance-message">Maintenance Message</Label>
                                         <Textarea 
                                             id="maintenance-message" 
                                             placeholder="Enter maintenance message for users..." 
-                                            defaultValue="System maintenance in progress. Please check back soon!"
+                                            value={maintenanceMessage}
+                                            onChange={(e) => setMaintenanceMessage(e.target.value)}
                                             rows={3}
                                         />
                                     </div>
-                                    <Button className="w-full">
+                                    <Button className="w-full" onClick={handleUpdateMaintenanceMode}>
                                         <Settings className="h-4 w-4 mr-2" />
                                         Update Maintenance Settings
                                     </Button>
