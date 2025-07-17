@@ -1267,6 +1267,7 @@ export type Database = {
           view_count: number | null
           vote_count: number | null
           website_url: string | null
+          youtube_trailer: string | null
         }
         Insert: {
           analytics_enabled?: boolean | null
@@ -1310,6 +1311,7 @@ export type Database = {
           view_count?: number | null
           vote_count?: number | null
           website_url?: string | null
+          youtube_trailer?: string | null
         }
         Update: {
           analytics_enabled?: boolean | null
@@ -1353,6 +1355,7 @@ export type Database = {
           view_count?: number | null
           vote_count?: number | null
           website_url?: string | null
+          youtube_trailer?: string | null
         }
         Relationships: []
       }
@@ -2155,6 +2158,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      team_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_at: string
+          invited_by: string
+          listing_id: string
+          role: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_at?: string
+          invited_by: string
+          listing_id: string
+          role: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string
+          listing_id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trending_metrics: {
         Row: {

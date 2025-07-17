@@ -3,6 +3,7 @@ import { useParams, Navigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { usePremiumFeatures } from '@/hooks/usePremiumFeatures';
 import Navbar from '@/components/Navbar';
 import ModernLayout from '@/components/layout/ModernLayout';
 import ModernCard from '@/components/ui/modern-card';
@@ -12,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EditListingModal from '@/components/EditListingModal';
 import { ReviewSystem } from '@/components/enhanced/ReviewSystem';
+import { TeamManagement } from '@/components/TeamManagement';
 import { 
   ExternalLink, 
   Users, 
@@ -31,7 +33,8 @@ import {
   Award,
   Zap,
   Shield,
-  Edit
+  Edit,
+  Play
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -64,6 +67,8 @@ interface Listing {
   created_at: string;
   last_bumped_at?: string;
   user_id: string;
+  youtube_trailer?: string;
+  priority_ranking?: number;
 }
 
 const ListingDetailPage = () => {
@@ -76,10 +81,7 @@ const ListingDetailPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-
-  // Cooldown constants
-  const FREE_BUMP_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours
-  const PREMIUM_BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
+  const { bumpCooldownHours, bumpPoints } = usePremiumFeatures();
 
   useEffect(() => {
     if (id) {
@@ -225,10 +227,8 @@ const ListingDetailPage = () => {
         return;
       }
 
-      // Determine cooldown based on subscription
-      const cooldownMs = profile.subscription_tier === 'platinum' || profile.subscription_tier === 'gold' 
-        ? PREMIUM_BUMP_COOLDOWN_MS 
-        : FREE_BUMP_COOLDOWN_MS;
+      // Use premium features hook for cooldown
+      const cooldownMs = bumpCooldownHours * 60 * 60 * 1000;
 
       // Check last bump time
       const { data: cooldown } = await supabase
@@ -617,10 +617,11 @@ const ListingDetailPage = () => {
 
         {/* Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full max-w-md">
+          <TabsList className="grid grid-cols-5 w-full max-w-xl">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            {user && user.id === listing.user_id && <TabsTrigger value="team">Team</TabsTrigger>}
             <TabsTrigger value="similar">Similar</TabsTrigger>
           </TabsList>
 
@@ -637,6 +638,24 @@ const ListingDetailPage = () => {
                     </p>
                   </div>
                 </ModernCard>
+
+                {/* YouTube Trailer */}
+                {listing.youtube_trailer && (
+                  <ModernCard className="p-6">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <Play className="h-5 w-5 text-red-500" />
+                      Trailer
+                    </h3>
+                    <div className="aspect-video rounded-lg overflow-hidden">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${listing.youtube_trailer.split('watch?v=')[1] || listing.youtube_trailer.split('/').pop()}`}
+                        title={`${listing.name} Trailer`}
+                        className="w-full h-full"
+                        allowFullScreen
+                      />
+                    </div>
+                  </ModernCard>
+                )}
 
                 {/* Features/Commands (for bots) */}
                 {listing.type === 'bot' && (
@@ -737,15 +756,15 @@ const ListingDetailPage = () => {
                           : "opacity-50 cursor-not-allowed"
                       )}
                       size="lg"
-                      title={!canBump ? `Next bump available in ${nextBumpTime}` : 'Bump this listing to the top'}
+                      title={!canBump ? `Next bump available in ${nextBumpTime}` : `Bump this listing to the top (${bumpPoints}x power)`}
                     >
                       <TrendingUp className="h-5 w-5 mr-2" />
-                      {canBump ? 'Bump to Top' : `Cooldown: ${nextBumpTime}`}
+                      {canBump ? `Bump to Top (${bumpPoints}x)` : `Cooldown: ${nextBumpTime}`}
                     </Button>
                     {!canBump && (
                       <p className="text-xs text-muted-foreground mt-2 text-center">
                         <Clock className="h-3 w-3 inline mr-1" />
-                        Next bump available in {nextBumpTime}
+                        Next bump available in {nextBumpTime} (Gold: 3h, Platinum: 2h)
                       </p>
                     )}
                   </div>
@@ -799,6 +818,12 @@ const ListingDetailPage = () => {
           <TabsContent value="reviews">
             <ReviewSystem listingId={listing.id} />
           </TabsContent>
+
+          {user && user.id === listing.user_id && (
+            <TabsContent value="team">
+              <TeamManagement listingId={listing.id} />
+            </TabsContent>
+          )}
 
           <TabsContent value="similar">
             <ModernCard className="p-6">
