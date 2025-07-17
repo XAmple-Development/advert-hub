@@ -209,9 +209,8 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
               </p>
             </div>
 
-            {/* Admin bypass button - only show if user is admin */}
-            {isAdmin && (
-              <div className="mt-6">
+            {/* Admin bypass button - always visible for emergency access */}
+            <div className="mt-6">
                 <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
                   <DialogTrigger asChild>
                     <Button 
@@ -279,7 +278,6 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
                   </DialogContent>
                 </Dialog>
               </div>
-            )}
           </CardContent>
         </Card>
       </div>
