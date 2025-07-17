@@ -59,26 +59,38 @@ export const ReviewSystem = ({ listingId, showWriteReview = true }: ReviewSystem
 
   const fetchReviews = async () => {
     try {
-      const { data, error } = await supabase
+      // First fetch reviews
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select(`
-          id,
-          user_id,
-          listing_id,
-          rating,
-          comment,
-          helpful_count,
-          verified_purchase,
-          created_at,
-          profiles(username, discord_username, discord_avatar)
-        `)
+        .select('*')
         .eq('listing_id', listingId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
-      console.log('Fetched reviews:', data); // Debug log
-      setReviews(data || []);
+      if (reviewsError) throw reviewsError;
+
+      // Then fetch user profiles for the reviews
+      if (reviewsData && reviewsData.length > 0) {
+        const userIds = reviewsData.map(review => review.user_id);
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, discord_username, discord_avatar')
+          .in('id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        }
+
+        // Combine the data
+        const reviewsWithProfiles = reviewsData.map(review => ({
+          ...review,
+          profiles: profilesData?.find(profile => profile.id === review.user_id) || null
+        }));
+
+        console.log('Fetched reviews with profiles:', reviewsWithProfiles);
+        setReviews(reviewsWithProfiles);
+      } else {
+        setReviews([]);
+      }
     } catch (error) {
       console.error('Error fetching reviews:', error);
     } finally {
