@@ -26,6 +26,7 @@ import {
   Share2,
   Flag,
   TrendingUp,
+  Clock,
   MessageCircle,
   Award,
   Zap,
@@ -552,21 +553,6 @@ const ListingDetailPage = () => {
                     {isFavorited ? 'Favorited' : 'Favorite'}
                   </Button>
                   
-                  {/* Bump Button */}
-                  <Button 
-                    variant="outline" 
-                    onClick={handleBump}
-                    disabled={!canBump}
-                    className={cn(
-                      "flex-1",
-                      !canBump && "opacity-50 cursor-not-allowed"
-                    )}
-                    title={!canBump ? `Next bump available in ${nextBumpTime}` : 'Bump this listing to the top'}
-                  >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    {canBump ? 'Bump' : `Wait ${nextBumpTime}`}
-                  </Button>
-                  
                   <Button variant="outline" onClick={handleShare}>
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -736,6 +722,31 @@ const ListingDetailPage = () => {
                           Support Server
                         </a>
                       </Button>
+                    )}
+                  </div>
+                  
+                  {/* Bump Button - moved here for better visibility */}
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <Button 
+                      onClick={handleBump}
+                      disabled={!canBump}
+                      className={cn(
+                        "w-full",
+                        canBump 
+                          ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-lg hover:shadow-purple-500/25" 
+                          : "opacity-50 cursor-not-allowed"
+                      )}
+                      size="lg"
+                      title={!canBump ? `Next bump available in ${nextBumpTime}` : 'Bump this listing to the top'}
+                    >
+                      <TrendingUp className="h-5 w-5 mr-2" />
+                      {canBump ? 'Bump to Top' : `Cooldown: ${nextBumpTime}`}
+                    </Button>
+                    {!canBump && (
+                      <p className="text-xs text-muted-foreground mt-2 text-center">
+                        <Clock className="h-3 w-3 inline mr-1" />
+                        Next bump available in {nextBumpTime}
+                      </p>
                     )}
                   </div>
                 </ModernCard>
