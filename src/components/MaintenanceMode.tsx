@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, Settings, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, Settings, Clock, Shield } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 interface MaintenanceStatus {
@@ -92,6 +93,13 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleAdminBypass = () => {
+    // Add admin bypass parameter and refresh page
+    const url = new URL(window.location.href);
+    url.searchParams.set('admin', 'true');
+    window.location.href = url.toString();
+  };
+
   // If loading, show children (don't block the app)
   if (loading) {
     return <>{children}</>;
@@ -146,6 +154,20 @@ const MaintenanceMode = ({ children }: { children: React.ReactNode }) => {
                 </a>
               </p>
             </div>
+
+            {/* Admin bypass button - only show if user is admin */}
+            {isAdmin && (
+              <div className="mt-6">
+                <Button 
+                  onClick={handleAdminBypass}
+                  variant="outline"
+                  className="bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30 hover:border-blue-500/50"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Bypass
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
