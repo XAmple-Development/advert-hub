@@ -82,7 +82,6 @@ const Navbar = () => {
                     Listings
                   </Link>
                 </DropdownMenuItem>
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
