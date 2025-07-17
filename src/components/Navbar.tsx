@@ -185,6 +185,12 @@ const Navbar = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
+                      <Link to="/subscription" className="flex items-center w-full text-foreground hover:text-primary font-medium">
+                        <Settings className="h-4 w-4 mr-3" />
+                        Subscription
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="focus:bg-accent/50 rounded-lg p-3 transition-colors">
                       <Link to="/pricing" className="flex items-center w-full text-foreground hover:text-primary font-medium">
                         <Crown className="h-4 w-4 mr-3" />
                         Premium
@@ -319,6 +325,13 @@ const Navbar = () => {
                     <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
                       <User className="h-5 w-5 mr-3" />
                       Profile
+                    </Button>
+                  </Link>
+
+                  <Link to="/subscription" onClick={closeMobileMenu}>
+                    <Button variant="ghost" className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800/50 text-lg font-medium py-3 rounded-xl">
+                      <Settings className="h-5 w-5 mr-3" />
+                      Subscription
                     </Button>
                   </Link>
 

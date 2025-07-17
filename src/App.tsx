@@ -28,6 +28,7 @@ import ForumCategory from "./pages/ForumCategory";
 import ForumTopic from "./pages/ForumTopic";
 import CreateForumTopic from "./pages/CreateForumTopic";
 import Pricing from "./pages/Pricing";
+import Subscription from "./pages/Subscription";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import AdminSubscriptions from "./pages/AdminSubscriptions";
 import API from "./pages/API";
@@ -75,6 +76,7 @@ const App = () => (
                 <Route path="/forum/topic/:id" element={<ForumTopic />} />
                 <Route path="/forum/create" element={<CreateForumTopic />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/subscription" element={<Subscription />} />
                 <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                 <Route path="/admin/subscriptions" element={
                   <ProtectedRoute requireAdmin={true}>
