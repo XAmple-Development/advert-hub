@@ -113,7 +113,7 @@ interface User {
     id: string;
     username?: string;
     discord_username?: string;
-    subscription_tier: string;
+    subscription_tier: 'free' | 'gold' | 'platinum';
     is_admin?: boolean;
     created_at: string;
     last_seen?: string;
@@ -713,13 +713,95 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="border-border/50 hover:border-primary/50"
-                                            >
-                                                <Settings className="h-4 w-4" />
-                                            </Button>
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="border-border/50 hover:border-primary/50"
+                                                    >
+                                                        <Settings className="h-4 w-4" />
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent>
+                                                    <DialogHeader>
+                                                        <DialogTitle>Manage User</DialogTitle>
+                                                        <DialogDescription>
+                                                            Manage permissions and settings for {user.discord_username || user.username || 'Unknown User'}
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label htmlFor={`admin-${user.id}`}>Admin Privileges</Label>
+                                                            <Switch
+                                                                id={`admin-${user.id}`}
+                                                                checked={user.is_admin || false}
+                                                                onCheckedChange={async (checked) => {
+                                                                    try {
+                                                                        const { error } = await supabase
+                                                                            .from('profiles')
+                                                                            .update({ is_admin: checked })
+                                                                            .eq('id', user.id);
+                                                                        
+                                                                        if (error) throw error;
+                                                                        
+                                                                        toast({
+                                                                            title: "Success",
+                                                                            description: `User ${checked ? 'granted' : 'revoked'} admin privileges`,
+                                                                        });
+                                                                        
+                                                                        await fetchAllUsers();
+                                                                    } catch (error: any) {
+                                                                        toast({
+                                                                            variant: "destructive",
+                                                                            title: "Error",
+                                                                            description: "Failed to update user privileges",
+                                                                        });
+                                                                    }
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center justify-between">
+                                                            <Label>Subscription Tier</Label>
+                                                            <Select
+                                                                value={user.subscription_tier}
+                                                                onValueChange={async (value: 'free' | 'gold' | 'platinum') => {
+                                                                     try {
+                                                                         const { error } = await supabase
+                                                                             .from('profiles')
+                                                                             .update({ subscription_tier: value })
+                                                                             .eq('id', user.id);
+                                                                        
+                                                                        if (error) throw error;
+                                                                        
+                                                                        toast({
+                                                                            title: "Success",
+                                                                            description: "User subscription tier updated",
+                                                                        });
+                                                                        
+                                                                        await fetchAllUsers();
+                                                                    } catch (error: any) {
+                                                                        toast({
+                                                                            variant: "destructive",
+                                                                            title: "Error",
+                                                                            description: "Failed to update subscription tier",
+                                                                        });
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <SelectTrigger>
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="free">Free</SelectItem>
+                                                                    <SelectItem value="gold">Gold</SelectItem>
+                                                                    <SelectItem value="platinum">Platinum</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+                                                </DialogContent>
+                                            </Dialog>
                                         </div>
                                     </div>
                                 ))}
