@@ -70,16 +70,25 @@ const ListingDetailPage = () => {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [canBump, setCanBump] = useState(true);
+  const [nextBumpTime, setNextBumpTime] = useState<string>('');
   const [showEditModal, setShowEditModal] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // Cooldown constants
+  const FREE_BUMP_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours
+  const PREMIUM_BUMP_COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
 
   useEffect(() => {
     if (id) {
       fetchListing();
       trackView();
+      if (user) {
+        checkBumpCooldown();
+      }
     }
-  }, [id]);
+  }, [id, user]);
 
   const fetchListing = async () => {
     try {
@@ -195,6 +204,189 @@ const ListingDetailPage = () => {
       toast({
         title: "Link copied!",
         description: "Listing link copied to clipboard"
+      });
+    }
+  };
+
+  const checkBumpCooldown = async () => {
+    if (!user || !id) return;
+
+    try {
+      // Get user subscription tier
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_tier, discord_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.discord_id) {
+        setCanBump(false);
+        return;
+      }
+
+      // Determine cooldown based on subscription
+      const cooldownMs = profile.subscription_tier === 'platinum' || profile.subscription_tier === 'gold' 
+        ? PREMIUM_BUMP_COOLDOWN_MS 
+        : FREE_BUMP_COOLDOWN_MS;
+
+      // Check last bump time
+      const { data: cooldown } = await supabase
+        .from('bump_cooldowns')
+        .select('last_bump_at')
+        .eq('user_discord_id', profile.discord_id)
+        .eq('listing_id', id)
+        .single();
+
+      if (!cooldown) {
+        setCanBump(true);
+        return;
+      }
+
+      const lastBumpTime = new Date(cooldown.last_bump_at).getTime();
+      const now = Date.now();
+      const timeDiff = now - lastBumpTime;
+
+      if (timeDiff >= cooldownMs) {
+        setCanBump(true);
+        setNextBumpTime('');
+      } else {
+        setCanBump(false);
+        const remainingTime = cooldownMs - timeDiff;
+        const hours = Math.floor(remainingTime / (60 * 60 * 1000));
+        const minutes = Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000));
+        setNextBumpTime(`${hours}h ${minutes}m`);
+        
+        // Set timeout to re-check when cooldown expires
+        setTimeout(checkBumpCooldown, remainingTime + 1000);
+      }
+    } catch (error) {
+      console.error('Error checking bump cooldown:', error);
+    }
+  };
+
+  const handleBump = async () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication required",
+        description: "Please sign in to bump listings",
+      });
+      return;
+    }
+
+    if (!canBump) {
+      toast({
+        variant: "destructive",
+        title: "Cooldown Active",
+        description: `You must wait ${nextBumpTime} before bumping again`,
+      });
+      return;
+    }
+
+    if (!listing) return;
+
+    try {
+      // Get user's Discord ID
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('discord_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.discord_id) {
+        toast({
+          variant: "destructive",
+          title: "Discord Account Required",
+          description: "You need to link your Discord account to bump listings",
+        });
+        return;
+      }
+
+      const now = new Date();
+
+      // Update cooldown
+      const { error: cooldownError } = await supabase
+        .from('bump_cooldowns')
+        .upsert({
+          user_discord_id: profile.discord_id,
+          listing_id: listing.id,
+          last_bump_at: now.toISOString(),
+        }, {
+          onConflict: 'user_discord_id,listing_id',
+          ignoreDuplicates: false
+        });
+
+      if (cooldownError) {
+        console.error('Error updating cooldown:', cooldownError);
+        toast({
+          variant: "destructive",
+          title: "Bump Failed",
+          description: "Unable to process your bump right now. Please try again in a moment.",
+        });
+        return;
+      }
+
+      // Update listing
+      const { error: listingUpdateError } = await supabase
+        .from('listings')
+        .update({
+          last_bumped_at: now.toISOString(),
+          bump_count: (listing.bump_count || 0) + 1,
+        })
+        .eq('id', listing.id);
+
+      if (listingUpdateError) {
+        console.error('Error updating listing:', listingUpdateError);
+        toast({
+          variant: "destructive",
+          title: "Bump Failed",
+          description: "Failed to update listing. Please try again.",
+        });
+        return;
+      }
+
+      // Create bump record
+      const { error: bumpError } = await supabase
+        .from('bumps')
+        .insert({
+          user_id: user.id,
+          listing_id: listing.id,
+          bump_type: 'manual',
+        });
+
+      if (bumpError) {
+        console.error('Error creating bump record:', bumpError);
+      }
+
+      // Track analytics
+      await supabase.from('analytics').insert({
+        event_type: 'bump',
+        user_id: user.id,
+        listing_id: listing.id,
+        event_data: { bump_type: 'manual' }
+      });
+
+      toast({
+        title: "Listing Bumped!",
+        description: "Your listing has been bumped to the top.",
+      });
+
+      // Update local state
+      setListing(prev => prev ? {
+        ...prev,
+        last_bumped_at: now.toISOString(),
+        bump_count: (prev.bump_count || 0) + 1,
+      } : null);
+
+      // Update bump cooldown state
+      checkBumpCooldown();
+
+    } catch (error: any) {
+      console.error('Error bumping listing:', error);
+      toast({
+        variant: "destructive",
+        title: "Bump Failed",
+        description: error.message || "An unexpected error occurred. Please try again.",
       });
     }
   };
@@ -359,6 +551,22 @@ const ListingDetailPage = () => {
                     <Heart className={cn("h-4 w-4 mr-2", isFavorited && "fill-current text-red-500")} />
                     {isFavorited ? 'Favorited' : 'Favorite'}
                   </Button>
+                  
+                  {/* Bump Button */}
+                  <Button 
+                    variant="outline" 
+                    onClick={handleBump}
+                    disabled={!canBump}
+                    className={cn(
+                      "flex-1",
+                      !canBump && "opacity-50 cursor-not-allowed"
+                    )}
+                    title={!canBump ? `Next bump available in ${nextBumpTime}` : 'Bump this listing to the top'}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    {canBump ? 'Bump' : `Wait ${nextBumpTime}`}
+                  </Button>
+                  
                   <Button variant="outline" onClick={handleShare}>
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -408,6 +616,13 @@ const ListingDetailPage = () => {
                 <div className="text-center">
                   <div className="text-2xl font-bold text-foreground">{formatCount(listing.view_count)}</div>
                   <div className="text-sm text-muted-foreground">Views</div>
+                </div>
+              )}
+              
+              {listing.bump_count && (
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-400">{formatCount(listing.bump_count)}</div>
+                  <div className="text-sm text-muted-foreground">Bumps</div>
                 </div>
               )}
             </div>
