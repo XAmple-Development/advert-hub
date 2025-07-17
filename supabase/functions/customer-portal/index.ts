@@ -1,173 +1,71 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-// Customer portal using built-in Deno.serve with proper authentication
-Deno.serve(async (req) => {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
-  console.log("Customer portal function called, method:", req.method);
+// Helper logging function for debugging
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[CUSTOMER-PORTAL] ${step}${detailsStr}`);
+};
 
+serve(async (req) => {
   if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    console.log("Starting customer portal execution");
-    
-    // Check environment variables
+    logStep("Function started");
+
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    console.log("Environment check:", { 
-      hasStripeKey: !!stripeKey,
-      hasSupabaseUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceKey
-    });
-    
-    if (!stripeKey) {
-      console.log("No Stripe key found");
-      return new Response(JSON.stringify({ 
-        error: "STRIPE_SECRET_KEY not found"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    logStep("Stripe key verified");
 
-    // Get user from authorization header
+    // Initialize Supabase client with the service role key
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      console.log("No authorization header");
-      return new Response(JSON.stringify({ 
-        error: "No authorization header provided"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
-    }
+    if (!authHeader) throw new Error("No authorization header provided");
+    logStep("Authorization header found");
 
-    // Create Supabase client
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-    
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
-    
-    if (userError || !userData.user?.email) {
-      console.log("User authentication failed:", userError);
-      return new Response(JSON.stringify({ 
-        error: "User not authenticated"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      });
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const user = userData.user;
+    if (!user?.email) throw new Error("User not authenticated or email not available");
+    logStep("User authenticated", { userId: user.id, email: user.email });
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    if (customers.data.length === 0) {
+      throw new Error("No Stripe customer found for this user");
     }
+    const customerId = customers.data[0].id;
+    logStep("Found Stripe customer", { customerId });
 
-    console.log("User authenticated:", userData.user.email);
-
-    // Find Stripe customer by email
-    const customersResponse = await fetch(`https://api.stripe.com/v1/customers?email=${encodeURIComponent(userData.user.email)}`, {
-      headers: {
-        'Authorization': `Bearer ${stripeKey}`,
-      }
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${origin}/`,
     });
+    logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
 
-    if (!customersResponse.ok) {
-      console.log("Failed to fetch customers from Stripe");
-      return new Response(JSON.stringify({ 
-        error: "Failed to fetch customer from Stripe"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-
-    const customersData = await customersResponse.json();
-    
-    if (!customersData.data || customersData.data.length === 0) {
-      console.log("No Stripe customer found for email:", userData.user.email);
-      return new Response(JSON.stringify({ 
-        error: "No Stripe customer found for this user"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 404,
-      });
-    }
-
-    const customerId = customersData.data[0].id;
-    console.log("Found Stripe customer:", customerId);
-
-    // Create portal session
-    const origin = req.headers.get("origin") || req.headers.get("referer") || "https://2b712818-fe7b-4d50-8a53-c875975112ef.lovableproject.com";
-    
-    console.log("Making Stripe API call to create portal session...");
-    console.log("Portal session params:", { customerId, returnUrl: origin });
-    
-    const stripeResponse = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${stripeKey}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        'customer': customerId,
-        'return_url': origin
-      })
-    });
-
-    const responseText = await stripeResponse.text();
-    console.log("Stripe response:", { status: stripeResponse.status, responseText });
-    
-    if (!stripeResponse.ok) {
-      console.error("Stripe API error details:", {
-        status: stripeResponse.status,
-        statusText: stripeResponse.statusText,
-        responseText,
-        customerId,
-        returnUrl: origin
-      });
-      
-      // Try to parse the error response
-      let errorDetails = responseText;
-      try {
-        const errorJson = JSON.parse(responseText);
-        errorDetails = errorJson.error?.message || errorJson.message || responseText;
-      } catch (e) {
-        // Keep original response text if parsing fails
-      }
-      
-      return new Response(JSON.stringify({ 
-        error: "Stripe billing portal error",
-        message: errorDetails,
-        status: stripeResponse.status,
-        details: "Check that Stripe billing portal is enabled in your Stripe dashboard"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-
-    const sessionData = JSON.parse(responseText);
-    console.log("SUCCESS: Stripe portal session created");
-    
-    return new Response(JSON.stringify({ 
-      url: sessionData.url
-    }), {
+    return new Response(JSON.stringify({ url: portalSession.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-
   } catch (error) {
-    console.error("Function error:", error);
-    return new Response(JSON.stringify({ 
-      error: "Function error",
-      details: error.message,
-      stack: error.stack,
-      name: error.name
-    }), {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR in customer-portal", { message: errorMessage });
+    return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
