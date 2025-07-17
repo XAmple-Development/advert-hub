@@ -75,75 +75,51 @@ export const ModernListingCard = ({
 
   return (
     <Card className={cn(
-      "card-glow group relative overflow-hidden",
-      "hover-lift hover-tilt transition-all duration-500",
-      "hover:shadow-glow-secondary",
-      listing.premium_featured && "ring-2 ring-primary/30 border-primary/40 animate-glow-pulse",
+      "group relative overflow-hidden border-border/40 hover:border-border/60 transition-all duration-300",
+      "h-[140px] bg-card/80 backdrop-blur-sm",
+      listing.premium_featured && "ring-1 ring-primary/30 border-primary/40",
       className
     )}>
-      {/* Enhanced Background Pattern */}
-      <div className="absolute inset-0" style={{background: 'var(--gradient-surface)'}} />
-      <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-all duration-500" 
-           style={{background: 'var(--gradient-primary)'}} />
-      <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full blur-2xl opacity-10 group-hover:opacity-25 transition-all duration-500" 
-           style={{background: 'var(--gradient-accent)'}} />
-      
-      {/* Enhanced Featured Badge */}
+      {/* Featured Badge */}
       {(listing.featured || listing.premium_featured) && (
-        <div className="absolute top-4 right-4 z-20">
-          <Badge className={cn(
-            "gap-2 text-sm font-bold shadow-2xl px-4 py-2 rounded-full animate-glow-pulse",
-            listing.premium_featured 
-              ? "border-0 text-white" 
-              : "border-0 text-white"
-          )} style={{
-            background: listing.premium_featured 
-              ? 'var(--gradient-cosmic)' 
-              : 'linear-gradient(135deg, #fbbf24, #f59e0b)'
-          }}>
-            <Star className="h-4 w-4 animate-bounce-gentle" />
+        <div className="absolute top-2 right-2 z-20">
+          <Badge className="text-xs px-2 py-0.5 bg-amber-500 text-white border-0">
+            <Star className="h-3 w-3 mr-1" />
             {listing.premium_featured ? "Premium" : "Featured"}
           </Badge>
         </div>
       )}
 
-      <CardContent className="relative p-4 space-y-4">
-        {/* Enhanced Header Section */}
-        <div className="flex items-start gap-3">
-          <div className="relative">
-            <Avatar className="h-12 w-12 ring-2 ring-primary/30 hover:ring-primary/50 transition-all duration-300 hover-glow">
-              <AvatarImage src={listing.avatar_url} alt={listing.name} />
-              <AvatarFallback className="text-primary font-bold text-sm" 
-                             style={{background: 'var(--gradient-primary)', opacity: 0.2}}>
-                {listing.name.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            {listing.online_count && listing.type === 'server' && (
-              <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 rounded-full border-3 border-card shadow-lg animate-glow-pulse" />
-            )}
-          </div>
+      <CardContent className="p-3 h-full flex flex-col">
+        {/* Header Section */}
+        <div className="flex items-start gap-2.5 mb-2">
+          <Avatar className="h-10 w-10 border border-border/40">
+            <AvatarImage src={listing.avatar_url} alt={listing.name} />
+            <AvatarFallback className="text-xs font-semibold bg-muted">
+              {listing.name.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
 
-          <div className="flex-1 min-w-0 space-y-2">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-base leading-tight truncate group-hover:gradient-text transition-all duration-300">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-1">
+              <h3 className="font-semibold text-sm truncate">
                 {listing.name}
               </h3>
               <ListingVerificationBadge listingId={listing.id} size="sm" />
             </div>
             
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge className="text-xs h-5 px-2 font-semibold rounded-md" 
-                     style={{background: 'var(--gradient-primary)', color: 'white'}}>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge className="text-xs px-1.5 py-0 h-4 bg-primary/20 text-primary border-primary/30">
                 {listing.type === 'server' ? 'Server' : 'Bot'}
               </Badge>
-              {listing.tags?.slice(0, 2).map(tag => (
-                <Badge key={tag} variant="outline" className="text-xs h-5 px-2 rounded-md hover-glow">
+              {listing.tags?.slice(0, 1).map(tag => (
+                <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0 h-4 border-border/40">
                   {tag}
                 </Badge>
               ))}
-              {listing.tags && listing.tags.length > 2 && (
-                <span className="text-xs text-muted-foreground font-medium">
-                  +{listing.tags.length - 2}
+              {listing.tags && listing.tags.length > 1 && (
+                <span className="text-xs text-muted-foreground">
+                  +{listing.tags.length - 1}
                 </span>
               )}
             </div>
@@ -154,89 +130,73 @@ export const ModernListingCard = ({
             size="icon"
             onClick={() => onFavorite?.(listing.id)}
             className={cn(
-              "h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-200",
+              "h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity",
               isFavorited && "text-red-500 opacity-100"
             )}
           >
-            <Heart className={cn("h-4 w-4", isFavorited && "fill-current")} />
+            <Heart className={cn("h-3.5 w-3.5", isFavorited && "fill-current")} />
           </Button>
         </div>
 
-        {/* Enhanced Description */}
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+        {/* Description */}
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-2 leading-relaxed flex-1">
           {listing.description}
         </p>
 
-        {/* Stats Row */}
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Users className="h-4 w-4 text-primary" />
-              <span className="font-medium">{formatCount(listing.member_count)}</span>
-              <span className="text-muted-foreground text-xs">
-                {listing.type === 'server' ? 'members' : 'servers'}
-              </span>
+        {/* Stats and Actions */}
+        <div className="mt-auto space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3 text-muted-foreground" />
+                <span className="font-medium">{formatCount(listing.member_count)}</span>
+              </div>
+              
+              {listing.online_count && (
+                <div className="flex items-center gap-1">
+                  <div className="h-1.5 w-1.5 bg-green-500 rounded-full" />
+                  <span className="text-muted-foreground">{formatCount(listing.online_count)}</span>
+                </div>
+              )}
             </div>
-            
-            {listing.online_count && (
-              <>
-                <Dot className="h-4 w-4 text-muted-foreground" />
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 bg-green-500 rounded-full" />
-                  <span className="font-medium">{formatCount(listing.online_count)}</span>
-                  <span className="text-muted-foreground text-xs">online</span>
-                </div>
-              </>
-            )}
-            
-            {listing.view_count && (
-              <>
-                <Dot className="h-4 w-4 text-muted-foreground" />
-                <div className="flex items-center gap-1.5">
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground text-xs">{formatCount(listing.view_count)}</span>
-                </div>
-              </>
+
+            {listing.last_bumped_at && (
+              <div className="text-xs text-muted-foreground">
+                {formatDate(listing.last_bumped_at)}
+              </div>
             )}
           </div>
 
-          {listing.last_bumped_at && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3" />
-              <span>{formatDate(listing.last_bumped_at)}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Enhanced Action Buttons */}
-        <div className="flex gap-2">
-          <Button
-            onClick={() => onView?.(listing.id)}
-            variant="outline"
-            size="sm"
-            className="flex-1 h-8 hover-glow font-medium text-xs"
-          >
-            View
-          </Button>
-          
-          {listing.invite_url && (
+          {/* Action Buttons */}
+          <div className="flex gap-1.5">
             <Button
-              onClick={() => onJoin?.(listing)}
+              onClick={() => onView?.(listing.id)}
+              variant="outline"
               size="sm"
-              className="btn-glow flex-1 h-8 font-bold text-xs"
+              className="flex-1 h-6 text-xs border-border/40 hover:border-border/60"
             >
-              {listing.type === 'server' ? 'Join' : 'Add'}
+              View
             </Button>
-          )}
-          
-          <Button
-            onClick={() => onShare?.(listing.id)}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 hover-glow"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
+            
+            {listing.invite_url && (
+              <Button
+                onClick={() => onJoin?.(listing)}
+                size="sm"
+                className="flex-1 h-6 text-xs bg-primary hover:bg-primary/90"
+              >
+                {listing.type === 'server' ? 'Join' : 'Add'}
+              </Button>
+            )}
+            
+            <Button
+              onClick={() => onShare?.(listing.id)}
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+            >
+              <Share2 className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
