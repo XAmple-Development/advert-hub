@@ -84,13 +84,7 @@ const Hero = () => {
               onClick={() => navigate('/listings?type=bot')}
               className="text-foreground text-lg font-semibold border-b-2 border-primary pb-2"
             >
-              Discord Bots
-            </button>
-            <button 
-              onClick={() => navigate('/listings?type=server')}
-              className="text-muted-foreground text-lg font-semibold hover:text-foreground transition-colors pb-2"
-            >
-              Discord Servers
+              View our Listings
             </button>
           </div>
         </ModernCard>
