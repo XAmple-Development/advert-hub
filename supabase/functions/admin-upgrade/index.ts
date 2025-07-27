@@ -28,7 +28,18 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
-    console.log(`Upgrading user ${user.email} to premium`);
+    // CRITICAL SECURITY CHECK: Only allow admins to use this function
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile?.is_admin) {
+      throw new Error("Unauthorized: Only administrators can upgrade accounts");
+    }
+
+    console.log(`Admin ${user.email} upgrading account to premium`);
 
     // Update subscribers table
     await supabaseClient.from("subscribers").upsert({
