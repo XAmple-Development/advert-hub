@@ -2873,6 +2873,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_user_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
       populate_sample_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
